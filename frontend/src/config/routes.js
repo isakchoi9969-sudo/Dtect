@@ -5,6 +5,7 @@ export const ROUTES = {
   SENTIMENT_RISK: "/company-analysis/sentiment-risk",
   RESPONSE_CENTER: "/response-center",
   ALERTS: "/alerts",
+  SEARCH: "/search",
   LOGIN: "/login",
   SIGNUP: "/signup",
 };

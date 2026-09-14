@@ -8,6 +8,7 @@ import FinalCtaSection from "./components/FinalCtaSection";
 import Footer from "./components/Footer";
 import SentimentRiskDashboard from "./components/SentimentRiskDashboard";
 import AuthPage from "./components/AuthPage";
+import SearchPage from "./components/SearchPage";
 import { ROUTES } from "./config/routes";
 
 function LandingPage() {
@@ -34,6 +35,10 @@ function App() {
 
   if (pathname === ROUTES.SENTIMENT_RISK) {
     return <SentimentRiskDashboard />;
+  }
+
+  if (pathname === ROUTES.SEARCH) {
+    return <SearchPage />;
   }
 
   if (pathname === ROUTES.LOGIN) {
