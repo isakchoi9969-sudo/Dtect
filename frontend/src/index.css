@@ -1629,3 +1629,39 @@ button:focus-visible {
     animation: none !important;
   }
 }
+
+/* Authentication */
+.auth-page { display: grid; grid-template-columns: minmax(360px, 42%) 1fr; min-height: 100vh; background: #fff; }
+.auth-intro { position: relative; display: flex; flex-direction: column; min-height: 100%; padding: 48px clamp(36px, 6vw, 92px); overflow: hidden; color: #fff; background: #10233f; }
+.auth-intro::before, .auth-intro::after { position: absolute; border-radius: 50%; content: ""; pointer-events: none; }
+.auth-intro::before { width: 420px; height: 420px; top: -170px; right: -190px; background: rgba(45, 137, 246, .55); filter: blur(4px); }
+.auth-intro::after { width: 300px; height: 300px; bottom: -160px; left: -80px; border: 1px solid rgba(127, 192, 255, .35); box-shadow: 0 0 0 48px rgba(64, 146, 242, .08), 0 0 0 96px rgba(64, 146, 242, .06); }
+.auth-logo, .auth-mobile-logo { position: relative; z-index: 1; width: fit-content; color: inherit; font-size: 25px; font-weight: 900; letter-spacing: -.08em; }
+.auth-intro-copy { position: relative; z-index: 1; max-width: 490px; margin: auto 0; }
+.auth-intro-copy > span, .auth-heading > span { color: #61adff; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+.auth-intro-copy h1 { margin: 16px 0 20px; font-size: clamp(35px, 3.2vw, 54px); line-height: 1.25; letter-spacing: -.06em; }
+.auth-intro-copy p { max-width: 390px; margin: 0; color: #b8c9dd; font-size: 15px; line-height: 1.75; }
+.auth-copyright { position: relative; z-index: 1; margin: 0; color: #8ca1b9; font-size: 11px; }
+.auth-form-section { display: grid; place-items: center; padding: 56px 36px; background: #fff; }
+.auth-form-wrap { width: min(100%, 430px); }
+.auth-mobile-logo { display: none; color: #172033; margin-bottom: 52px; }
+.auth-heading h2 { margin: 9px 0 7px; color: #172033; font-size: 36px; letter-spacing: -.06em; }
+.auth-heading p { margin: 0; color: #778294; font-size: 14px; }
+.auth-form { display: grid; gap: 19px; margin-top: 38px; }
+.auth-form > label { display: grid; gap: 8px; color: #3f4b5d; font-size: 13px; font-weight: 700; }
+.auth-form input { width: 100%; height: 51px; padding: 0 15px; border: 1px solid #dce2ea; border-radius: 9px; color: #172033; background: #fff; outline: 0; font: inherit; font-weight: 500; transition: border-color 160ms ease, box-shadow 160ms ease; }
+.auth-form input::placeholder { color: #a7b0bd; }
+.auth-form input:focus { border-color: #2584ec; box-shadow: 0 0 0 4px rgba(37,132,236,.12); }
+.password-field { position: relative; display: block; }
+.password-field input { padding-right: 54px; }
+.password-field button { position: absolute; top: 50%; right: 12px; padding: 4px; transform: translateY(-50%); color: #718096; background: transparent; cursor: pointer; font-size: 11px; }
+.auth-options { display: flex; justify-content: space-between; align-items: center; margin-top: -3px; color: #697689; font-size: 12px; }
+.auth-options a, .auth-agreement a, .auth-switch a { color: #1676dc; font-weight: 700; }
+.remember-me, .auth-agreement { display: flex !important; align-items: flex-start; gap: 8px; color: #697689 !important; font-size: 12px !important; font-weight: 500 !important; }
+.remember-me input, .auth-agreement input { width: 15px; height: 15px; margin: 2px 0 0; accent-color: #1676dc; }
+.auth-agreement { margin-top: -3px; line-height: 1.55; }
+.auth-submit { width: 100%; min-height: 53px; margin-top: 4px; border-radius: 9px; color: #fff; background: #1676dc; cursor: pointer; font-size: 14px; font-weight: 800; transition: background 160ms ease, transform 160ms ease; }
+.auth-submit:hover { background: #0967ca; transform: translateY(-1px); }
+.auth-notice { margin: -7px 0 0; padding: 10px 12px; border-radius: 8px; color: #1763ae; background: #edf6ff; font-size: 12px; line-height: 1.5; }
+.auth-switch { margin: 29px 0 0; color: #778294; font-size: 13px; text-align: center; }
+@media (max-width: 800px) { .auth-page { display: block; }.auth-intro { display: none; }.auth-form-section { min-height: 100vh; padding: 42px 24px; }.auth-mobile-logo { display: block; }.auth-heading h2 { font-size: 32px; } }

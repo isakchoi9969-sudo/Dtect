@@ -7,6 +7,7 @@ import TestimonialSection from "./components/TestimonialSection";
 import FinalCtaSection from "./components/FinalCtaSection";
 import Footer from "./components/Footer";
 import SentimentRiskDashboard from "./components/SentimentRiskDashboard";
+import AuthPage from "./components/AuthPage";
 import { ROUTES } from "./config/routes";
 
 function LandingPage() {
@@ -35,7 +36,16 @@ function App() {
     return <SentimentRiskDashboard />;
   }
 
+  if (pathname === ROUTES.LOGIN) {
+    return <AuthPage mode="login" />;
+  }
+
+  if (pathname === ROUTES.SIGNUP) {
+    return <AuthPage mode="signup" />;
+  }
+
   return <LandingPage />;
 }
 
 export default App;
+
