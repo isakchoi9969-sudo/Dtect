@@ -1,4 +1,4 @@
-﻿import Header from "./Header";
+import Header from "./Header";
 
 const companies = [
   { name: "삼성전자", code: "005930", score: 76, change: "+4.2", issues: 12, tone: "blue", initials: "SE", status: "주의" },
@@ -36,5 +36,39 @@ function RiskDashboard() {
   </DashboardLayout>;
 }
 
-function DashboardLayout({ title, subtitle, active, children }) { return <div className="dashboard-page"><Header /><main className="dashboard-main"><div className="dashboard-title-row"><div><p>DASHBOARD</p><h1>{title}</h1><span>{subtitle}</span></div><div className="live-update"><i /> 실시간 업데이트 <small>방금 전</small></div></div><div className="dashboard-tabs"><a className={active === "watchlist" ? "active" : ""} href="/dashboard/watchlist">관심 기업 요약</a><a className={active === "risk" ? "active" : ""} href="/dashboard/issue-risk">이슈 · 위험도 현황</a></div>{children}</main></div>; }
+function DashboardSidebar() {
+  return (
+    <aside className="dashboard-sidebar">
+      <div className="dashboard-side-heading"><span>WATCHLIST</span><button type="button" aria-label="관심 기업 추가">+</button></div>
+      <div className="dashboard-side-companies">
+        {companies.slice(0, 3).map((company, index) => (
+          <button className={index === 0 ? "selected" : ""} type="button" key={company.name}>
+            <CompanyMark item={company} />
+            <span><strong>{company.name}</strong><small>{company.code} · KOSPI</small></span>
+            <em className={company.change.startsWith("-") ? "fall" : "rise"}>{company.change}%</em>
+          </button>
+        ))}
+      </div>
+      <button type="button" className="dashboard-add-company">+ 관심 기업 추가</button>
+      <div className="dashboard-side-footer"><a href="#settings">설정</a><a href="#help">도움말</a></div>
+    </aside>
+  );
+}
+
+function DashboardLayout({ title, subtitle, active, children }) {
+  return (
+    <div className="dashboard-page">
+      <Header />
+      <div className="dashboard-content-shell">
+        <DashboardSidebar />
+        <main className="dashboard-main">
+          <div className="dashboard-title-row"><div><p>DASHBOARD</p><h1>{title}</h1><span>{subtitle}</span></div><div className="live-update"><i /> 실시간 업데이트 <small>방금 전</small></div></div>
+          <div className="dashboard-tabs"><a className={active === "watchlist" ? "active" : ""} href="/dashboard/watchlist">관심 기업 요약</a><a className={active === "risk" ? "active" : ""} href="/dashboard/issue-risk">이슈 · 위험도 현황</a></div>
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
+
 export { WatchlistDashboard, RiskDashboard };
