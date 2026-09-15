@@ -13,7 +13,6 @@ function Sparkline({ points }) {
     .map((value, index) => {
       const x = (index / (points.length - 1)) * 100;
       const y = 54 - (value / 100) * 48;
-
       return `${x},${y}`;
     })
     .join(" ");
@@ -31,12 +30,10 @@ function Sparkline({ points }) {
           <stop offset="1" stopColor="#2d79ef" stopOpacity="0" />
         </linearGradient>
       </defs>
-
       <path
         d={`M ${coords.replaceAll(" ", " L ")} L 100,58 L 0,58 Z`}
         fill="url(#riskArea)"
       />
-
       <polyline
         points={coords}
         fill="none"
@@ -44,7 +41,6 @@ function Sparkline({ points }) {
         strokeWidth="1.8"
         vectorEffect="non-scaling-stroke"
       />
-
       <circle
         cx="100"
         cy={54 - (points.at(-1) / 100) * 48}
@@ -197,7 +193,6 @@ function SentimentRiskDashboard() {
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
             </svg>
-
             <i />
           </button>
 
@@ -214,7 +209,6 @@ function SentimentRiskDashboard() {
         <aside className="sr-sidebar">
           <div className="sr-side-heading">
             <span>WATCHLIST</span>
-
             <button type="button" aria-label="기업 추가">
               +
             </button>
@@ -256,7 +250,6 @@ function SentimentRiskDashboard() {
               <p className="sr-kicker">CORPORATE ANALYSIS</p>
 
               <h1>감성·리스크 분석</h1>
-
               <p className="sr-subtitle">
                 뉴스와 온라인 여론을 분석해 기업의 잠재 리스크를 빠르게
                 파악합니다.
@@ -298,7 +291,6 @@ function SentimentRiskDashboard() {
             <article className="sr-card sr-score-card">
               <div className="sr-card-head">
                 <span>종합 리스크 지수</span>
-
                 <button title="산정 기준" type="button">
                   i
                 </button>
@@ -433,7 +425,6 @@ function SentimentRiskDashboard() {
                 <span className="sr-ai-mark" aria-hidden="true">
                   AI
                 </span>
-
                 <div>
                   <span>AI CURRENT SITUATION</span>
 
@@ -578,7 +569,6 @@ function SentimentRiskDashboard() {
                 전체 보기 →
               </button>
             </div>
-
             <div className="sr-issue-list">
               {company.issues.map((issue) => (
                 <button type="button" key={issue.title}>
