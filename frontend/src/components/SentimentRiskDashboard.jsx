@@ -107,7 +107,6 @@ function SentimentRiskDashboard() {
             justifyContent: "center",
           }}
         >
-          <a href="#overview">대시보드</a>
           <a className="active" href="#analysis">
             기업 분석
           </a>

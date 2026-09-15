@@ -109,7 +109,6 @@ function SearchPage() {
             justifyContent: "center",
           }}
         >
-          <a href={ROUTES.DASHBOARD}>대시보드</a>
           <a href={ROUTES.SEARCH} className="active">
             기업 분석
           </a>
