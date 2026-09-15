@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { navigationItems } from "../data/landingData";
 import { ROUTES } from "../config/routes";
 import ThemeToggle from "./ThemeToggle";
@@ -38,6 +38,10 @@ function Header() {
     if (item.href === ROUTES.DASHBOARD && childIndex === 1) return ROUTES.DASHBOARD_ISSUE_RISK;
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 0) return ROUTES.SEARCH;
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 1) return ROUTES.SENTIMENT_RISK;
+    if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 2) return ROUTES.ISSUE_TIMELINE;
+    if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 3) return ROUTES.RELATED_ARTICLES;
+    if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 0) return ROUTES.CASE_SIMULATOR;
+    if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 1) return ROUTES.RESPONSE_GENERATOR;
     return item.href;
   };
 
