@@ -1,14 +1,9 @@
 export const navigationItems = [
   {
-    title: "대시보드",
-    href: "/dashboard",
-    children: ["관심 기업 요약", "이슈·위험도 현황"],
-  },
-  {
     title: "기업 분석",
     href: "/company-analysis",
     children: [
-      "기업·브랜드·CEO 검색",
+      "관심 기업 검색",
       "감성·리스크 분석",
       "이슈 타임라인",
       "관련 기사",
