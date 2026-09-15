@@ -138,7 +138,6 @@ function DashboardWithSearch() {
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("전체");
   const [isSearching, setIsSearching] = useState(false);
-  const [recent, setRecent] = useState(["삼성전자", "현대자동차", "김범수"]);
 
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -166,9 +165,6 @@ function DashboardWithSearch() {
       setQuery("");
       return;
     }
-    if (!recent.includes(term)) {
-      setRecent((prev) => [term, ...prev].slice(0, 5));
-    }
     setQuery(term);
     setIsSearching(true);
   };
@@ -185,9 +181,60 @@ function DashboardWithSearch() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif; background: #f8fafc; color: #0f172a; }
 
+        /* ─── 헤더 ─── */
+        .global-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 28px;
+          height: 60px;
+          background: #fff;
+          border-bottom: 1px solid #e2e8f0;
+          position: sticky;
+          top: 0;
+          z-index: 50;
+        }
+        .logo {
+          font-size: 18px;
+          font-weight: 800;
+          color: #0f172a;
+          text-decoration: none;
+          letter-spacing: -0.02em;
+        }
+        .header-nav {
+          display: flex;
+          gap: 32px;
+        }
+        .header-nav a {
+          font-size: 14px;
+          color: #64748b;
+          text-decoration: none;
+          font-weight: 500;
+        }
+        .header-nav a.active {
+          color: #0f172a;
+          font-weight: 600;
+        }
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .login-btn {
+          padding: 7px 16px;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          background: #fff;
+          font-size: 13px;
+          font-weight: 500;
+          color: #334155;
+          cursor: pointer;
+        }
+        .login-btn:hover { background: #f8fafc; }
+
         .dashboard-layout {
           display: flex;
-          min-height: 100vh;
+          min-height: calc(100vh - 60px);
           background: #f8fafc;
         }
 
@@ -683,6 +730,23 @@ function DashboardWithSearch() {
           border-radius: 4px 4px 0 0;
         }
       `}</style>
+
+      {/* ─── 전역 헤더 ─── */}
+      <header className="global-header">
+        <a href="/" className="logo">
+          D:TECT
+        </a>
+        <nav className="header-nav">
+          <a href="#" className="active">
+            기업 분석
+          </a>
+          <a href="#">AI 대응센터</a>
+          <a href="#">알림</a>
+        </nav>
+        <div className="header-right">
+          <button className="login-btn">로그인</button>
+        </div>
+      </header>
 
       <div className="dashboard-layout">
         {/* Sidebar */}
