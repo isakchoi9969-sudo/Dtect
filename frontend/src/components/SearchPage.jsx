@@ -102,7 +102,13 @@ function SearchPage() {
         <a href={ROUTES.HOME} className="search-logo">
           D:TECT
         </a>
-        <nav aria-label="주요 메뉴">
+        <nav
+          aria-label="주요 메뉴"
+          style={{
+            flex: 1,
+            justifyContent: "center",
+          }}
+        >
           <a href={ROUTES.DASHBOARD}>대시보드</a>
           <a href={ROUTES.SEARCH} className="active">
             기업 분석
