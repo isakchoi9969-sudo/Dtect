@@ -52,7 +52,10 @@ function App() {
 
   const pathname = window.location.pathname.replace(/\/$/, "") || "/";
 
-  if (pathname === ROUTES.DASHBOARD || pathname === ROUTES.DASHBOARD_WATCHLIST) {
+  if (
+    pathname === ROUTES.DASHBOARD ||
+    pathname === ROUTES.DASHBOARD_WATCHLIST
+  ) {
     return <WatchlistDashboard />;
   }
 
@@ -96,4 +99,3 @@ function App() {
 }
 
 export default App;
-

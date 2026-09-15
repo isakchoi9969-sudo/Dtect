@@ -25,6 +25,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
+from app.api.company import router as company_router
+# from app.api.stock import router as stock_router
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -49,6 +51,15 @@ app.add_middleware(
 # 여기서는 등록만 하면 /api/auth/signup, /api/auth/login 이 그대로 열린다.
 app.include_router(auth_router)
 
+app.include_router(
+    company_router,
+    prefix="/api/company"
+)
+
+# app.include_router(
+#     stock_router,
+#     prefix="/api/stocks"
+# )
 
 @app.get("/api/test")
 def test_connection():
