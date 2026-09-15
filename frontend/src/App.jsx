@@ -1,4 +1,8 @@
-﻿import Header from "./components/Header";
+﻿// 백엔드 연결 테스트를 위한 axios import 및 useEffect 추가
+import React, { useEffect } from "react";
+import axios from "axios";
+
+import Header from "./components/Header";
 import HeroSection from "./components/HeroSection";
 import DashboardPreview from "./components/DashboardPreview";
 import ProblemSection from "./components/ProblemSection";
@@ -34,6 +38,18 @@ function LandingPage() {
 }
 
 function App() {
+  // 백엔드 연결 테스트 코드 ---------------------
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/test")
+      .then((response) => {
+        console.log("백엔드 응답:", response.data.message);
+      })
+      .catch((error) => {
+        console.error("백엔드 연결 실패:", error);
+      });
+  }, []);
+
   const pathname = window.location.pathname.replace(/\/$/, "") || "/";
 
   if (pathname === ROUTES.DASHBOARD || pathname === ROUTES.DASHBOARD_WATCHLIST) {

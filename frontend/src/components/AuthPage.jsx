@@ -1,14 +1,50 @@
 ﻿import { useState } from "react";
 import { ROUTES } from "../config/routes";
+// 로그인 axios 로 연결
+import axios from "axios";
 
 function AuthPage({ mode }) {
   const isSignup = mode === "signup";
   const [showPassword, setShowPassword] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (event) => {
+  // 🔌 백엔드로 데이터 전송 로직 추가 ----------------------------------
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitted(true);
+
+    // 폼 안에 입력된 데이터들을 객체 형태로 추출
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      if (isSignup) {
+        // 1️⃣ 회원가입 요청
+        const response = await axios.post(
+          "http://localhost:5000/api/auth/signup",
+          data,
+        );
+        alert(response.data.message || "회원가입이 완료되었습니다!");
+        window.location.href = ROUTES.LOGIN; // 로그인 페이지로 이동
+      } else {
+        // 2️⃣ 로그인 요청
+        const response = await axios.post(
+          "http://localhost:5000/api/auth/login",
+          {
+            email: data.email,
+            password: data.password,
+          },
+        );
+        alert(response.data.message || "로그인 성공!");
+        window.location.href = ROUTES.DASHBOARD; // 대시보드로 이동
+      }
+    } catch (error) {
+      console.error("인증 실패:", error);
+      // 백엔드에서 보낸 에러 메시지가 있다면 출력, 없으면 기본 메시지
+      const errorMessage =
+        error.response?.data?.message || "서버 통신 중 오류가 발생했습니다.";
+      alert(errorMessage);
+    }
   };
 
   return (
