@@ -1,10 +1,17 @@
-export const ROUTES = {
+﻿export const ROUTES = {
   HOME: "/",
   DASHBOARD: "/dashboard",
+  DASHBOARD_WATCHLIST: "/dashboard/watchlist",
+  DASHBOARD_ISSUE_RISK: "/dashboard/issue-risk",
   COMPANY_ANALYSIS: "/company-analysis",
   SENTIMENT_RISK: "/company-analysis/sentiment-risk",
+  ISSUE_TIMELINE: "/company-analysis/issue-timeline",
+  RELATED_ARTICLES: "/company-analysis/related-articles",
   RESPONSE_CENTER: "/response-center",
+  CASE_SIMULATOR: "/response-center/case-simulator",
+  RESPONSE_GENERATOR: "/response-center/response-generator",
   ALERTS: "/alerts",
+  SEARCH: "/search",
   LOGIN: "/login",
   SIGNUP: "/signup",
 };
