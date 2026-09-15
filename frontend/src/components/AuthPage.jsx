@@ -1,14 +1,73 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { ROUTES } from "../config/routes";
+// 🔧 변경 1: axios 를 직접 쓰지 않고 config/api.js 의 공용 인스턴스를 쓴다.
+//    - baseURL 이 한 곳(api.js)에만 있으므로 포트가 바뀌어도 여기는 안 건드려도 된다.
+//    - "http://localhost:5000" 하드코딩이 파일마다 흩어지는 걸 막는다.
+import { api } from "../config/api";
+
+// 🔧 변경 2: FastAPI 에러 응답을 안전하게 문자열로 뽑아내는 헬퍼.
+//
+//   FastAPI 에러는 두 가지 모양으로 온다.
+//   ① 우리가 직접 raise HTTPException(detail="비밀번호가 일치하지 않습니다.")
+//      → { detail: "비밀번호가 일치하지 않습니다." }              (문자열)
+//   ② Pydantic 자동 검증 실패 (예: 이메일 형식 오류, 비밀번호 8자 미만)
+//      → { detail: [{ loc: [...], msg: "...", type: "..." }] }   (배열)
+//
+//   기존 코드처럼 error.response?.data?.message 로 읽으면 항상 undefined 다.
+//   Express 는 message 필드를 썼지만 FastAPI 는 detail 필드를 쓰기 때문이다.
+function extractErrorMessage(error) {
+  const detail = error.response?.data?.detail;
+
+  if (typeof detail === "string") {
+    // ① HTTPException 케이스: 그대로 사용자에게 보여줄 수 있는 문장
+    return detail;
+  }
+
+  if (Array.isArray(detail) && detail.length > 0) {
+    // ② Pydantic 검증 실패 케이스: 첫 번째 오류만 한글 문구로 변환해서 보여준다.
+    //    예: "email" 필드가 이메일 형식이 아니면 detail[0].msg 에 원인이 들어있다.
+    return `입력값을 확인해주세요. (${detail[0].msg})`;
+  }
+
+  return "서버 통신 중 오류가 발생했습니다.";
+}
 
 function AuthPage({ mode }) {
   const isSignup = mode === "signup";
   const [showPassword, setShowPassword] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (event) => {
+  // 🔌 백엔드로 데이터 전송 로직 ----------------------------------
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitted(true);
+
+    // 폼 안에 입력된 데이터들을 객체 형태로 추출
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      if (isSignup) {
+        // 1️⃣ 회원가입 요청
+        // 🔧 변경 3: axios.post("http://localhost:5000/...") → api.post("/...")
+        //    baseURL 은 api.js 가 이미 붙여주므로 경로만 적으면 된다.
+        const response = await api.post("/api/auth/signup", data);
+        alert(response.data.message || "회원가입이 완료되었습니다!");
+        window.location.href = ROUTES.LOGIN; // 로그인 페이지로 이동
+      } else {
+        // 2️⃣ 로그인 요청
+        const response = await api.post("/api/auth/login", {
+          email: data.email,
+          password: data.password,
+        });
+        alert(response.data.message || "로그인 성공!");
+        window.location.href = ROUTES.DASHBOARD; // 대시보드로 이동
+      }
+    } catch (error) {
+      console.error("인증 실패:", error);
+      // 🔧 변경 4: message 대신 detail 을 읽는 헬퍼로 교체
+      alert(extractErrorMessage(error));
+    }
   };
 
   return (

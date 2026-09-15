@@ -47,3 +47,4 @@ npm run dev
 
 - `frontend/`: 랜딩 페이지 및 감성·리스크 분석 대시보드 구현 완료
 - `backend/`, `ai-service/`, `infrastructure/`: 멘토링 기반 구현을 위한 초기 폴더 구조 생성 완료
+Git collaboration test
