@@ -14,6 +14,7 @@ import SentimentRiskDashboard from "./components/SentimentRiskDashboard";
 import AuthPage from "./components/AuthPage";
 import SearchPage from "./components/SearchPage";
 import ResponseToolsPage from "./components/ResponseToolsPage";
+import IssueTimelinePage from "./components/IssueTimelinePage";
 import { WatchlistDashboard, RiskDashboard } from "./components/DashboardPages";
 import { ROUTES } from "./config/routes";
 

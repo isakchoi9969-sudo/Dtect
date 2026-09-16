@@ -2,7 +2,7 @@ export const navigationItems = [
   {
     title: "기업 분석",
     href: "/company-analysis",
-    children: ["관심 기업 검색", "감성·리스크 분석"],
+    children: ["기업 검색", "관심 기업", "감성·리스크 분석"],
   },
   {
     title: "AI 대응센터",
