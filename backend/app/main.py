@@ -26,6 +26,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
 from app.api.company import router as company_router
+
+from app.db.database import check_db_connection, get_company_count
 # from app.api.stock import router as stock_router
 
 load_dotenv()
@@ -65,3 +67,37 @@ app.include_router(
 def test_connection():
     """프론트-백엔드 연결 확인용. Express 의 app.get('/api/test') 그대로."""
     return {"message": "프론트엔드와 백엔드 연결 성공!"}
+
+@app.get("/api/health/db")
+def db_health_check():
+    try:
+        db_name = check_db_connection()
+
+        return {
+            "success": True,
+            "message": "DB 연결 성공",
+            "database": db_name
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "message": "DB 연결 실패",
+            "error": str(e)
+        }
+
+@app.get("/api/test/company-count")
+def company_count():
+    try:
+        count = get_company_count()
+
+        return {
+            "success": True,
+            "company_count": count
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
