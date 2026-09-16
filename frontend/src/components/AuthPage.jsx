@@ -91,6 +91,7 @@ function AuthPage({ mode }) {
           </div>
           <form className="auth-form" onSubmit={handleSubmit}>
             {isSignup && <label>이름<input type="text" name="name" placeholder="이름을 입력하세요" autoComplete="name" required /></label>}
+            {isSignup && <label>소속 기업<input type="text" name="company" placeholder="예: 삼성전자" autoComplete="organization" required /></label>}
             <label>이메일<input type="email" name="email" placeholder="name@company.com" autoComplete="email" required /></label>
             <label>비밀번호<span className="password-field"><input type={showPassword ? "text" : "password"} name="password" placeholder={isSignup ? "8자 이상 입력하세요" : "비밀번호를 입력하세요"} autoComplete={isSignup ? "new-password" : "current-password"} minLength="8" required /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}>{showPassword ? "숨김" : "보기"}</button></span></label>
             {isSignup && <label>비밀번호 확인<input type="password" name="passwordConfirm" placeholder="비밀번호를 다시 입력하세요" autoComplete="new-password" minLength="8" required /></label>}
