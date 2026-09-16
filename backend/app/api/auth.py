@@ -1,91 +1,206 @@
-"""인증 관련 라우터: /api/auth/signup, /api/auth/login.
+"""D:TECT 회원 인증 API.
 
-[Node/Express server.js 와 줄 단위 대응표]
-
-  Express                                    FastAPI
-  ─────────────────────────────────────────  ─────────────────────────────────
-  app.post("/api/auth/login", (req, res)=>{  @router.post("/login")
-                                              def login(payload: LoginRequest):
-  const {email,password} = req.body            # payload.email / payload.password
-                                                 (타입 검증까지 이미 끝난 상태)
-  res.json({...})                             return {...}   # dict 리턴이 곧 JSON 응답
-  res.status(400).json({...})                 raise HTTPException(400, detail=...)
-  res.status(401).json({...})                 raise HTTPException(401, detail=...)
-
-Express 는 `res` 객체를 직접 조작해서 상태코드+본문을 만들지만,
-FastAPI 는 "정상 흐름은 return, 에러는 raise" 로 나뉜다.
+현재 상태
+- 회원가입: 임시 메모리 저장
+- 로그인: MySQL USER 테이블 조회
 """
+
 import logging
 
-from fastapi import APIRouter, HTTPException
+import bcrypt
 
-from app.schemas.auth import AuthResponse, LoginRequest, SignupRequest, UserOut
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from app.db.database import get_db
+from app.schemas.auth import (
+    AuthResponse,
+    LoginRequest,
+    SignupRequest,
+    UserOut,
+)
+
 
 logger = logging.getLogger(__name__)
 
-# prefix 를 여기서 지정하면 main.py 에서는 경로를 반복해서 안 적어도 된다.
-router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-# ⚠️ server.js 와 동일하게 "메모리 임시 저장 + 하드코딩 관리자 계정" 을 그대로 옮겼다.
-# 서버를 재시작하면 가입한 회원 정보는 사라진다. DB 연동 전 임시 구현이다.
-# (원본 Node 코드도 실제로는 저장하지 않고 콘솔에만 찍고 성공 응답만 보냈다)
+router = APIRouter(
+    prefix="/api/auth",
+    tags=["auth"],
+)
+
+
+# =========================================================
+# 임시 회원가입 저장소
+# 나중에 회원가입 DB 연동 시 삭제 예정
+# =========================================================
+
 _fake_users_db: dict[str, dict] = {}
 
-ADMIN_EMAIL = "admin@company.com"
-ADMIN_PASSWORD = "12345678"
 
+# =========================================================
+# 회원가입
+# 아직 DB에 저장하지 않고 기존 임시 방식 유지
+# =========================================================
 
-@router.post("/signup", response_model=AuthResponse)
+@router.post(
+    "/signup",
+    response_model=AuthResponse
+)
 def signup(payload: SignupRequest):
-    """회원가입 처리 (임시 구현, DB 미연동).
 
-    Express 버전과 동일한 로직:
-      1) 비밀번호 확인 일치 검사
-      2) (실제 저장은 하지 않고) 성공 메시지만 반환
-    Pydantic 이 이미 email 형식, 비밀번호 8자 이상은 걸러줬으므로
-    여기서는 "두 비밀번호가 같은가"만 추가로 확인하면 된다.
-    """
-    logger.info("받은 회원가입 데이터: %s", {"name": payload.name, "email": payload.email})
+    logger.info(
+        "회원가입 요청: %s",
+        {
+            "name": payload.name,
+            "email": payload.email
+        }
+    )
 
-    # Express: if (password !== passwordConfirm) return res.status(400).json(...)
+    # 비밀번호 확인
     if payload.password != payload.passwordConfirm:
+
         raise HTTPException(
             status_code=400,
             detail="비밀번호가 일치하지 않습니다.",
         )
 
-    # TODO: DB 연동 시 여기서 비밀번호 해싱(bcrypt/passlib) 후 저장.
-    # 지금은 원본 Node 코드와 동일하게 메모리에만 남기고 응답한다.
-    _fake_users_db[payload.email] = {"name": payload.name, "password": payload.password}
 
-    return AuthResponse(success=True, message="회원가입이 성공적으로 완료되었습니다!")
+    # 임시 저장
+    _fake_users_db[payload.email] = {
+        "name": payload.name,
+        "password": payload.password,
+    }
 
 
-@router.post("/login", response_model=AuthResponse)
-def login(payload: LoginRequest):
-    """로그인 처리 (임시 관리자 계정: admin@company.com / 12345678).
+    return AuthResponse(
+        success=True,
+        message="회원가입이 성공적으로 완료되었습니다!"
+    )
 
-    Express 버전의 if/else 분기를 그대로 옮겼다.
-    실패 시 res.status(401).json(...) → raise HTTPException(401, ...) 로 대응.
-    """
-    logger.info("받은 로그인 데이터: %s", {"email": payload.email})
 
-    if payload.email == ADMIN_EMAIL and payload.password == ADMIN_PASSWORD:
+# =========================================================
+# 로그인
+# MySQL USER 테이블 실제 조회
+# =========================================================
+
+@router.post(
+    "/login",
+    response_model=AuthResponse
+)
+def login(
+    payload: LoginRequest,
+    db: Session = Depends(get_db)
+):
+
+    logger.info(
+        "로그인 요청: %s",
+        {
+            "email": payload.email
+        }
+    )
+
+
+    # -----------------------------------------------------
+    # 1. MySQL USER 테이블에서 이메일 조회
+    # -----------------------------------------------------
+
+    query = text("""
+        SELECT
+            USER_ID,
+            COMPANY_ID,
+            LOGIN_ID,
+            PASSWORD,
+            NAME,
+            EMAIL,
+            USER_TYPE,
+            CREATED_AT
+        FROM `USER`
+        WHERE EMAIL = :email
+        LIMIT 1
+    """)
+
+
+    user = db.execute(
+        query,
+        {
+            "email": payload.email
+        }
+    ).mappings().first()
+
+
+    # -----------------------------------------------------
+    # 2. DB에 사용자가 존재하는 경우
+    # -----------------------------------------------------
+
+    if user:
+
+        try:
+
+            password_ok = bcrypt.checkpw(
+                payload.password.encode("utf-8"),
+                user["PASSWORD"].encode("utf-8")
+            )
+
+        except Exception as e:
+
+            logger.error(
+                "비밀번호 검증 오류: %s",
+                e
+            )
+
+            password_ok = False
+
+
+        if not password_ok:
+
+            raise HTTPException(
+                status_code=401,
+                detail="등록되지 않은 이메일이거나 비밀번호가 틀렸습니다.",
+            )
+
+
         return AuthResponse(
             success=True,
             message="로그인 성공!",
-            user=UserOut(email=ADMIN_EMAIL, name="관리자"),
+            user=UserOut(
+                email=user["EMAIL"],
+                name=user["NAME"],
+            ),
         )
 
-    # 회원가입으로 저장된 임시 유저도 확인 (원본 Node 코드에는 없었지만
-    # signup 이후 login 이 아예 안 되는 건 부자연스러워서 최소한으로 추가함)
-    user = _fake_users_db.get(payload.email)
-    if user and user["password"] == payload.password:
+
+    # -----------------------------------------------------
+    # 3. 임시 회원가입 사용자 확인
+    #
+    # 회원가입 DB 연동 전까지만 사용하는 코드
+    # -----------------------------------------------------
+
+    temp_user = _fake_users_db.get(
+        payload.email
+    )
+
+
+    if (
+        temp_user
+        and
+        temp_user["password"] == payload.password
+    ):
+
         return AuthResponse(
             success=True,
             message="로그인 성공!",
-            user=UserOut(email=payload.email, name=user["name"]),
+            user=UserOut(
+                email=payload.email,
+                name=temp_user["name"],
+            ),
         )
+
+
+    # -----------------------------------------------------
+    # 4. 사용자 없음
+    # -----------------------------------------------------
 
     raise HTTPException(
         status_code=401,
