@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import Header from "./Header";
 
 /* =========================================================
    관심기업 샘플 데이터
@@ -401,165 +402,173 @@ export default function IssueTimelinePage({ mode = "timeline" }) {
   }
 
   return (
-    <div style={styles.page}>
-      {/* ===================================================
+    <>
+      <Header />
+      <div style={styles.page}>
+        {/* ===================================================
           상단 기업 선택 영역
       =================================================== */}
 
-      <div style={styles.companySelectorArea}>
-        <div>
-          <div style={styles.pageEyebrow}>MY WATCHLIST</div>
-          <h1 style={styles.pageTitle}>관심기업 분석</h1>
-          <p style={styles.pageDescription}>
-            관심기업의 주요 이슈와 리스크 변화를 한눈에 확인하세요.
-          </p>
+        <div style={styles.companySelectorArea}>
+          <div>
+            <div style={styles.pageEyebrow}>MY WATCHLIST</div>
+            <h1 style={styles.pageTitle}>관심기업 분석</h1>
+            <p style={styles.pageDescription}>
+              관심기업의 주요 이슈와 리스크 변화를 한눈에 확인하세요.
+            </p>
+          </div>
+
+          <div style={styles.companySelector}>
+            <span style={styles.selectorLabel}>관심기업</span>
+
+            <select
+              value={selectedCompany.id}
+              onChange={(e) => setSelectedCompanyId(Number(e.target.value))}
+              style={styles.select}
+            >
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name} ({company.ticker})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div style={styles.companySelector}>
-          <span style={styles.selectorLabel}>관심기업</span>
-
-          <select
-            value={selectedCompany.id}
-            onChange={(e) => setSelectedCompanyId(Number(e.target.value))}
-            style={styles.select}
-          >
-            {companies.map((company) => (
-              <option key={company.id} value={company.id}>
-                {company.name} ({company.ticker})
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* ===================================================
+        {/* ===================================================
           기업 기본정보
       =================================================== */}
 
-      <section style={styles.companyHeader}>
-        <div style={styles.companyLogo}>{selectedCompany.name.slice(0, 2)}</div>
-
-        <div style={styles.companyInfo}>
-          <div style={styles.companyNameRow}>
-            <h2 style={styles.companyName}>{selectedCompany.name}</h2>
-
-            <span style={styles.ticker}>({selectedCompany.ticker})</span>
+        <section style={styles.companyHeader}>
+          <div style={styles.companyLogo}>
+            {selectedCompany.name.slice(0, 2)}
           </div>
 
-          <p style={styles.companyDescription}>{selectedCompany.description}</p>
+          <div style={styles.companyInfo}>
+            <div style={styles.companyNameRow}>
+              <h2 style={styles.companyName}>{selectedCompany.name}</h2>
 
-          <div style={styles.companyTags}>
-            <span>{selectedCompany.category}</span>
-            <span>{selectedCompany.market}</span>
-            <span>시가총액 {selectedCompany.marketCap}</span>
-            <span>직원 수 {selectedCompany.employees}</span>
+              <span style={styles.ticker}>({selectedCompany.ticker})</span>
+            </div>
+
+            <p style={styles.companyDescription}>
+              {selectedCompany.description}
+            </p>
+
+            <div style={styles.companyTags}>
+              <span>{selectedCompany.category}</span>
+              <span>{selectedCompany.market}</span>
+              <span>시가총액 {selectedCompany.marketCap}</span>
+              <span>직원 수 {selectedCompany.employees}</span>
+            </div>
           </div>
-        </div>
 
-        <button
-          style={styles.watchButton}
-          onClick={() => {
-            alert(`${selectedCompany.name}은 관심기업으로 등록되어 있습니다.`);
-          }}
-        >
-          ★ 관심기업
-        </button>
-      </section>
+          <button
+            style={styles.watchButton}
+            onClick={() => {
+              alert(
+                `${selectedCompany.name}은 관심기업으로 등록되어 있습니다.`,
+              );
+            }}
+          >
+            ★ 관심기업
+          </button>
+        </section>
 
-      {/* ===================================================
+        {/* ===================================================
           상단 요약 카드
       =================================================== */}
 
-      <section style={styles.summaryGrid}>
-        <div style={styles.summaryCard}>
-          <div>
-            <div style={styles.cardTitle}>현재 위험도</div>
+        <section style={styles.summaryGrid}>
+          <div style={styles.summaryCard}>
+            <div>
+              <div style={styles.cardTitle}>현재 위험도</div>
 
-            <div style={styles.riskValueRow}>
-              <span
+              <div style={styles.riskValueRow}>
+                <span
+                  style={{
+                    ...styles.riskDot,
+                    background:
+                      selectedCompany.riskScore >= 60
+                        ? "#FF6B6B"
+                        : selectedCompany.riskScore >= 40
+                          ? "#F6B84B"
+                          : "#35C98A",
+                  }}
+                />
+
+                <strong style={styles.riskText}>
+                  {selectedCompany.riskLevel}
+                </strong>
+              </div>
+            </div>
+
+            <div style={styles.infoIcon}>i</div>
+          </div>
+
+          <div style={styles.summaryCard}>
+            <div>
+              <div style={styles.cardTitle}>최근 7일 변화</div>
+
+              <div
                 style={{
-                  ...styles.riskDot,
-                  background:
-                    selectedCompany.riskScore >= 60
-                      ? "#FF6B6B"
-                      : selectedCompany.riskScore >= 40
-                        ? "#F6B84B"
-                        : "#35C98A",
+                  ...styles.changeValue,
+                  color: selectedCompany.riskChange > 0 ? "#FF6B6B" : "#2E7DE9",
                 }}
-              />
+              >
+                {selectedCompany.riskChange > 0 ? "▲" : "▼"}{" "}
+                {Math.abs(selectedCompany.riskChange)}%
+              </div>
 
-              <strong style={styles.riskText}>
-                {selectedCompany.riskLevel}
-              </strong>
+              <div style={styles.smallText}>
+                위험도 {selectedCompany.riskChange > 0 ? "증가" : "감소"}
+              </div>
             </div>
           </div>
 
-          <div style={styles.infoIcon}>i</div>
-        </div>
+          <div style={styles.summaryCard}>
+            <div style={{ width: "100%" }}>
+              <div style={styles.cardTitle}>주요 리스크 유형</div>
 
-        <div style={styles.summaryCard}>
-          <div>
-            <div style={styles.cardTitle}>최근 7일 변화</div>
-
-            <div
-              style={{
-                ...styles.changeValue,
-                color: selectedCompany.riskChange > 0 ? "#FF6B6B" : "#2E7DE9",
-              }}
-            >
-              {selectedCompany.riskChange > 0 ? "▲" : "▼"}{" "}
-              {Math.abs(selectedCompany.riskChange)}%
-            </div>
-
-            <div style={styles.smallText}>
-              위험도 {selectedCompany.riskChange > 0 ? "증가" : "감소"}
-            </div>
-          </div>
-        </div>
-
-        <div style={styles.summaryCard}>
-          <div style={{ width: "100%" }}>
-            <div style={styles.cardTitle}>주요 리스크 유형</div>
-
-            <div style={styles.riskMiniList}>
-              {selectedCompany.riskTypes
-                .slice()
-                .sort((a, b) => b.value - a.value)
-                .slice(0, 3)
-                .map((risk) => (
-                  <div key={risk.name} style={styles.riskMiniItem}>
-                    <span
-                      style={{
-                        ...styles.miniDot,
-                        background: risk.color,
-                      }}
-                    />
-                    <span>{risk.name}</span>
-                    <strong>{risk.value}</strong>
-                  </div>
-                ))}
+              <div style={styles.riskMiniList}>
+                {selectedCompany.riskTypes
+                  .slice()
+                  .sort((a, b) => b.value - a.value)
+                  .slice(0, 3)
+                  .map((risk) => (
+                    <div key={risk.name} style={styles.riskMiniItem}>
+                      <span
+                        style={{
+                          ...styles.miniDot,
+                          background: risk.color,
+                        }}
+                      />
+                      <span>{risk.name}</span>
+                      <strong>{risk.value}</strong>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ===================================================
+        {/* ===================================================
           분석 카드 3개
       =================================================== */}
 
-      <section style={styles.threeColumnGrid}>
-        {/* 종합 리스크 */}
-        <div style={styles.panel}>
-          <div style={styles.panelHeader}>
-            <h3>종합 리스크 점수</h3>
-            <span>100점 기준</span>
-          </div>
+        <section style={styles.threeColumnGrid}>
+          {/* 종합 리스크 */}
+          <div style={styles.panel}>
+            <div style={styles.panelHeader}>
+              <h3>종합 리스크 점수</h3>
+              <span>100점 기준</span>
+            </div>
 
-          <div style={styles.riskChartArea}>
-            <div
-              style={{
-                ...styles.riskCircle,
-                background: `conic-gradient(
+            <div style={styles.riskChartArea}>
+              <div
+                style={{
+                  ...styles.riskCircle,
+                  background: `conic-gradient(
                   ${
                     selectedCompany.riskScore >= 60
                       ? "#FF6B6B"
@@ -569,54 +578,54 @@ export default function IssueTimelinePage({ mode = "timeline" }) {
                   } ${selectedCompany.riskScore * 3.6}deg,
                   #edf2f7 ${selectedCompany.riskScore * 3.6}deg
                 )`,
-              }}
-            >
-              <div style={styles.riskCircleInner}>
-                <strong>{selectedCompany.riskScore}</strong>
-                <span>
-                  {selectedCompany.riskScore >= 60
-                    ? "높음"
-                    : selectedCompany.riskScore >= 40
-                      ? "보통"
-                      : "낮음"}
-                </span>
+                }}
+              >
+                <div style={styles.riskCircleInner}>
+                  <strong>{selectedCompany.riskScore}</strong>
+                  <span>
+                    {selectedCompany.riskScore >= 60
+                      ? "높음"
+                      : selectedCompany.riskScore >= 40
+                        ? "보통"
+                        : "낮음"}
+                  </span>
+                </div>
               </div>
+            </div>
+
+            <div style={styles.riskBreakdown}>
+              {selectedCompany.riskTypes.map((risk) => (
+                <div key={risk.name} style={styles.riskRow}>
+                  <div style={styles.riskRowName}>
+                    <span
+                      style={{
+                        ...styles.miniDot,
+                        background: risk.color,
+                      }}
+                    />
+                    {risk.name}
+                  </div>
+
+                  <strong>{risk.value}</strong>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div style={styles.riskBreakdown}>
-            {selectedCompany.riskTypes.map((risk) => (
-              <div key={risk.name} style={styles.riskRow}>
-                <div style={styles.riskRowName}>
-                  <span
-                    style={{
-                      ...styles.miniDot,
-                      background: risk.color,
-                    }}
-                  />
-                  {risk.name}
-                </div>
+          {/* 감성 분석 */}
+          <div style={styles.panel}>
+            <div style={styles.panelHeader}>
+              <h3>감성 분석 요약</h3>
+              <span>
+                전체 {selectedCompany.sentimentTotal.toLocaleString()}건
+              </span>
+            </div>
 
-                <strong>{risk.value}</strong>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 감성 분석 */}
-        <div style={styles.panel}>
-          <div style={styles.panelHeader}>
-            <h3>감성 분석 요약</h3>
-            <span>
-              전체 {selectedCompany.sentimentTotal.toLocaleString()}건
-            </span>
-          </div>
-
-          <div style={styles.sentimentContent}>
-            <div
-              style={{
-                ...styles.donut,
-                background: `conic-gradient(
+            <div style={styles.sentimentContent}>
+              <div
+                style={{
+                  ...styles.donut,
+                  background: `conic-gradient(
                   #35C98A 0 ${selectedCompany.sentiment.positive}%,
                   #4F8EF7 ${selectedCompany.sentiment.positive}% ${
                     selectedCompany.sentiment.positive +
@@ -627,251 +636,252 @@ export default function IssueTimelinePage({ mode = "timeline" }) {
                     selectedCompany.sentiment.neutral
                   }% 100%
                 )`,
-              }}
-            >
-              <div style={styles.donutInner}>
-                <span>전체</span>
-                <strong>
-                  {selectedCompany.sentimentTotal.toLocaleString()}건
-                </strong>
-              </div>
-            </div>
-
-            <div style={styles.sentimentLegend}>
-              <div>
-                <span
-                  style={{
-                    ...styles.legendDot,
-                    background: "#35C98A",
-                  }}
-                />
-                <span>긍정</span>
-                <strong>{selectedCompany.sentiment.positive}%</strong>
-              </div>
-
-              <div>
-                <span
-                  style={{
-                    ...styles.legendDot,
-                    background: "#4F8EF7",
-                  }}
-                />
-                <span>중립</span>
-                <strong>{selectedCompany.sentiment.neutral}%</strong>
-              </div>
-
-              <div>
-                <span
-                  style={{
-                    ...styles.legendDot,
-                    background: "#FF6B6B",
-                  }}
-                />
-                <span>부정</span>
-                <strong>{selectedCompany.sentiment.negative}%</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 감성 추이 */}
-        <div style={styles.panel}>
-          <div style={styles.panelHeader}>
-            <h3>감성 추이</h3>
-
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              style={styles.periodSelect}
-            >
-              <option>최근 1개월</option>
-              <option>최근 3개월</option>
-              <option>최근 6개월</option>
-            </select>
-          </div>
-
-          <div style={styles.lineChart}>
-            <div style={styles.yAxis}>
-              <span>60</span>
-              <span>40</span>
-              <span>20</span>
-              <span>0</span>
-            </div>
-
-            <div style={styles.chartBody}>
-              <div style={styles.chartGridLine} />
-              <div style={{ ...styles.chartGridLine, top: "33%" }} />
-              <div style={{ ...styles.chartGridLine, top: "66%" }} />
-              <div style={{ ...styles.chartGridLine, top: "100%" }} />
-
-              <svg
-                viewBox="0 0 400 170"
-                preserveAspectRatio="none"
-                style={styles.svg}
+                }}
               >
-                <polyline
-                  fill="none"
-                  stroke="#35C98A"
-                  strokeWidth="3"
-                  points={makeChartPoints(
-                    selectedCompany.sentimentTrend,
-                    "positive",
-                  )}
-                />
+                <div style={styles.donutInner}>
+                  <span>전체</span>
+                  <strong>
+                    {selectedCompany.sentimentTotal.toLocaleString()}건
+                  </strong>
+                </div>
+              </div>
 
-                <polyline
-                  fill="none"
-                  stroke="#4F8EF7"
-                  strokeWidth="3"
-                  points={makeChartPoints(
-                    selectedCompany.sentimentTrend,
-                    "neutral",
-                  )}
-                />
+              <div style={styles.sentimentLegend}>
+                <div>
+                  <span
+                    style={{
+                      ...styles.legendDot,
+                      background: "#35C98A",
+                    }}
+                  />
+                  <span>긍정</span>
+                  <strong>{selectedCompany.sentiment.positive}%</strong>
+                </div>
 
-                <polyline
-                  fill="none"
-                  stroke="#FF6B6B"
-                  strokeWidth="3"
-                  points={makeChartPoints(
-                    selectedCompany.sentimentTrend,
-                    "negative",
-                  )}
-                />
-              </svg>
+                <div>
+                  <span
+                    style={{
+                      ...styles.legendDot,
+                      background: "#4F8EF7",
+                    }}
+                  />
+                  <span>중립</span>
+                  <strong>{selectedCompany.sentiment.neutral}%</strong>
+                </div>
+
+                <div>
+                  <span
+                    style={{
+                      ...styles.legendDot,
+                      background: "#FF6B6B",
+                    }}
+                  />
+                  <span>부정</span>
+                  <strong>{selectedCompany.sentiment.negative}%</strong>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div style={styles.chartLegend}>
-            <span>
-              <i style={{ background: "#35C98A" }} />
-              긍정
-            </span>
-            <span>
-              <i style={{ background: "#4F8EF7" }} />
-              중립
-            </span>
-            <span>
-              <i style={{ background: "#FF6B6B" }} />
-              부정
-            </span>
-          </div>
-        </div>
-      </section>
+          {/* 감성 추이 */}
+          <div style={styles.panel}>
+            <div style={styles.panelHeader}>
+              <h3>감성 추이</h3>
 
-      {/* ===================================================
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+                style={styles.periodSelect}
+              >
+                <option>최근 1개월</option>
+                <option>최근 3개월</option>
+                <option>최근 6개월</option>
+              </select>
+            </div>
+
+            <div style={styles.lineChart}>
+              <div style={styles.yAxis}>
+                <span>60</span>
+                <span>40</span>
+                <span>20</span>
+                <span>0</span>
+              </div>
+
+              <div style={styles.chartBody}>
+                <div style={styles.chartGridLine} />
+                <div style={{ ...styles.chartGridLine, top: "33%" }} />
+                <div style={{ ...styles.chartGridLine, top: "66%" }} />
+                <div style={{ ...styles.chartGridLine, top: "100%" }} />
+
+                <svg
+                  viewBox="0 0 400 170"
+                  preserveAspectRatio="none"
+                  style={styles.svg}
+                >
+                  <polyline
+                    fill="none"
+                    stroke="#35C98A"
+                    strokeWidth="3"
+                    points={makeChartPoints(
+                      selectedCompany.sentimentTrend,
+                      "positive",
+                    )}
+                  />
+
+                  <polyline
+                    fill="none"
+                    stroke="#4F8EF7"
+                    strokeWidth="3"
+                    points={makeChartPoints(
+                      selectedCompany.sentimentTrend,
+                      "neutral",
+                    )}
+                  />
+
+                  <polyline
+                    fill="none"
+                    stroke="#FF6B6B"
+                    strokeWidth="3"
+                    points={makeChartPoints(
+                      selectedCompany.sentimentTrend,
+                      "negative",
+                    )}
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div style={styles.chartLegend}>
+              <span>
+                <i style={{ background: "#35C98A" }} />
+                긍정
+              </span>
+              <span>
+                <i style={{ background: "#4F8EF7" }} />
+                중립
+              </span>
+              <span>
+                <i style={{ background: "#FF6B6B" }} />
+                부정
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================
           하단 3컬럼
       =================================================== */}
 
-      <section style={styles.bottomGrid}>
-        {/* 주요 이슈 타임라인 */}
-        <div style={styles.largePanel}>
-          <div style={styles.panelHeader}>
-            <h3>주요 이슈 타임라인</h3>
-            <button style={styles.moreButton}>전체보기 ›</button>
-          </div>
+        <section style={styles.bottomGrid}>
+          {/* 주요 이슈 타임라인 */}
+          <div style={styles.largePanel}>
+            <div style={styles.panelHeader}>
+              <h3>주요 이슈 타임라인</h3>
+              <button style={styles.moreButton}>전체보기 ›</button>
+            </div>
 
-          <div style={styles.timeline}>
-            {selectedCompany.issues.map((issue, index) => (
-              <div key={`${issue.date}-${index}`} style={styles.timelineItem}>
-                <div style={styles.timelineDate}>{issue.date}</div>
+            <div style={styles.timeline}>
+              {selectedCompany.issues.map((issue, index) => (
+                <div key={`${issue.date}-${index}`} style={styles.timelineItem}>
+                  <div style={styles.timelineDate}>{issue.date}</div>
 
-                <div style={styles.timelineLine}>
-                  <span
-                    style={{
-                      ...styles.timelineDot,
-                      background: getIssueColor(issue.type),
-                    }}
-                  />
-
-                  {index !== selectedCompany.issues.length - 1 && (
-                    <span style={styles.verticalLine} />
-                  )}
-                </div>
-
-                <div style={styles.timelineContent}>
-                  <div style={styles.issueTitleRow}>
+                  <div style={styles.timelineLine}>
                     <span
                       style={{
-                        ...styles.issueType,
-                        color: getIssueColor(issue.type),
-                        background: `${getIssueColor(issue.type)}15`,
+                        ...styles.timelineDot,
+                        background: getIssueColor(issue.type),
                       }}
-                    >
-                      {issue.type}
-                    </span>
+                    />
 
-                    <strong>{issue.title}</strong>
+                    {index !== selectedCompany.issues.length - 1 && (
+                      <span style={styles.verticalLine} />
+                    )}
                   </div>
 
-                  <p>{issue.description}</p>
+                  <div style={styles.timelineContent}>
+                    <div style={styles.issueTitleRow}>
+                      <span
+                        style={{
+                          ...styles.issueType,
+                          color: getIssueColor(issue.type),
+                          background: `${getIssueColor(issue.type)}15`,
+                        }}
+                      >
+                        {issue.type}
+                      </span>
+
+                      <strong>{issue.title}</strong>
+                    </div>
+
+                    <p>{issue.description}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 핵심 키워드 */}
-        <div style={styles.mediumPanel}>
-          <div style={styles.panelHeader}>
-            <h3>핵심 키워드</h3>
-            <button style={styles.moreButton}>전체보기 ›</button>
-          </div>
-
-          <div style={styles.keywordContainer}>
-            {selectedCompany.keywords.map((keyword) => (
-              <span
-                key={keyword.text}
-                style={{
-                  ...styles.keyword,
-                  ...keywordStyles[keyword.type],
-                }}
-              >
-                {keyword.text}
-              </span>
-            ))}
-          </div>
-
-          {/* 간단한 AI 분석 영역 */}
-          <div style={styles.analysisBox}>
-            <div style={styles.analysisIcon}>✦</div>
-
-            <div>
-              <strong>이슈 분석 요약</strong>
-
-              <p>
-                최근 {selectedCompany.name} 관련 기사에서는{" "}
-                <b>{selectedCompany.keywords[0]?.text.replace("#", "")}</b>와
-                관련된 내용이 주요하게 언급되고 있습니다.
-              </p>
+              ))}
             </div>
           </div>
-        </div>
 
-        {/* 관련 기사 */}
-        <div style={styles.mediumPanel}>
-          <div style={styles.panelHeader}>
-            <h3>관련 기사</h3>
-            <button style={styles.moreButton}>전체보기 ›</button>
-          </div>
+          {/* 핵심 키워드 */}
+          <div style={styles.mediumPanel}>
+            <div style={styles.panelHeader}>
+              <h3>핵심 키워드</h3>
+              <button style={styles.moreButton}>전체보기 ›</button>
+            </div>
 
-          <div style={styles.articleList}>
-            {selectedCompany.articles.map((article, index) => (
-              <div key={index} style={styles.articleItem}>
-                <div style={styles.articleSourceIcon}>{article.icon}</div>
+            <div style={styles.keywordContainer}>
+              {selectedCompany.keywords.map((keyword) => (
+                <span
+                  key={keyword.text}
+                  style={{
+                    ...styles.keyword,
+                    ...keywordStyles[keyword.type],
+                  }}
+                >
+                  {keyword.text}
+                </span>
+              ))}
+            </div>
 
-                <div style={styles.articleInfo}>
-                  <strong>{article.source}</strong>
-                  <p>{article.title}</p>
-                </div>
+            {/* 간단한 AI 분석 영역 */}
+            <div style={styles.analysisBox}>
+              <div style={styles.analysisIcon}>✦</div>
 
-                <span style={styles.articleTime}>{article.time}</span>
+              <div>
+                <strong>이슈 분석 요약</strong>
+
+                <p>
+                  최근 {selectedCompany.name} 관련 기사에서는{" "}
+                  <b>{selectedCompany.keywords[0]?.text.replace("#", "")}</b>와
+                  관련된 내용이 주요하게 언급되고 있습니다.
+                </p>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </section>
-    </div>
+
+          {/* 관련 기사 */}
+          <div style={styles.mediumPanel}>
+            <div style={styles.panelHeader}>
+              <h3>관련 기사</h3>
+              <button style={styles.moreButton}>전체보기 ›</button>
+            </div>
+
+            <div style={styles.articleList}>
+              {selectedCompany.articles.map((article, index) => (
+                <div key={index} style={styles.articleItem}>
+                  <div style={styles.articleSourceIcon}>{article.icon}</div>
+
+                  <div style={styles.articleInfo}>
+                    <strong>{article.source}</strong>
+                    <p>{article.title}</p>
+                  </div>
+
+                  <span style={styles.articleTime}>{article.time}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    </>
   );
 }
 
