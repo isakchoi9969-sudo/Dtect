@@ -47,7 +47,7 @@ function Header() {
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 1)
       return ROUTES.SENTIMENT_RISK;
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 2)
-      return ROUTES.ISSUE_TIMELINE;
+      return ROUTES.SENTIMENT_RISK;
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 3)
       return ROUTES.RELATED_ARTICLES;
     if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 0)
