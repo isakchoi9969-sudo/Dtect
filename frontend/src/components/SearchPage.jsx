@@ -194,13 +194,13 @@ function DashboardWithSearch() {
           top: 0;
           z-index: 50;
         }
-        .logo {
-          font-size: 18px;
-          font-weight: 800;
-          color: #0f172a;
-          text-decoration: none;
-          letter-spacing: -0.02em;
-        }
+.logo {
+  font-size: 17 px;
+  font-weight: 700;
+  color: #0f172a;
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
         .header-nav {
           display: flex;
           gap: 32px;

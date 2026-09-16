@@ -9,7 +9,6 @@ import Footer from "./components/Footer";
 import SentimentRiskDashboard from "./components/SentimentRiskDashboard";
 import AuthPage from "./components/AuthPage";
 import SearchPage from "./components/SearchPage";
-import IssueTimelinePage from "./components/IssueTimelinePage";
 import ResponseToolsPage from "./components/ResponseToolsPage";
 import { WatchlistDashboard, RiskDashboard } from "./components/DashboardPages";
 import { ROUTES } from "./config/routes";
@@ -36,7 +35,10 @@ function LandingPage() {
 function App() {
   const pathname = window.location.pathname.replace(/\/$/, "") || "/";
 
-  if (pathname === ROUTES.DASHBOARD || pathname === ROUTES.DASHBOARD_WATCHLIST) {
+  if (
+    pathname === ROUTES.DASHBOARD ||
+    pathname === ROUTES.DASHBOARD_WATCHLIST
+  ) {
     return <WatchlistDashboard />;
   }
 
@@ -80,4 +82,3 @@ function App() {
 }
 
 export default App;
-
