@@ -1,4 +1,11 @@
-from fastapi import APIRouter
+from copy import deepcopy
+
+from fastapi import APIRouter, HTTPException
+
+from app.services.news_service import (
+    NewsServiceError,
+    fetch_and_analyze_news,
+)
 
 router = APIRouter()
 
