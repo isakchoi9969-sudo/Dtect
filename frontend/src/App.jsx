@@ -10,11 +10,11 @@ import WorkflowSection from "./components/WorkflowSection";
 import TestimonialSection from "./components/TestimonialSection";
 import FinalCtaSection from "./components/FinalCtaSection";
 import Footer from "./components/Footer";
-import SentimentRiskDashboard from "./components/SentimentRiskDashboard";
 import AuthPage from "./components/AuthPage";
-import SearchPage from "./components/SearchPage";
+import CompanySearchPage from "./components/CompanySearchPage";
+import WatchlistPage from "./components/WatchlistPage";
 import ResponseToolsPage from "./components/ResponseToolsPage";
-import IssueTimelinePage from "./components/IssueTimelinePage";
+import CompanyAnalysisPage from "./components/CompanyAnalysisPage";
 import { WatchlistDashboard, RiskDashboard } from "./components/DashboardPages";
 import { ROUTES } from "./config/routes";
 
@@ -63,20 +63,16 @@ function App() {
     return <RiskDashboard />;
   }
 
-  if (pathname === ROUTES.SENTIMENT_RISK) {
-    return <SentimentRiskDashboard />;
+  if (pathname === ROUTES.COMPANY_SEARCH) {
+    return <CompanySearchPage />;
   }
 
-  if (pathname === ROUTES.SEARCH) {
-    return <SearchPage />;
+  if (pathname === ROUTES.COMPANY_WATCHLIST) {
+    return <WatchlistPage />;
   }
 
-  if (pathname === ROUTES.ISSUE_TIMELINE) {
-    return <IssueTimelinePage mode="timeline" />;
-  }
-
-  if (pathname === ROUTES.RELATED_ARTICLES) {
-    return <IssueTimelinePage mode="articles" />;
+  if (pathname === ROUTES.COMPANY_DETAIL) {
+    return <CompanyAnalysisPage />;
   }
 
   if (pathname === ROUTES.CASE_SIMULATOR) {

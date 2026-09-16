@@ -1,317 +1,32 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Header from "./Header";
+import { useWatchlist } from "../hooks/useWatchlist";
+import { companyProfiles } from "../data/companyProfiles";
 
 /* =========================================================
    관심기업 샘플 데이터
    - 나중에 백엔드 API 연결 시 이 부분을 API 데이터로 교체하면 됩니다.
 ========================================================= */
 
-const defaultCompanies = [
-  {
-    id: 1,
-    name: "삼성전자",
-    englishName: "Samsung Electronics",
-    ticker: "005930",
-    description: "기술로 더 나은 일상을 만드는 글로벌 혁신 기업",
-    category: "전자/IT",
-    market: "KOSPI",
-    marketCap: "473.3조원",
-    employees: "124,000명",
-    riskScore: 35,
-    riskLevel: "낮음",
-    riskChange: -12,
-    sentimentTotal: 1248,
-
-    riskTypes: [
-      { name: "규제/정책", value: 40, color: "#4F8EF7" },
-      { name: "시장/경쟁", value: 28, color: "#3BCB83" },
-      { name: "재무/실적", value: 32, color: "#7B61FF" },
-      { name: "평판/ESG", value: 48, color: "#F5A623" },
-    ],
-
-    sentiment: {
-      positive: 46,
-      neutral: 36,
-      negative: 18,
-    },
-
-    sentimentTrend: [
-      { date: "10.01", positive: 42, neutral: 28, negative: 12 },
-      { date: "10.04", positive: 44, neutral: 31, negative: 14 },
-      { date: "10.07", positive: 51, neutral: 34, negative: 15 },
-      { date: "10.10", positive: 49, neutral: 36, negative: 18 },
-      { date: "10.14", positive: 48, neutral: 33, negative: 16 },
-      { date: "10.18", positive: 43, neutral: 29, negative: 13 },
-      { date: "10.21", positive: 47, neutral: 25, negative: 12 },
-      { date: "10.24", positive: 58, neutral: 29, negative: 15 },
-      { date: "10.28", positive: 60, neutral: 31, negative: 14 },
-    ],
-
-    issues: [
-      {
-        date: "10.28",
-        type: "부정",
-        title: "미국 반도체 수출 규제 강화 가능성 제기",
-        description:
-          "미국 정부의 첨단 반도체 수출 규제 강화 가능성이 제기되며 관련 업계의 대응 필요성이 커지고 있습니다.",
-      },
-      {
-        date: "10.24",
-        type: "중립",
-        title: "3분기 실적 발표, 시장 예상치 상회",
-        description:
-          "영업이익 10.4조원, 전년 대비 27% 증가하며 시장 예상치를 상회했습니다.",
-      },
-      {
-        date: "10.18",
-        type: "긍정",
-        title: "AI 반도체 수요 확대에 따른 신규 투자 계획",
-        description: "차세대 HBM 생산라인 증설 계획을 발표했습니다.",
-      },
-      {
-        date: "10.12",
-        type: "주의",
-        title: "노사 임금협상 관련 이슈 지속",
-        description: "일부 사업장에서 임금 관련 협의가 진행되고 있습니다.",
-      },
-      {
-        date: "10.05",
-        type: "중립",
-        title: "글로벌 주요 고객사 장기 공급 계약 체결",
-        description: "북미 네트워크 기업과 메모리 공급 계약을 확대했습니다.",
-      },
-    ],
-
-    keywords: [
-      { text: "#HBM", type: "blue" },
-      { text: "#AI 반도체", type: "blue" },
-      { text: "#실적", type: "green" },
-      { text: "#수출 규제", type: "red" },
-      { text: "#글로벌 수요", type: "green" },
-      { text: "#신규 투자", type: "green" },
-      { text: "#노사 이슈", type: "orange" },
-      { text: "#ESG", type: "blue" },
-    ],
-
-    articles: [
-      {
-        source: "연합뉴스",
-        title: "삼성전자, 3분기 영업이익 10.4조원…시장 예상치 상회",
-        time: "2시간 전",
-        icon: "Y",
-      },
-      {
-        source: "한국경제",
-        title: "美 AI 반도체 수출 규제 강화 움직임",
-        time: "5시간 전",
-        icon: "H",
-      },
-      {
-        source: "매일경제",
-        title: "삼성전자, 차세대 HBM 생산라인 증설…10조원 투자",
-        time: "1일 전",
-        icon: "M",
-      },
-      {
-        source: "조선비즈",
-        title: "삼성전자 노사 협상 난항…일부 사업장 파업 우려",
-        time: "2일 전",
-        icon: "C",
-      },
-      {
-        source: "한겨레",
-        title: "글로벌 네트워크, 삼성전자와 장기 공급 계약",
-        time: "3일 전",
-        icon: "H",
-      },
-    ],
+const defaultCompanies = companyProfiles.map((company) => ({
+  ...company,
+  id: Number(company.ticker),
+  category: company.industry,
+  riskScore: company.analysis.risk.score,
+  riskLevel: company.analysis.risk.level,
+  riskChange: company.analysis.risk.change,
+  riskTypes: company.analysis.risk.types,
+  sentimentTotal: company.analysis.sentiment.total,
+  sentiment: {
+    positive: company.analysis.sentiment.positive,
+    neutral: company.analysis.sentiment.neutral,
+    negative: company.analysis.sentiment.negative,
   },
-
-  {
-    id: 2,
-    name: "현대자동차",
-    englishName: "Hyundai Motor Company",
-    ticker: "005380",
-    description: "스마트 모빌리티 시대를 선도하는 글로벌 자동차 기업",
-    category: "자동차",
-    market: "KOSPI",
-    marketCap: "54.2조원",
-    employees: "120,000명",
-    riskScore: 42,
-    riskLevel: "보통",
-    riskChange: 5,
-    sentimentTotal: 986,
-
-    riskTypes: [
-      { name: "규제/정책", value: 35, color: "#4F8EF7" },
-      { name: "시장/경쟁", value: 42, color: "#3BCB83" },
-      { name: "재무/실적", value: 31, color: "#7B61FF" },
-      { name: "평판/ESG", value: 36, color: "#F5A623" },
-    ],
-
-    sentiment: {
-      positive: 42,
-      neutral: 38,
-      negative: 20,
-    },
-
-    sentimentTrend: [
-      { date: "10.01", positive: 40, neutral: 32, negative: 14 },
-      { date: "10.04", positive: 42, neutral: 34, negative: 16 },
-      { date: "10.07", positive: 45, neutral: 33, negative: 18 },
-      { date: "10.10", positive: 43, neutral: 37, negative: 19 },
-      { date: "10.14", positive: 40, neutral: 39, negative: 21 },
-      { date: "10.18", positive: 44, neutral: 35, negative: 18 },
-      { date: "10.21", positive: 47, neutral: 32, negative: 17 },
-      { date: "10.24", positive: 45, neutral: 35, negative: 18 },
-      { date: "10.28", positive: 46, neutral: 34, negative: 17 },
-    ],
-
-    issues: [
-      {
-        date: "10.28",
-        type: "긍정",
-        title: "전기차 신차 글로벌 판매량 증가",
-        description: "신규 전기차 라인업 판매량이 전월 대비 증가했습니다.",
-      },
-      {
-        date: "10.24",
-        type: "중립",
-        title: "미국 생산시설 투자 확대",
-        description: "현지 생산시설 확대를 위한 투자 계획이 발표됐습니다.",
-      },
-      {
-        date: "10.18",
-        type: "주의",
-        title: "원자재 가격 변동성 확대",
-        description: "배터리 핵심 원자재 가격 변동성이 확대되고 있습니다.",
-      },
-      {
-        date: "10.10",
-        type: "긍정",
-        title: "글로벌 판매량 회복세",
-        description: "주요 해외 시장에서 판매량이 증가했습니다.",
-      },
-    ],
-
-    keywords: [
-      { text: "#전기차", type: "blue" },
-      { text: "#자동차", type: "green" },
-      { text: "#배터리", type: "blue" },
-      { text: "#미국시장", type: "green" },
-      { text: "#원자재", type: "orange" },
-      { text: "#친환경", type: "green" },
-    ],
-
-    articles: [
-      {
-        source: "연합뉴스",
-        title: "현대차 전기차 글로벌 판매량 증가",
-        time: "1시간 전",
-        icon: "Y",
-      },
-      {
-        source: "한국경제",
-        title: "현대차 미국 생산시설 투자 확대",
-        time: "6시간 전",
-        icon: "H",
-      },
-      {
-        source: "매일경제",
-        title: "자동차 업계 원자재 가격 변동성 확대",
-        time: "1일 전",
-        icon: "M",
-      },
-    ],
-  },
-
-  {
-    id: 3,
-    name: "네이버",
-    englishName: "NAVER Corporation",
-    ticker: "035420",
-    description: "검색과 AI를 기반으로 새로운 연결을 만드는 플랫폼 기업",
-    category: "인터넷/플랫폼",
-    market: "KOSPI",
-    marketCap: "36.8조원",
-    employees: "4,500명",
-    riskScore: 29,
-    riskLevel: "낮음",
-    riskChange: -7,
-    sentimentTotal: 824,
-
-    riskTypes: [
-      { name: "규제/정책", value: 31, color: "#4F8EF7" },
-      { name: "시장/경쟁", value: 25, color: "#3BCB83" },
-      { name: "재무/실적", value: 22, color: "#7B61FF" },
-      { name: "평판/ESG", value: 29, color: "#F5A623" },
-    ],
-
-    sentiment: {
-      positive: 51,
-      neutral: 34,
-      negative: 15,
-    },
-
-    sentimentTrend: [
-      { date: "10.01", positive: 45, neutral: 30, negative: 14 },
-      { date: "10.04", positive: 47, neutral: 31, negative: 15 },
-      { date: "10.07", positive: 50, neutral: 33, negative: 14 },
-      { date: "10.10", positive: 48, neutral: 34, negative: 16 },
-      { date: "10.14", positive: 52, neutral: 32, negative: 14 },
-      { date: "10.18", positive: 54, neutral: 31, negative: 13 },
-      { date: "10.21", positive: 55, neutral: 30, negative: 13 },
-      { date: "10.24", positive: 53, neutral: 33, negative: 14 },
-      { date: "10.28", positive: 51, neutral: 34, negative: 15 },
-    ],
-
-    issues: [
-      {
-        date: "10.28",
-        type: "긍정",
-        title: "생성형 AI 서비스 이용자 증가",
-        description:
-          "AI 기반 신규 서비스의 이용자 수가 지속적으로 증가하고 있습니다.",
-      },
-      {
-        date: "10.21",
-        type: "긍정",
-        title: "광고 사업 부문 실적 개선",
-        description: "광고 플랫폼 사업의 매출 성장세가 이어지고 있습니다.",
-      },
-      {
-        date: "10.14",
-        type: "중립",
-        title: "플랫폼 규제 관련 논의 지속",
-        description: "국내외 플랫폼 규제 관련 논의가 계속되고 있습니다.",
-      },
-    ],
-
-    keywords: [
-      { text: "#생성형AI", type: "blue" },
-      { text: "#검색", type: "green" },
-      { text: "#광고", type: "blue" },
-      { text: "#플랫폼", type: "orange" },
-      { text: "#클라우드", type: "green" },
-    ],
-
-    articles: [
-      {
-        source: "연합뉴스",
-        title: "네이버 AI 서비스 이용자 증가세",
-        time: "3시간 전",
-        icon: "Y",
-      },
-      {
-        source: "한국경제",
-        title: "네이버 광고 사업 실적 개선",
-        time: "8시간 전",
-        icon: "H",
-      },
-    ],
-  },
-];
-
+  sentimentTrend: company.analysis.sentiment.trend,
+  keywords: company.analysis.keywords,
+  issues: company.analysis.issues,
+  articles: company.analysis.articles,
+}));
 /* =========================================================
    유틸
 ========================================================= */
@@ -334,55 +49,14 @@ const getIssueColor = (type) => {
    메인 페이지
 ========================================================= */
 
-export default function IssueTimelinePage({ mode = "timeline" }) {
-  const [companies, setCompanies] = useState(defaultCompanies);
-  const [selectedCompanyId, setSelectedCompanyId] = useState(1);
+export default function CompanyAnalysisPage() {
+  const [companies] = useState(defaultCompanies);
+  const selectedCompanyId = useMemo(() => {
+    const symbol = new URLSearchParams(window.location.search).get("symbol");
+    return companies.find((company) => company.ticker === symbol)?.id ?? companies[0].id;
+  }, [companies]);
   const [period, setPeriod] = useState("최근 1개월");
-
-  /* -------------------------------------------------------
-     localStorage 관심기업 불러오기
-
-     현재 프로젝트에서 관심기업을 localStorage에 저장하고 있다면
-     아래 키를 "watchlistCompanies"로 맞춰서 사용할 수 있습니다.
-  ------------------------------------------------------- */
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("watchlistCompanies");
-
-      if (!saved) return;
-
-      const parsed = JSON.parse(saved);
-
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        /*
-         * 저장된 데이터가 이름만 가지고 있는 경우에도
-         * 기본 샘플 데이터와 연결되도록 처리
-         */
-        const savedCompanies = parsed
-          .map((item) => {
-            if (typeof item === "string") {
-              return defaultCompanies.find((company) => company.name === item);
-            }
-
-            return (
-              defaultCompanies.find(
-                (company) =>
-                  company.name === item.name || company.ticker === item.ticker,
-              ) || item
-            );
-          })
-          .filter(Boolean);
-
-        if (savedCompanies.length > 0) {
-          setCompanies(savedCompanies);
-          setSelectedCompanyId(savedCompanies[0].id);
-        }
-      }
-    } catch (error) {
-      console.log("관심기업 데이터를 불러오지 못했습니다.", error);
-    }
-  }, []);
+  const { isWatched, toggleCompany, count, limit } = useWatchlist();
 
   const selectedCompany = useMemo(() => {
     return (
@@ -404,42 +78,13 @@ export default function IssueTimelinePage({ mode = "timeline" }) {
   return (
     <>
       <Header />
-      <div style={styles.page}>
-        {/* ===================================================
-          상단 기업 선택 영역
-      =================================================== */}
-
-        <div style={styles.companySelectorArea}>
-          <div>
-            <div style={styles.pageEyebrow}>MY WATCHLIST</div>
-            <h1 style={styles.pageTitle}>관심기업 분석</h1>
-            <p style={styles.pageDescription}>
-              관심기업의 주요 이슈와 리스크 변화를 한눈에 확인하세요.
-            </p>
-          </div>
-
-          <div style={styles.companySelector}>
-            <span style={styles.selectorLabel}>관심기업</span>
-
-            <select
-              value={selectedCompany.id}
-              onChange={(e) => setSelectedCompanyId(Number(e.target.value))}
-              style={styles.select}
-            >
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name} ({company.ticker})
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
+      <main className="company-analysis-detail">
+      <div className="company-analysis-canvas" style={styles.page}>
         {/* ===================================================
           기업 기본정보
       =================================================== */}
 
-        <section style={styles.companyHeader}>
+        <section className="analysis-detail-header" style={styles.companyHeader}>
           <div style={styles.companyLogo}>
             {selectedCompany.name.slice(0, 2)}
           </div>
@@ -466,12 +111,10 @@ export default function IssueTimelinePage({ mode = "timeline" }) {
           <button
             style={styles.watchButton}
             onClick={() => {
-              alert(
-                `${selectedCompany.name}은 관심기업으로 등록되어 있습니다.`,
-              );
+              toggleCompany(selectedCompany.ticker);
             }}
           >
-            ★ 관심기업
+            {isWatched(selectedCompany.ticker) ? "★ 관심기업" : "☆ 관심기업"} ({count}/{limit})
           </button>
         </section>
 
@@ -479,7 +122,7 @@ export default function IssueTimelinePage({ mode = "timeline" }) {
           상단 요약 카드
       =================================================== */}
 
-        <section style={styles.summaryGrid}>
+        <section className="analysis-summary-grid" style={styles.summaryGrid}>
           <div style={styles.summaryCard}>
             <div>
               <div style={styles.cardTitle}>현재 위험도</div>
@@ -556,7 +199,7 @@ export default function IssueTimelinePage({ mode = "timeline" }) {
           분석 카드 3개
       =================================================== */}
 
-        <section style={styles.threeColumnGrid}>
+        <section className="analysis-metrics-grid" style={styles.threeColumnGrid}>
           {/* 종합 리스크 */}
           <div style={styles.panel}>
             <div style={styles.panelHeader}>
@@ -772,7 +415,7 @@ export default function IssueTimelinePage({ mode = "timeline" }) {
           하단 3컬럼
       =================================================== */}
 
-        <section style={styles.bottomGrid}>
+        <section className="analysis-support-grid" style={styles.bottomGrid}>
           {/* 주요 이슈 타임라인 */}
           <div style={styles.largePanel}>
             <div style={styles.panelHeader}>
@@ -881,6 +524,7 @@ export default function IssueTimelinePage({ mode = "timeline" }) {
           </div>
         </section>
       </div>
+      </main>
     </>
   );
 }
@@ -933,10 +577,10 @@ const keywordStyles = {
 
 const styles = {
   page: {
-    width: "100%",
-    minHeight: "100vh",
-    background: "#F5F8FC",
-    padding: "32px 42px 60px",
+    width: "min(calc(100% - 48px), var(--container))",
+    margin: "0 auto",
+    background: "transparent",
+    padding: "32px 0 60px",
     boxSizing: "border-box",
     color: "#172B4D",
     fontFamily:
@@ -1163,43 +807,7 @@ const styles = {
     marginBottom: "14px",
   },
 
-  panel: {
-    background: "#FFFFFF",
-    border: "1px solid #E5EBF3",
-    borderRadius: "13px",
-    padding: "18px",
-    boxSizing: "border-box",
-    minHeight: "315px",
-    boxShadow: "0 2px 10px rgba(31, 61, 96, 0.025)",
-  },
-
-  panelHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: "16px",
-  },
-
   panelHeaderH3: {},
-
-  panelHeaderTitle: {},
-
-  panelHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: "16px",
-  },
-
-  panel: {
-    background: "#FFFFFF",
-    border: "1px solid #E5EBF3",
-    borderRadius: "13px",
-    padding: "18px",
-    boxSizing: "border-box",
-    minHeight: "315px",
-    boxShadow: "0 2px 10px rgba(31, 61, 96, 0.025)",
-  },
 
   bottomGrid: {
     display: "grid",
@@ -1537,3 +1145,4 @@ const styles = {
     marginBottom: "10px",
   },
 };
+
