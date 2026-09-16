@@ -27,6 +27,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import router as auth_router
 from app.api.company import router as company_router
 
+from app.api.news import router as news_router
+
 from app.db.database import check_db_connection, get_company_count
 # from app.api.stock import router as stock_router
 
@@ -52,6 +54,8 @@ app.add_middleware(
 # auth.py 의 router 에 이미 prefix="/api/auth" 가 붙어 있으므로
 # 여기서는 등록만 하면 /api/auth/signup, /api/auth/login 이 그대로 열린다.
 app.include_router(auth_router)
+
+app.include_router(news_router)
 
 app.include_router(
     company_router,
