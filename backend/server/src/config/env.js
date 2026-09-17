@@ -31,6 +31,9 @@ if (!fs.existsSync(serverEnvPath)) {
   }
 }
 
+const isProduction = process.env.NODE_ENV === "production";
+const developmentTokenSecret = "dtect-local-development-token-secret-change-before-deploy";
+
 module.exports = {
   port: process.env.PORT || 3000,
   frontendOrigin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
@@ -48,5 +51,11 @@ module.exports = {
   naver: {
     clientId: process.env.NAVER_CLIENT_ID,
     clientSecret: process.env.NAVER_CLIENT_SECRET,
+  },
+
+  auth: {
+    tokenSecret: process.env.AUTH_TOKEN_SECRET || developmentTokenSecret,
+    tokenMaxAgeSeconds: Number(process.env.AUTH_TOKEN_MAX_AGE_SECONDS) || 60 * 60 * 24 * 7,
+    isProduction,
   },
 };
