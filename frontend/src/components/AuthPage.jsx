@@ -163,9 +163,9 @@ function AuthPage({ mode }) {
                     <input
                       type="radio"
                       name="userType"
-                      value="CORPORATE"
-                      checked={userType === "CORPORATE"}
-                      onChange={() => setUserType("CORPORATE")}
+                      value="COMPANY"
+                      checked={userType === "COMPANY"}
+                      onChange={() => setUserType("COMPANY")}
                     />
                     <span>
                       <strong>기업회원</strong>
@@ -175,7 +175,7 @@ function AuthPage({ mode }) {
                 </div>
               </fieldset>
             )}
-            {isSignup && userType === "CORPORATE" && (
+            {isSignup && userType === "COMPANY" && (
               <label>
                 소속 기업
                 <select
