@@ -18,7 +18,7 @@ export const navigationItems = [
   },
 ];
 
-export const watchlist = ["Samsung Electronics", "SK Hynix", "Hyundai Motor"];
+export const watchlist = ["삼성전자", "하이닉스", "현대모터"];
 
 export const problemItems = [
   {
