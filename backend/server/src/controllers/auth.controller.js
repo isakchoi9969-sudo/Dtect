@@ -58,7 +58,7 @@ async function signup(req, res) {
   }
 
   try {
-    if (!["PERSONAL", "CORPORATE"].includes(userType)) {
+    if (!["PERSONAL", "COMPANY"].includes(userType)) {
       return res.status(422).json({
         success: false,
         message: "회원 유형을 다시 선택해주세요.",
@@ -67,7 +67,7 @@ async function signup(req, res) {
 
     let companyIdToSave = null;
 
-    if (userType === "CORPORATE" && companyId !== "NONE") {
+    if (userType === "COMPANY" && companyId !== "NONE") {
       const parsedCompanyId = Number(companyId);
 
       if (!Number.isSafeInteger(parsedCompanyId) || parsedCompanyId <= 0) {
