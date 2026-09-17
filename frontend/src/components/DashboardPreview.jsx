@@ -1,14 +1,47 @@
+import { useState } from "react";
 import { watchlist } from "../data/landingData";
 
-const ACTIVITY_DATA = [34, 52, 42, 68, 58, 85, 70, 91];
+// 회사별 데이터 (원하는 수치로 마음대로 바꿔도 됩니다)
+const companyData = {
+  삼성전자: {
+    risk: 84,
+    riskLabel: "High Risk",
+    activity: [34, 52, 42, 68, 58, 85, 70, 91],
+    reportTitle: "공급망 리스크 분석 리포트",
+    reportDesc:
+      "42건의 주요 보도자료가 분석되었으며, 실시간 대응 가이드라인이 생성되었습니다.",
+    status: "분석 완료",
+  },
+  하이닉스: {
+    risk: 67,
+    riskLabel: "Medium Risk",
+    activity: [28, 45, 38, 55, 62, 48, 71, 59],
+    reportTitle: "반도체 수급 리스크 분석 리포트",
+    reportDesc:
+      "31건의 관련 기사가 분석되었으며, 원자재 가격 변동에 대한 대응 방안이 제시되었습니다.",
+    status: "분석 완료",
+  },
+  현대모터: {
+    risk: 41,
+    riskLabel: "Low Risk",
+    activity: [22, 35, 29, 41, 38, 52, 47, 33],
+    reportTitle: "전기차 배터리 공급망 분석 리포트",
+    reportDesc:
+      "18건의 주요 이슈가 감지되었으며, 안정적인 공급망 유지 전략이 수립되었습니다.",
+    status: "분석 완료",
+  },
+};
 
 function DashboardPreview() {
+  const [selectedCompany, setSelectedCompany] = useState(watchlist[0]); // 기본값: 삼성전자
+  const data = companyData[selectedCompany];
+
   return (
     <section
       className="dashboard-preview-section"
       aria-label="D:TECT 서비스 미리보기"
     >
-      {/* ===== 스타일 + 애니메이션을 JSX 안에 직접 넣음 ===== */}
+      {/* ===== 스타일 + 애니메이션 ===== */}
       <style>{`
         .dashboard-preview-section .live-dot {
           width: 8px;
@@ -39,6 +72,7 @@ function DashboardPreview() {
           background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
           border-radius: 999px;
           animation: progressGlow 2.2s ease-in-out infinite alternate;
+          transition: width 0.6s ease;
         }
 
         @keyframes progressGlow {
@@ -96,6 +130,13 @@ function DashboardPreview() {
           background: linear-gradient(135deg, #3b82f6, #8b5cf6);
           color: white;
         }
+
+        /* 선택된 회사 강조 */
+        .dashboard-preview-section .watchlist-item.selected {
+          background: #eff6ff;
+          color: #1d4ed8;
+          font-weight: 600;
+        }
       `}</style>
 
       <div className="container">
@@ -105,11 +146,12 @@ function DashboardPreview() {
             <p className="dashboard-label">WATCHLIST</p>
 
             <div className="watchlist-items">
-              {watchlist.map((company, index) => (
+              {watchlist.map((company) => (
                 <button
                   key={company}
                   type="button"
-                  className={`watchlist-item ${index === 0 ? "selected" : ""}`}
+                  className={`watchlist-item ${selectedCompany === company ? "selected" : ""}`}
+                  onClick={() => setSelectedCompany(company)}
                 >
                   <span className="company-indicator" />
                   {company}
@@ -137,13 +179,16 @@ function DashboardPreview() {
               {/* Risk Index */}
               <article className="metric-card risk-card">
                 <span className="metric-label">RISK INDEX</span>
-                <strong className="risk-value">84%</strong>
+                <strong className="risk-value">{data.risk}%</strong>
 
                 <div className="risk-track">
-                  <div className="risk-progress" style={{ width: "84%" }} />
+                  <div
+                    className="risk-progress"
+                    style={{ width: `${data.risk}%` }}
+                  />
                 </div>
 
-                <p className="risk-label">High Risk</p>
+                <p className="risk-label">{data.riskLabel}</p>
               </article>
 
               {/* Activity Chart */}
@@ -151,9 +196,9 @@ function DashboardPreview() {
                 <span className="metric-label">ACTIVITY</span>
 
                 <div className="activity-chart">
-                  {ACTIVITY_DATA.map((height, index) => (
+                  {data.activity.map((height, index) => (
                     <span
-                      key={index}
+                      key={`${selectedCompany}-${index}`} // key를 바꿔서 애니메이션 다시 실행
                       className="activity-bar"
                       style={{
                         height: `${height}%`,
@@ -173,14 +218,11 @@ function DashboardPreview() {
 
               <div className="report-body">
                 <span className="metric-label">ANALYSIS REPORT</span>
-                <h4>공급망 리스크 분석 리포트</h4>
-                <p>
-                  42건의 주요 보도자료가 분석되었으며, 실시간 대응 가이드라인이
-                  생성되었습니다.
-                </p>
+                <h4>{data.reportTitle}</h4>
+                <p>{data.reportDesc}</p>
               </div>
 
-              <span className="report-status">분석 완료</span>
+              <span className="report-status">{data.status}</span>
             </article>
           </div>
         </div>
