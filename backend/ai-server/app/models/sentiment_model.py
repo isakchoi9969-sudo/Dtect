@@ -27,7 +27,7 @@ def get_sentiment_pipeline():
 
     with _model_lock:
         if _sentiment_pipeline is None:
-            # 백엔드 실행 자체는 가능하게 하고,
+            # 서버 실행 자체는 가능하게 하고,
             # 실제 분석 시점에 transformers를 불러온다.
             from transformers import pipeline
 
