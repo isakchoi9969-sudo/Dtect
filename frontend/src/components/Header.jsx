@@ -43,13 +43,9 @@ function Header() {
     if (item.href === ROUTES.DASHBOARD && childIndex === 1)
       return ROUTES.DASHBOARD_ISSUE_RISK;
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 0)
-      return ROUTES.SEARCH;
+      return ROUTES.COMPANY_SEARCH;
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 1)
-      return ROUTES.SENTIMENT_RISK;
-    if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 2)
-      return ROUTES.ISSUE_TIMELINE;
-    if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 3)
-      return ROUTES.RELATED_ARTICLES;
+      return ROUTES.COMPANY_WATCHLIST;
     if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 0)
       return ROUTES.CASE_SIMULATOR;
     if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 1)
