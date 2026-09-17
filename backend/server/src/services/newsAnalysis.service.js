@@ -5,8 +5,15 @@ const {
 const { analyzeSentiments } = require("./aiClient.service");
 
 async function analyzeCompanyNews(query, page, perPage) {
-  const { totalResults, articles, analysisTexts } =
-    await fetchAndPrepareNews(query, page, perPage);
+  const {
+    totalResults,
+    articles,
+    analysisTexts,
+    fetchedCount,
+    pagesFetched,
+    mentionFilteredCount,
+    duplicateCount,
+  } = await fetchAndPrepareNews(query, page, perPage);
   const predictions = await analyzeSentiments(analysisTexts);
   const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
 
@@ -30,6 +37,14 @@ async function analyzeCompanyNews(query, page, perPage) {
     page,
     per_page: perPage,
     total_results: totalResults,
+    fetched_count: fetchedCount,
+    pages_fetched: pagesFetched,
+    relevant_count: articles.length,
+    mention_filtered_count: mentionFilteredCount,
+    duplicate_count: duplicateCount,
+    processed_count: articles.length + mentionFilteredCount + duplicateCount,
+    target_reached: articles.length === perPage,
+    minimum_keyword_mentions: 3,
     analyzed_count: analyzedNews.length,
     sentiment_summary: sentimentCounts,
     sentiment_percentages: calculatePercentages(sentimentCounts),

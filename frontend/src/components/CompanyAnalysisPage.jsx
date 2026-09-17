@@ -160,6 +160,12 @@ export default function CompanyAnalysisPage() {
     negative: 0,
   };
   const analyzedCount = newsAnalysis?.analyzed_count ?? 0;
+  const fetchedCount = newsAnalysis?.fetched_count ?? 0;
+  const pagesFetched = newsAnalysis?.pages_fetched ?? 0;
+  const relevantCount = newsAnalysis?.relevant_count ?? 0;
+  const targetReached = newsAnalysis?.target_reached ?? false;
+  const minimumKeywordMentions =
+    newsAnalysis?.minimum_keyword_mentions ?? 3;
   const articles = newsAnalysis?.news_list ?? [];
   const analyzedAt = formatDateTime(
     newsAnalysis?.analyzed_at,
@@ -170,6 +176,13 @@ export default function CompanyAnalysisPage() {
     "최신 기사 발행 시각 확인 중",
   );
   const visibleArticles = articles.slice(0, 5);
+  const realtimeAnalysisNotice = !newsAnalysis
+    ? "최신 뉴스를 불러오면 기업 관련성 기준의 분석 현황이 표시됩니다."
+    : relevantCount === 0
+      ? `원본 기사 ${fetchedCount.toLocaleString()}건을 확인했지만 기업명이 ${minimumKeywordMentions}회 이상 언급된 기사가 없습니다.`
+      : !targetReached
+        ? `원본 기사 ${fetchedCount.toLocaleString()}건을 모두 확인해 관련 기사 ${relevantCount.toLocaleString()}건을 분석했습니다. 조건을 충족하는 기사가 100건보다 적을 수 있습니다.`
+        : "새로고침 또는 기업 변경 시 최신 기사 기준으로 다시 분석됩니다. 이전 분석 결과는 저장하지 않습니다.";
 
   if (!selectedCompany) {
     return (
@@ -240,7 +253,11 @@ export default function CompanyAnalysisPage() {
           )}
           {newsAnalysis && !isNewsLoading && (
             <>
-              <span>최신 뉴스 {newsAnalysis.analyzed_count}건 분석을 완료했습니다.</span>
+              <span>
+                {relevantCount === 0
+                  ? `원본 기사 ${fetchedCount.toLocaleString()}건(${pagesFetched}페이지)에서 조건을 충족한 기사가 없습니다.`
+                  : `원본 기사 ${fetchedCount.toLocaleString()}건(${pagesFetched}페이지) 중 기업명 ${minimumKeywordMentions}회 이상 언급된 ${relevantCount.toLocaleString()}건을 분석했습니다.`}
+              </span>
               <button
                 onClick={retryNewsAnalysis}
                 style={styles.retryButton}
@@ -270,7 +287,7 @@ export default function CompanyAnalysisPage() {
               <div style={styles.summaryPending}>
                 {isNewsLoading
                   ? "최신 뉴스 분석 중"
-                  : `최신 뉴스 ${analyzedCount.toLocaleString()}건 기준`}
+                  : `기업명 ${minimumKeywordMentions}회 이상 언급 ${analyzedCount.toLocaleString()}건 기준`}
               </div>
             </div>
           </div>
@@ -375,7 +392,13 @@ export default function CompanyAnalysisPage() {
             <div style={styles.liveNewsDetails}>
               <div>
                 <span>분석 기준</span>
-                <strong>최신 뉴스 최대 100건</strong>
+                <strong>기업명 {minimumKeywordMentions}회 이상 언급된 최신 뉴스 최대 100건</strong>
+              </div>
+              <div>
+                <span>수집 현황</span>
+                <strong>
+                  원본 {fetchedCount.toLocaleString()}건 확인 · 관련 기사 {relevantCount.toLocaleString()}건
+                </strong>
               </div>
               <div>
                 <span>분석 시각</span>
@@ -386,8 +409,7 @@ export default function CompanyAnalysisPage() {
                 <strong>{latestArticlePublishedAt}</strong>
               </div>
               <p>
-                새로고침 또는 기업 변경 시 최신 기사 기준으로 다시 분석됩니다.
-                이전 분석 결과는 저장하지 않습니다.
+                {realtimeAnalysisNotice}
               </p>
             </div>
           </div>
@@ -451,7 +473,9 @@ export default function CompanyAnalysisPage() {
                 );
               })}
               {!isNewsLoading && !newsError && newsAnalysis && articles.length === 0 && (
-                <p style={styles.articleEmpty}>표시할 최신 기사가 없습니다.</p>
+                <p style={styles.articleEmpty}>
+                  기업명이 {minimumKeywordMentions}회 이상 언급된 최신 기사가 없습니다.
+                </p>
               )}
             </div>
           </div>
