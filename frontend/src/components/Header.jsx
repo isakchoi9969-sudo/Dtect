@@ -64,7 +64,11 @@ function Header() {
         >
           D:TECT
         </a>
-        <nav className="desktop-nav" aria-label={copy.primaryMenu}>
+        <nav
+          className="desktop-nav"
+          aria-label={copy.primaryMenu}
+          style={{ display: "flex" }}
+        >
           {navigationItems.map((item) => (
             <div className="nav-item" key={item.title}>
               <a href={item.href} className="nav-link">
