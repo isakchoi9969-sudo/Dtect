@@ -1,9 +1,11 @@
 const {
   NewsServiceError,
-  fetchAndPrepareNews,
-  calculatePercentages,
 } = require("../services/naverNews.service");
-const { analyzeSentiments } = require("../services/aiClient.service");
+const { analyzeCompanyNews } = require("../services/newsAnalysis.service");
+const {
+  getSentimentTrend,
+  persistNewsAnalysis,
+} = require("../services/newsHistory.service");
 
 /**
  * GET /api/news?query=카카오&page=1&per_page=20
@@ -24,35 +26,7 @@ async function getCompanyNews(req, res) {
   }
 
   try {
-    const { totalResults, articles, analysisTexts } =
-      await fetchAndPrepareNews(query, page, perPage);
-
-    // 감성분석은 AI 서버(FastAPI)에 위임한다.
-    const predictions = await analyzeSentiments(analysisTexts);
-
-    const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
-
-    const analyzedNews = articles.map((article, i) => {
-      const prediction = predictions[i] || { label: "neutral", score: 0 };
-      sentimentCounts[prediction.label] += 1;
-
-      return {
-        ...article,
-        sentiment: prediction.label,
-        score: Number(prediction.score.toFixed(4)),
-      };
-    });
-
-    return res.json({
-      query,
-      page,
-      per_page: perPage,
-      total_results: totalResults,
-      analyzed_count: analyzedNews.length,
-      sentiment_summary: sentimentCounts,
-      sentiment_percentages: calculatePercentages(sentimentCounts),
-      news_list: analyzedNews,
-    });
+    return res.json(await analyzeCompanyNews(query, page, perPage));
   } catch (error) {
     if (error instanceof NewsServiceError) {
       return res.status(500).json({ success: false, message: error.message });
@@ -66,4 +40,27 @@ async function getCompanyNews(req, res) {
   }
 }
 
-module.exports = { getCompanyNews };
+async function getCompanySentimentTrend(req, res) {
+  const query = (req.query.query || "").trim();
+  const requestedDays = Number.parseInt(req.query.days, 10);
+  const days = Math.min(Math.max(requestedDays || 30, 7), 180);
+
+  if (!query) {
+    return res
+      .status(422)
+      .json({ success: false, message: "검색할 기업명을 입력해 주세요." });
+  }
+
+  try {
+    const trend = await getSentimentTrend(query, days);
+    return res.json({ query, days, trend });
+  } catch (error) {
+    console.error("감성 추이 조회 오류:", error);
+    return res.status(503).json({
+      success: false,
+      message: "감성 추이 데이터를 불러오지 못했습니다.",
+    });
+  }
+}
+
+module.exports = { getCompanyNews, getCompanySentimentTrend };
