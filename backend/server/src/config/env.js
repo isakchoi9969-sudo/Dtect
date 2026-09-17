@@ -21,9 +21,6 @@ if (!fs.existsSync(serverEnvPath)) {
       "DB_PASSWORD",
       "NAVER_CLIENT_ID",
       "NAVER_CLIENT_SECRET",
-      "NEWS_CACHE_TTL_SECONDS",
-      "NEWS_COLLECTION_COMPANIES",
-      "NEWS_COLLECTION_PER_PAGE",
     ];
 
     for (const key of reusableKeys) {
@@ -34,44 +31,11 @@ if (!fs.existsSync(serverEnvPath)) {
   }
 }
 
-function getNonNegativeInteger(value, fallback) {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed >= 0 ? parsed : fallback;
-}
-
-function getIntegerInRange(value, fallback, minimum, maximum) {
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isInteger(parsed)) return fallback;
-  return Math.min(Math.max(parsed, minimum), maximum);
-}
-
-function getCommaSeparatedValues(value) {
-  return (value || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 module.exports = {
   port: process.env.PORT || 3000,
   frontendOrigin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
 
   aiServerUrl: process.env.AI_SERVER_URL || "http://localhost:6000",
-
-  newsCacheTtlSeconds: getNonNegativeInteger(
-    process.env.NEWS_CACHE_TTL_SECONDS,
-    300,
-  ),
-
-  newsCollectionCompanies: getCommaSeparatedValues(
-    process.env.NEWS_COLLECTION_COMPANIES,
-  ),
-  newsCollectionPerPage: getIntegerInRange(
-    process.env.NEWS_COLLECTION_PER_PAGE,
-    100,
-    1,
-    100,
-  ),
 
   db: {
     host: process.env.DB_HOST,
