@@ -1,12 +1,40 @@
 const bcrypt = require("bcryptjs");
 const { pool } = require("../db/pool");
+const { auth } = require("../config/env");
+const { createAuthToken } = require("../services/authToken.service");
+
+const authCookieOptions = {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: auth.isProduction,
+  maxAge: auth.tokenMaxAgeSeconds * 1000,
+  path: "/",
+};
+
+function toUserResponse(user) {
+  return {
+    id: user.USER_ID,
+    email: user.EMAIL,
+    name: user.NAME,
+    userType: user.USER_TYPE,
+    companyId: user.COMPANY_ID,
+    companyName: user.COMPANY_NAME || null,
+  };
+}
 
 /**
  * POST /api/auth/signup
  * 회원가입 → MySQL USER 테이블에 저장
  */
 async function signup(req, res) {
-  const { name, email, password, passwordConfirm } = req.body || {};
+  const {
+    name,
+    email,
+    password,
+    passwordConfirm,
+    userType = "PERSONAL",
+    companyId = "NONE",
+  } = req.body || {};
 
   if (!name || !email || !password || !passwordConfirm) {
     return res.status(422).json({
@@ -30,13 +58,47 @@ async function signup(req, res) {
   }
 
   try {
+    if (!["PERSONAL", "CORPORATE"].includes(userType)) {
+      return res.status(422).json({
+        success: false,
+        message: "회원 유형을 다시 선택해주세요.",
+      });
+    }
+
+    let companyIdToSave = null;
+
+    if (userType === "CORPORATE" && companyId !== "NONE") {
+      const parsedCompanyId = Number(companyId);
+
+      if (!Number.isSafeInteger(parsedCompanyId) || parsedCompanyId <= 0) {
+        return res.status(422).json({
+          success: false,
+          message: "소속 기업 선택값이 올바르지 않습니다.",
+        });
+      }
+
+      const [companies] = await pool.query(
+        "SELECT COMPANY_ID FROM COMPANY WHERE COMPANY_ID = ? LIMIT 1",
+        [parsedCompanyId],
+      );
+
+      if (companies.length === 0) {
+        return res.status(422).json({
+          success: false,
+          message: "선택한 기업을 찾을 수 없습니다. 목록을 새로고침 후 다시 선택해주세요.",
+        });
+      }
+
+      companyIdToSave = parsedCompanyId;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await pool.query(
       `INSERT INTO \`USER\`
-       (LOGIN_ID, PASSWORD, NAME, EMAIL, USER_TYPE)
-       VALUES (?, ?, ?, ?, ?)`,
-      [email, hashedPassword, name, email, "PERSONAL"],
+       (LOGIN_ID, PASSWORD, NAME, EMAIL, USER_TYPE, COMPANY_ID)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [email, hashedPassword, name, email, userType, companyIdToSave],
     );
 
     return res.json({
@@ -101,13 +163,12 @@ async function login(req, res) {
       });
     }
 
+    res.cookie("dtect_auth", createAuthToken(user.USER_ID), authCookieOptions);
+
     return res.json({
       success: true,
       message: "로그인 성공!",
-      user: {
-        email: user.EMAIL,
-        name: user.NAME,
-      },
+      user: toUserResponse(user),
     });
   } catch (error) {
     console.error("로그인 처리 오류:", error);
@@ -119,4 +180,52 @@ async function login(req, res) {
   }
 }
 
-module.exports = { signup, login };
+/**
+ * GET /api/auth/me
+ * 브라우저 쿠키의 로그인 토큰으로 현재 사용자 정보를 조회한다.
+ */
+async function getCurrentUser(req, res) {
+  try {
+    const [rows] = await pool.query(
+      `SELECT u.USER_ID, u.COMPANY_ID, u.NAME, u.EMAIL, u.USER_TYPE,
+              c.COMPANY_NAME
+       FROM \`USER\` u
+       LEFT JOIN COMPANY c ON c.COMPANY_ID = u.COMPANY_ID
+       WHERE u.USER_ID = ?
+       LIMIT 1`,
+      [req.authUserId],
+    );
+
+    const user = rows[0];
+    if (!user) {
+      res.clearCookie("dtect_auth", { path: "/" });
+      return res.status(401).json({
+        success: false,
+        message: "사용자 정보를 찾을 수 없습니다.",
+      });
+    }
+
+    return res.json({ success: true, user: toUserResponse(user) });
+  } catch (error) {
+    console.error("현재 사용자 조회 오류:", error);
+    return res.status(500).json({
+      success: false,
+      message: "로그인 정보를 확인하지 못했습니다.",
+    });
+  }
+}
+
+/**
+ * POST /api/auth/logout
+ */
+function logout(_req, res) {
+  res.clearCookie("dtect_auth", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: auth.isProduction,
+    path: "/",
+  });
+  return res.json({ success: true, message: "로그아웃되었습니다." });
+}
+
+module.exports = { signup, login, getCurrentUser, logout };
