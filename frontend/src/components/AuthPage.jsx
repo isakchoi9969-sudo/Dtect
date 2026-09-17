@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ROUTES } from "../config/routes";
 // 🔧 변경 1: axios 를 직접 쓰지 않고 config/api.js 의 공용 인스턴스를 쓴다.
 //    - baseURL 이 한 곳(api.js)에만 있으므로 포트가 바뀌어도 여기는 안 건드려도 된다.
@@ -28,6 +28,38 @@ function AuthPage({ mode }) {
   const isSignup = mode === "signup";
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userType, setUserType] = useState("PERSONAL");
+  const [companies, setCompanies] = useState([]);
+  const [companyId, setCompanyId] = useState("NONE");
+  const [isCompaniesLoading, setIsCompaniesLoading] = useState(isSignup);
+  const [companiesError, setCompaniesError] = useState("");
+
+  useEffect(() => {
+    if (!isSignup) return undefined;
+
+    const controller = new AbortController();
+
+    async function loadCompanies() {
+      try {
+        setIsCompaniesLoading(true);
+        setCompaniesError("");
+        const response = await api.get("/api/company", {
+          signal: controller.signal,
+        });
+        setCompanies(response.data?.data || []);
+      } catch (error) {
+        if (error.name !== "CanceledError") {
+          console.error("회사 목록 조회 실패:", error);
+          setCompaniesError("회사 목록을 불러오지 못했습니다. '없음'은 선택할 수 있습니다.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsCompaniesLoading(false);
+      }
+    }
+
+    loadCompanies();
+    return () => controller.abort();
+  }, [isSignup]);
 
   // 🔌 백엔드로 데이터 전송 로직 ----------------------------------
   const handleSubmit = async (event) => {
@@ -111,15 +143,59 @@ function AuthPage({ mode }) {
               </label>
             )}
             {isSignup && (
+              <fieldset className="member-type-field">
+                <legend>회원 유형</legend>
+                <div className="member-type-options">
+                  <label>
+                    <input
+                      type="radio"
+                      name="userType"
+                      value="PERSONAL"
+                      checked={userType === "PERSONAL"}
+                      onChange={() => setUserType("PERSONAL")}
+                    />
+                    <span>
+                      <strong>일반회원</strong>
+                      <small>개인 사용자를 위한 기본 회원가입</small>
+                    </span>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="userType"
+                      value="COMPANY"
+                      checked={userType === "COMPANY"}
+                      onChange={() => setUserType("COMPANY")}
+                    />
+                    <span>
+                      <strong>기업회원</strong>
+                      <small>등록된 회사와 계정을 연결</small>
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
+            )}
+            {isSignup && userType === "COMPANY" && (
               <label>
                 소속 기업
-                <input
-                  type="text"
-                  name="company"
-                  placeholder="예: 삼성전자"
-                  autoComplete="organization"
-                  required
-                />
+                <select
+                  name="companyId"
+                  value={companyId}
+                  onChange={(event) => setCompanyId(event.target.value)}
+                  disabled={isCompaniesLoading}
+                >
+                  <option value="NONE">없음 (등록된 회사가 아닌 경우)</option>
+                  {companies.map((company) => (
+                    <option key={company.companyId} value={company.companyId}>
+                      {company.companyName}
+                    </option>
+                  ))}
+                </select>
+                <small className="company-field-help">
+                  {isCompaniesLoading
+                    ? "등록된 회사 목록을 불러오는 중입니다."
+                    : companiesError || `등록된 회사 ${companies.length}개를 불러왔습니다.`}
+                </small>
               </label>
             )}
             <label>

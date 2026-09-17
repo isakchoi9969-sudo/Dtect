@@ -7,18 +7,18 @@ export const navigationItems = [
   {
     title: "AI 대응센터",
     href: "/response-center",
-    businessOnly: true,
+    paidService: true,
     children: ["과거 사례 시뮬레이터", "대응자료 생성"],
   },
   {
     title: "알림",
     href: "/alerts",
-    businessOnly: true,
+    paidService: true,
     children: ["위험도 급상승 알림", "주요 이슈 발생 알림"],
   },
 ];
 
-export const watchlist = ["Samsung Electronics", "SK Hynix", "Hyundai Motor"];
+export const watchlist = ["삼성전자", "하이닉스", "현대모터"];
 
 export const problemItems = [
   {
