@@ -63,6 +63,18 @@ function formatArticleTime(pubDate) {
   });
 }
 
+function formatDateTime(value, fallback) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  return date.toLocaleString("ko-KR", {
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function getApiErrorMessage(error, fallbackMessage) {
   return (
     error.response?.data?.detail ??
@@ -78,21 +90,6 @@ function AnalysisUnavailable({ description, label = "준비 중" }) {
       <p>{description}</p>
     </div>
   );
-}
-
-function makeChartPoints(data, key) {
-  if (data.length < 2) return "";
-
-  const width = 400;
-  const height = 150;
-
-  return data
-    .map((item, index) => {
-      const x = (index / (data.length - 1)) * width;
-      const y = height - (item[key] / 100) * height;
-      return `${x},${y}`;
-    })
-    .join(" ");
 }
 
 /* =========================================================
@@ -117,10 +114,6 @@ export default function CompanyAnalysisPage() {
   const [isNewsLoading, setIsNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
-  const [trendDays, setTrendDays] = useState(30);
-  const [sentimentTrend, setSentimentTrend] = useState([]);
-  const [isTrendLoading, setIsTrendLoading] = useState(true);
-  const [trendError, setTrendError] = useState("");
 
   React.useEffect(() => {
     if (!selectedCompany?.name) return undefined;
@@ -131,7 +124,7 @@ export default function CompanyAnalysisPage() {
       .get("/api/news", {
         params: {
           query: selectedCompany.name,
-          per_page: 20,
+          per_page: 100,
         },
         signal: controller.signal,
       })
@@ -158,48 +151,7 @@ export default function CompanyAnalysisPage() {
   const retryNewsAnalysis = () => {
     setIsNewsLoading(true);
     setNewsError("");
-    setNewsAnalysis(null);
     setRetryCount((count) => count + 1);
-  };
-
-  React.useEffect(() => {
-    if (!selectedCompany?.name) return undefined;
-
-    const controller = new AbortController();
-
-    api
-      .get("/api/news/trend", {
-        params: {
-          query: selectedCompany.name,
-          days: trendDays,
-        },
-        signal: controller.signal,
-      })
-      .then((response) => {
-        setSentimentTrend(response.data.trend ?? []);
-      })
-      .catch((error) => {
-        if (error.code === "ERR_CANCELED") return;
-
-        setTrendError(
-          getApiErrorMessage(
-            error,
-            "감성 추이 데이터를 불러오지 못했습니다.",
-          ),
-        );
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setIsTrendLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [selectedCompany?.name, trendDays]);
-
-  const changeTrendDays = (event) => {
-    setIsTrendLoading(true);
-    setTrendError("");
-    setSentimentTrend([]);
-    setTrendDays(Number(event.target.value));
   };
 
   const sentiment = newsAnalysis?.sentiment_percentages ?? {
@@ -209,6 +161,15 @@ export default function CompanyAnalysisPage() {
   };
   const analyzedCount = newsAnalysis?.analyzed_count ?? 0;
   const articles = newsAnalysis?.news_list ?? [];
+  const analyzedAt = formatDateTime(
+    newsAnalysis?.analyzed_at,
+    "분석 시각 확인 중",
+  );
+  const latestArticlePublishedAt = formatDateTime(
+    newsAnalysis?.latest_article_published_at,
+    "최신 기사 발행 시각 확인 중",
+  );
+  const visibleArticles = articles.slice(0, 5);
 
   if (!selectedCompany) {
     return (
@@ -278,7 +239,16 @@ export default function CompanyAnalysisPage() {
             </>
           )}
           {newsAnalysis && !isNewsLoading && (
-            <span>최신 뉴스 {newsAnalysis.analyzed_count}건 분석을 완료했습니다.</span>
+            <>
+              <span>최신 뉴스 {newsAnalysis.analyzed_count}건 분석을 완료했습니다.</span>
+              <button
+                onClick={retryNewsAnalysis}
+                style={styles.retryButton}
+                type="button"
+              >
+                최신 뉴스 새로고침
+              </button>
+            </>
           )}
         </div>
 
@@ -296,8 +266,12 @@ export default function CompanyAnalysisPage() {
 
           <div style={styles.summaryCard}>
             <div>
-              <div style={styles.cardTitle}>최근 7일 변화</div>
-              <div style={styles.summaryPending}>일별 분석 데이터 수집 예정</div>
+              <div style={styles.cardTitle}>최신 뉴스 감성 현황</div>
+              <div style={styles.summaryPending}>
+                {isNewsLoading
+                  ? "최신 뉴스 분석 중"
+                  : `최신 뉴스 ${analyzedCount.toLocaleString()}건 기준`}
+              </div>
             </div>
           </div>
 
@@ -393,69 +367,31 @@ export default function CompanyAnalysisPage() {
             </div>
           </div>
 
-          {/* 감성 추이 */}
           <div style={styles.panel}>
             <div style={styles.panelHeader}>
-              <h3>감성 추이</h3>
-              <select
-                onChange={changeTrendDays}
-                style={styles.periodSelect}
-                value={trendDays}
-              >
-                <option value={30}>최근 1개월</option>
-                <option value={90}>최근 3개월</option>
-                <option value={180}>최근 6개월</option>
-              </select>
+              <h3>최신 뉴스 감성 현황</h3>
+              <span>실시간 분석</span>
             </div>
-            {isTrendLoading && (
-              <AnalysisUnavailable
-                description="저장된 뉴스 분석 이력을 불러오고 있습니다."
-                label="불러오는 중"
-              />
-            )}
-            {!isTrendLoading && trendError && (
-              <AnalysisUnavailable description={trendError} label="불러오기 실패" />
-            )}
-            {!isTrendLoading && !trendError && sentimentTrend.length < 2 && (
-              <AnalysisUnavailable
-                description="추이를 표시하려면 서로 다른 날짜의 뉴스 분석 이력이 더 필요합니다."
-                label="이력 축적 중"
-              />
-            )}
-            {!isTrendLoading && !trendError && sentimentTrend.length >= 2 && (
-              <>
-                <div style={styles.lineChart}>
-                  <div style={styles.yAxis}>
-                    <span>100</span>
-                    <span>75</span>
-                    <span>50</span>
-                    <span>25</span>
-                    <span>0</span>
-                  </div>
-
-                  <div style={styles.chartBody}>
-                    <div style={styles.chartGridLine} />
-                    <div style={{ ...styles.chartGridLine, top: "25%" }} />
-                    <div style={{ ...styles.chartGridLine, top: "50%" }} />
-                    <div style={{ ...styles.chartGridLine, top: "75%" }} />
-                    <div style={{ ...styles.chartGridLine, top: "100%" }} />
-
-                    <svg preserveAspectRatio="none" style={styles.svg} viewBox="0 0 400 170">
-                      <polyline fill="none" points={makeChartPoints(sentimentTrend, "positive")} stroke="#35C98A" strokeWidth="3" />
-                      <polyline fill="none" points={makeChartPoints(sentimentTrend, "neutral")} stroke="#4F8EF7" strokeWidth="3" />
-                      <polyline fill="none" points={makeChartPoints(sentimentTrend, "negative")} stroke="#FF6B6B" strokeWidth="3" />
-                    </svg>
-                  </div>
-                </div>
-
-                <div style={styles.chartLegend}>
-                  <span><i style={{ background: "#35C98A" }} />긍정</span>
-                  <span><i style={{ background: "#4F8EF7" }} />중립</span>
-                  <span><i style={{ background: "#FF6B6B" }} />부정</span>
-                </div>
-              </>
-            )}
+            <div style={styles.liveNewsDetails}>
+              <div>
+                <span>분석 기준</span>
+                <strong>최신 뉴스 최대 100건</strong>
+              </div>
+              <div>
+                <span>분석 시각</span>
+                <strong>{analyzedAt}</strong>
+              </div>
+              <div>
+                <span>가장 최신 기사</span>
+                <strong>{latestArticlePublishedAt}</strong>
+              </div>
+              <p>
+                새로고침 또는 기업 변경 시 최신 기사 기준으로 다시 분석됩니다.
+                이전 분석 결과는 저장하지 않습니다.
+              </p>
+            </div>
           </div>
+
         </section>
 
         {/* ===================================================
@@ -483,11 +419,11 @@ export default function CompanyAnalysisPage() {
           <div style={styles.mediumPanel}>
             <div style={styles.panelHeader}>
               <h3>관련 기사</h3>
-              <button style={styles.moreButton}>전체보기 ›</button>
+              <span>최신 5건</span>
             </div>
 
             <div style={styles.articleList}>
-              {articles.map((article, index) => {
+              {visibleArticles.map((article, index) => {
                 const source = getArticleSource(article);
                 const articleUrl = article.original_link || article.link;
 
@@ -733,6 +669,14 @@ const styles = {
     color: "#9AA6B5",
     fontSize: "12px",
     fontWeight: 600,
+  },
+
+  liveNewsDetails: {
+    display: "grid",
+    gap: "12px",
+    paddingTop: "8px",
+    color: "#718198",
+    fontSize: "12px",
   },
 
   analysisUnavailable: {
