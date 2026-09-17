@@ -38,10 +38,9 @@ function LandingPage() {
 }
 
 function App() {
-  // 백엔드 연결 테스트 코드 ---------------------
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/test")
+      .get("http://localhost:3000/api/test")
       .then((response) => {
         console.log("백엔드 응답:", response.data.message);
       })
