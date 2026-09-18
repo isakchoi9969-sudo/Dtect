@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { naver } = require("../config/env");
+const { getApprovedNewsSource } = require("../config/approvedNewsSources");
 
 const NAVER_NEWS_URL = "https://naverapihub.apigw.ntruss.com/search/v1/news";
 const HTML_TAG_PATTERN = /<[^>]+>/g;
@@ -128,6 +129,7 @@ async function fetchAndPrepareNews(query, page = 1) {
   let totalResults = 0;
   let fetchedCount = 0;
   let pagesFetched = 0;
+  let sourceFilteredCount = 0;
   let mentionFilteredCount = 0;
   let duplicateCount = 0;
 
@@ -151,6 +153,15 @@ async function fetchAndPrepareNews(query, page = 1) {
     fetchedCount += items.length;
 
     for (const item of items) {
+      // 네이버 검색 결과의 원문 링크 기준으로, 합의한 26개 언론사 기사만 분석한다.
+      // `link`는 네이버 경유 주소이므로 반드시 `originallink`를 우선 사용한다.
+      const approvedSource = getApprovedNewsSource(item.originallink);
+
+      if (!approvedSource) {
+        sourceFilteredCount += 1;
+        continue;
+      }
+
       const title = cleanNaverText(item.title);
       const description = cleanNaverText(item.description);
 
@@ -175,6 +186,11 @@ async function fetchAndPrepareNews(query, page = 1) {
         link: item.link || "",
         original_link: item.originallink || "",
         pub_date: item.pubDate || "",
+        // 프론트는 도메인을 다시 해석하지 않고 이 정보를 그대로 표시할 수 있다.
+        source: {
+          id: approvedSource.id,
+          name: approvedSource.name,
+        },
       };
       const articleId = makeArticleIdentifier(article);
 
@@ -206,6 +222,7 @@ async function fetchAndPrepareNews(query, page = 1) {
     analysisTexts,
     fetchedCount,
     pagesFetched,
+    sourceFilteredCount,
     mentionFilteredCount,
     duplicateCount,
   };
