@@ -353,9 +353,6 @@ function HeroSection() {
             CORPORATE INTELLIGENCE PLATFORM
           </div>
 
-          {/* 작은 카테고리 */}
-          <p style={styles.eyebrow}>D:TECT BUSINESS INTELLIGENCE</p>
-
           {/* 메인 타이틀 */}
           <h1 style={styles.title}>
             기업 이슈를 <span style={styles.highlight}>발견하고,</span>
@@ -367,6 +364,8 @@ function HeroSection() {
           <h2 style={styles.subtitle}>
             이슈 탐색을 넘어, 대응 전략까지 설계하는 기업 인텔리전스
           </h2>
+          {/* 작은 카테고리 */}
+          <p style={styles.eyebrow}>D:TECT BUSINESS INTELLIGENCE</p>
 
           {/* 설명 */}
           <p style={styles.description}>
