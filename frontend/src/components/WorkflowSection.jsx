@@ -579,8 +579,8 @@ function WorkflowSection() {
           </article>
 
           {/* =================================
-              03. RESPONSE
-          ================================= */}
+    03. RESPONSE
+================================= */}
 
           <article
             style={{
@@ -598,7 +598,13 @@ function WorkflowSection() {
               <strong style={styles.cardTitleStrong}>대응을 준비합니다.</strong>
             </h3>
 
-            <p style={styles.cardText}>
+            <p
+              style={{
+                ...styles.cardText,
+                margin: "16px 0 0",
+                lineHeight: 1.7,
+              }}
+            >
               과거 유사 사례와 분석 결과를 참고하여
               <br />
               상황에 맞는 대응 자료를 작성합니다.
@@ -608,10 +614,8 @@ function WorkflowSection() {
 
             <div
               style={{
-                position: "absolute",
-                left: "34px",
-                right: "34px",
-                bottom: "42px",
+                marginTop: "18px",
+                marginBottom: "48px",
               }}
             >
               <div
@@ -639,7 +643,7 @@ function WorkflowSection() {
 
               <div
                 style={{
-                  padding: "18px",
+                  padding: "14px 16px",
                   border: "1px solid #e5e7eb",
                   borderRadius: "12px",
                   background: "#f8fafc",
@@ -647,7 +651,7 @@ function WorkflowSection() {
               >
                 <div
                   style={{
-                    marginBottom: "14px",
+                    marginBottom: "10px",
                     fontSize: "13px",
                     fontWeight: 700,
                     color: "#374151",
@@ -702,7 +706,7 @@ function WorkflowSection() {
 
                 <div
                   style={{
-                    marginTop: "13px",
+                    marginTop: "10px",
                     fontSize: "9px",
                     color: "#16a34a",
                   }}
