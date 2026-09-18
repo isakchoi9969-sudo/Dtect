@@ -35,9 +35,14 @@ class SentimentResponse(BaseModel):
 
 @router.post("/sentiment", response_model=SentimentResponse)
 def sentiment(payload: SentimentRequest):
+    print("===== FastAPI 입력 텍스트 =====")
+    print(payload.texts)
+    print("==============================")
     """텍스트 리스트를 받아 순서를 유지한 채 감성분석 결과를 반환한다."""
     predictions = analyze_sentiments(payload.texts)
-
+    print("===== FastAPI 결과 =====")
+    print(predictions)
+    print("=======================")
     return SentimentResponse(
         results=[SentimentResult(**p) for p in predictions]
     )
