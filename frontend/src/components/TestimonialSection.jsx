@@ -3,12 +3,66 @@ import { testimonials } from "../data/landingData";
 function TestimonialSection() {
   return (
     <section
-      className="section testimonial-section"
+      className="section testimonial-section dtect-testimonial"
       style={{
         padding: "130px 0",
-        background: "#f7f8fa",
+        background: "var(--ts-bg)",
       }}
     >
+      <style>{`
+        .dtect-testimonial {
+          --ts-bg: #f7f8fa;
+          --ts-primary: #2563eb;
+          --ts-title: #111827;
+          --ts-muted: #6b7280;
+          --ts-card-bg: #ffffff;
+          --ts-card-border: #e8ebf0;
+          --ts-card-shadow: rgba(15, 23, 42, 0.05);
+          --ts-accent-a: linear-gradient(90deg, #2563eb, #60a5fa);
+          --ts-accent-b: linear-gradient(90deg, #0f172a, #64748b);
+          --ts-label-bg: #f1f5f9;
+          --ts-label-text: #475569;
+          --ts-label-dot: #2563eb;
+          --ts-index: #cbd5e1;
+          --ts-quote: #1e293b;
+          --ts-quote-mark: #dbeafe;
+          --ts-divider: #eef0f3;
+          --ts-avatar-bg: #111827;
+          --ts-avatar-text: #ffffff;
+          --ts-name: #1e293b;
+          --ts-role: #94a3b8;
+        }
+
+        :root[data-theme="dark"] .dtect-testimonial {
+          --ts-bg: #0f1621;
+          --ts-primary: #4c9cff;
+          --ts-title: #eef3fb;
+          --ts-muted: #8a96a8;
+          --ts-card-bg: #141b27;
+          --ts-card-border: #263142;
+          --ts-card-shadow: rgba(0, 0, 0, 0.3);
+          --ts-accent-a: linear-gradient(90deg, #4c9cff, #72afff);
+          --ts-accent-b: linear-gradient(90deg, #4c9cff, #3a4658);
+          --ts-label-bg: #1a2332;
+          --ts-label-text: #aeb8c8;
+          --ts-label-dot: #4c9cff;
+          --ts-index: #4a5568;
+          --ts-quote: #e8eef8;
+          --ts-quote-mark: #1c3655;
+          --ts-divider: #263142;
+          --ts-avatar-bg: #1c3655;
+          --ts-avatar-text: #8fc5ff;
+          --ts-name: #e8eef8;
+          --ts-role: #7f8a9c;
+        }
+
+        @media (max-width: 800px) {
+          .dtect-testimonial .testimonial-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
       <div
         className="container"
         style={{
@@ -32,7 +86,7 @@ function TestimonialSection() {
               fontSize: "11px",
               fontWeight: 700,
               letterSpacing: "0.18em",
-              color: "#2563eb",
+              color: "var(--ts-primary)",
             }}
           >
             EXPECTED VALUE
@@ -45,12 +99,12 @@ function TestimonialSection() {
               lineHeight: 1.25,
               fontWeight: 700,
               letterSpacing: "-0.04em",
-              color: "#111827",
+              color: "var(--ts-title)",
             }}
           >
             효율적인 판단을 돕는
             <br />
-            <span style={{ color: "#2563eb" }}>결정적 도구</span>
+            <span style={{ color: "var(--ts-primary)" }}>결정적 도구</span>
           </h2>
 
           <p
@@ -59,7 +113,7 @@ function TestimonialSection() {
               maxWidth: "560px",
               fontSize: "15px",
               lineHeight: 1.8,
-              color: "#6b7280",
+              color: "var(--ts-muted)",
             }}
           >
             복잡한 기업 이슈를 빠르게 파악하고
@@ -88,10 +142,10 @@ function TestimonialSection() {
               style={{
                 position: "relative",
                 padding: "38px 38px 34px",
-                background: "#ffffff",
-                border: "1px solid #e8ebf0",
+                background: "var(--ts-card-bg)",
+                border: "1px solid var(--ts-card-border)",
                 borderRadius: "20px",
-                boxShadow: "0 10px 35px rgba(15, 23, 42, 0.05)",
+                boxShadow: "0 10px 35px var(--ts-card-shadow)",
                 overflow: "hidden",
                 transition: "all 0.25s ease",
               }}
@@ -106,8 +160,8 @@ function TestimonialSection() {
                   height: "3px",
                   background:
                     index % 2 === 0
-                      ? "linear-gradient(90deg, #2563eb, #60a5fa)"
-                      : "linear-gradient(90deg, #0f172a, #64748b)",
+                      ? "var(--ts-accent-a)"
+                      : "var(--ts-accent-b)",
                 }}
               />
 
@@ -127,8 +181,8 @@ function TestimonialSection() {
                     gap: "7px",
                     padding: "7px 11px",
                     borderRadius: "7px",
-                    background: "#f1f5f9",
-                    color: "#475569",
+                    background: "var(--ts-label-bg)",
+                    color: "var(--ts-label-text)",
                     fontSize: "11px",
                     fontWeight: 700,
                     letterSpacing: "0.04em",
@@ -139,7 +193,7 @@ function TestimonialSection() {
                       width: "5px",
                       height: "5px",
                       borderRadius: "50%",
-                      background: "#2563eb",
+                      background: "var(--ts-label-dot)",
                     }}
                   />
                   활용 예시
@@ -148,7 +202,7 @@ function TestimonialSection() {
                 <span
                   style={{
                     fontSize: "11px",
-                    color: "#cbd5e1",
+                    color: "var(--ts-index)",
                     fontWeight: 600,
                     letterSpacing: "0.08em",
                   }}
@@ -168,7 +222,7 @@ function TestimonialSection() {
                   lineHeight: 1.65,
                   fontWeight: 600,
                   letterSpacing: "-0.025em",
-                  color: "#1e293b",
+                  color: "var(--ts-quote)",
                 }}
               >
                 <span
@@ -179,7 +233,7 @@ function TestimonialSection() {
                     fontSize: "48px",
                     lineHeight: 0.6,
                     fontWeight: 700,
-                    color: "#dbeafe",
+                    color: "var(--ts-quote-mark)",
                   }}
                 >
                   “
@@ -192,7 +246,7 @@ function TestimonialSection() {
               <div
                 style={{
                   height: "1px",
-                  background: "#eef0f3",
+                  background: "var(--ts-divider)",
                   marginBottom: "24px",
                 }}
               />
@@ -216,8 +270,8 @@ function TestimonialSection() {
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: "12px",
-                    background: "#111827",
-                    color: "#ffffff",
+                    background: "var(--ts-avatar-bg)",
+                    color: "var(--ts-avatar-text)",
                     fontSize: "14px",
                     fontWeight: 700,
                   }}
@@ -236,7 +290,7 @@ function TestimonialSection() {
                     style={{
                       fontSize: "14px",
                       fontWeight: 700,
-                      color: "#1e293b",
+                      color: "var(--ts-name)",
                     }}
                   >
                     {testimonial.name}
@@ -245,7 +299,7 @@ function TestimonialSection() {
                   <span
                     style={{
                       fontSize: "12px",
-                      color: "#94a3b8",
+                      color: "var(--ts-role)",
                     }}
                   >
                     {testimonial.role}
