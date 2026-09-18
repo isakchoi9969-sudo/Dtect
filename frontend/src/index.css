@@ -1155,49 +1155,33 @@ button:focus-visible {
 /* Tablet */
 
 @media (max-width: 950px) {
-  .desktop-nav,
-  .desktop-login {
+  .header-inner {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    justify-content: normal;
+  }
+
+  .desktop-nav {
+    display: flex;
+    min-width: 0;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .nav-link {
+    padding: 0 clamp(5px, 1.2vw, 12px);
+    font-size: clamp(11px, 1.5vw, 14px);
+    white-space: nowrap;
+  }
+
+  .desktop-login,
+  .mobile-menu-button {
     display: none;
   }
 
-  .header-inner {
-    display: flex;
-
-    justify-content: space-between;
-  }
-
   .landing-header-actions {
-    margin-left: auto;
-    margin-right: 4px;
-  }
-
-  .mobile-menu-button {
-    display: flex;
-    flex-direction: column;
-
-    justify-content: center;
-
-    gap: 5px;
-
-    width: 42px;
-    height: 42px;
-
-    padding: 9px;
-
-    background: transparent;
-
-    cursor: pointer;
-  }
-
-  .mobile-menu-button span {
-    display: block;
-
-    width: 100%;
-    height: 2px;
-
-    background: var(--color-text);
-
-    transition: 150ms ease;
+    margin: 0;
+    justify-self: end;
   }
 
   .mobile-nav {
