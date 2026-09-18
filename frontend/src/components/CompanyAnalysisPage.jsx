@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import Header from "./Header";
 import { useWatchlist } from "../hooks/useWatchlist";
 import { companyProfiles } from "../data/companyProfiles";
+import { api } from "../config/api";
 
 /* =========================================================
    관심기업 샘플 데이터
@@ -31,19 +32,65 @@ const defaultCompanies = companyProfiles.map((company) => ({
    유틸
 ========================================================= */
 
-const getIssueColor = (type) => {
-  switch (type) {
-    case "긍정":
-      return "#35C98A";
-    case "부정":
-      return "#FF6B6B";
-    case "주의":
-      return "#F6B84B";
-    case "중립":
-    default:
-      return "#4F8EF7";
-  }
+const sentimentLabels = {
+  positive: "긍정",
+  neutral: "중립",
+  negative: "부정",
 };
+
+function getArticleSource(article) {
+  try {
+    const hostname = new URL(article.original_link || article.link).hostname;
+    return hostname.replace(/^www\./, "");
+  } catch {
+    return "뉴스";
+  }
+}
+
+function formatArticleTime(pubDate) {
+  const publishedAt = new Date(pubDate);
+  if (Number.isNaN(publishedAt.getTime())) return "발행일 미상";
+
+  const elapsedMinutes = Math.floor((Date.now() - publishedAt.getTime()) / 60000);
+  if (elapsedMinutes < 1) return "방금 전";
+  if (elapsedMinutes < 60) return `${elapsedMinutes}분 전`;
+  if (elapsedMinutes < 1440) return `${Math.floor(elapsedMinutes / 60)}시간 전`;
+  if (elapsedMinutes < 10080) return `${Math.floor(elapsedMinutes / 1440)}일 전`;
+
+  return publishedAt.toLocaleDateString("ko-KR", {
+    month: "numeric",
+    day: "numeric",
+  });
+}
+
+function formatDateTime(value, fallback) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  return date.toLocaleString("ko-KR", {
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getApiErrorMessage(error, fallbackMessage) {
+  return (
+    error.response?.data?.detail ??
+    error.response?.data?.message ??
+    fallbackMessage
+  );
+}
+
+function AnalysisUnavailable({ description, label = "준비 중" }) {
+  return (
+    <div style={styles.analysisUnavailable}>
+      <span style={styles.analysisUnavailableBadge}>{label}</span>
+      <p>{description}</p>
+    </div>
+  );
+}
 
 /* =========================================================
    메인 페이지
@@ -55,7 +102,6 @@ export default function CompanyAnalysisPage() {
     const symbol = new URLSearchParams(window.location.search).get("symbol");
     return companies.find((company) => company.ticker === symbol)?.id ?? companies[0].id;
   }, [companies]);
-  const [period, setPeriod] = useState("최근 1개월");
   const { isWatched, toggleCompany, count, limit } = useWatchlist();
 
   const selectedCompany = useMemo(() => {
@@ -64,6 +110,79 @@ export default function CompanyAnalysisPage() {
       companies[0]
     );
   }, [companies, selectedCompanyId]);
+  const [newsAnalysis, setNewsAnalysis] = useState(null);
+  const [isNewsLoading, setIsNewsLoading] = useState(true);
+  const [newsError, setNewsError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
+
+  React.useEffect(() => {
+    if (!selectedCompany?.name) return undefined;
+
+    const controller = new AbortController();
+
+    api
+      .get("/api/news", {
+        params: {
+          query: selectedCompany.name,
+          per_page: 100,
+        },
+        signal: controller.signal,
+      })
+      .then((response) => {
+        setNewsAnalysis(response.data);
+      })
+      .catch((error) => {
+        if (error.code === "ERR_CANCELED") return;
+
+        setNewsError(
+          getApiErrorMessage(
+            error,
+            "최신 뉴스 분석 결과를 불러오지 못했습니다.",
+          ),
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsNewsLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [selectedCompany?.name, retryCount]);
+
+  const retryNewsAnalysis = () => {
+    setIsNewsLoading(true);
+    setNewsError("");
+    setRetryCount((count) => count + 1);
+  };
+
+  const sentiment = newsAnalysis?.sentiment_percentages ?? {
+    positive: 0,
+    neutral: 0,
+    negative: 0,
+  };
+  const analyzedCount = newsAnalysis?.analyzed_count ?? 0;
+  const fetchedCount = newsAnalysis?.fetched_count ?? 0;
+  const pagesFetched = newsAnalysis?.pages_fetched ?? 0;
+  const relevantCount = newsAnalysis?.relevant_count ?? 0;
+  const targetReached = newsAnalysis?.target_reached ?? false;
+  const minimumKeywordMentions =
+    newsAnalysis?.minimum_keyword_mentions ?? 3;
+  const articles = newsAnalysis?.news_list ?? [];
+  const analyzedAt = formatDateTime(
+    newsAnalysis?.analyzed_at,
+    "분석 시각 확인 중",
+  );
+  const latestArticlePublishedAt = formatDateTime(
+    newsAnalysis?.latest_article_published_at,
+    "최신 기사 발행 시각 확인 중",
+  );
+  const visibleArticles = articles.slice(0, 5);
+  const realtimeAnalysisNotice = !newsAnalysis
+    ? "최신 뉴스를 불러오면 기업 관련성 기준의 분석 현황이 표시됩니다."
+    : relevantCount === 0
+      ? `원본 기사 ${fetchedCount.toLocaleString()}건을 확인했지만 기업명이 ${minimumKeywordMentions}회 이상 언급된 기사가 없습니다.`
+      : !targetReached
+        ? `원본 기사 ${fetchedCount.toLocaleString()}건을 모두 확인해 관련 기사 ${relevantCount.toLocaleString()}건을 분석했습니다. 조건을 충족하는 기사가 100건보다 적을 수 있습니다.`
+        : "새로고침 또는 기업 변경 시 최신 기사 기준으로 다시 분석됩니다. 이전 분석 결과는 저장하지 않습니다.";
 
   if (!selectedCompany) {
     return (
@@ -118,6 +237,38 @@ export default function CompanyAnalysisPage() {
           </button>
         </section>
 
+        <div aria-live="polite" role="status" style={styles.newsStatus}>
+          {isNewsLoading && "최신 뉴스와 감성 분석 결과를 불러오는 중입니다."}
+          {newsError && (
+            <>
+              <span>{newsError}</span>
+              <button
+                onClick={retryNewsAnalysis}
+                style={styles.retryButton}
+                type="button"
+              >
+                다시 시도
+              </button>
+            </>
+          )}
+          {newsAnalysis && !isNewsLoading && (
+            <>
+              <span>
+                {relevantCount === 0
+                  ? `원본 기사 ${fetchedCount.toLocaleString()}건(${pagesFetched}페이지)에서 조건을 충족한 기사가 없습니다.`
+                  : `원본 기사 ${fetchedCount.toLocaleString()}건(${pagesFetched}페이지) 중 기업명 ${minimumKeywordMentions}회 이상 언급된 ${relevantCount.toLocaleString()}건을 분석했습니다.`}
+              </span>
+              <button
+                onClick={retryNewsAnalysis}
+                style={styles.retryButton}
+                type="button"
+              >
+                최신 뉴스 새로고침
+              </button>
+            </>
+          )}
+        </div>
+
         {/* ===================================================
           상단 요약 카드
       =================================================== */}
@@ -126,45 +277,17 @@ export default function CompanyAnalysisPage() {
           <div style={styles.summaryCard}>
             <div>
               <div style={styles.cardTitle}>현재 위험도</div>
-
-              <div style={styles.riskValueRow}>
-                <span
-                  style={{
-                    ...styles.riskDot,
-                    background:
-                      selectedCompany.riskScore >= 60
-                        ? "#FF6B6B"
-                        : selectedCompany.riskScore >= 40
-                          ? "#F6B84B"
-                          : "#35C98A",
-                  }}
-                />
-
-                <strong style={styles.riskText}>
-                  {selectedCompany.riskLevel}
-                </strong>
-              </div>
+              <div style={styles.summaryPending}>실시간 산정 준비 중</div>
             </div>
-
-            <div style={styles.infoIcon}>i</div>
           </div>
 
           <div style={styles.summaryCard}>
             <div>
-              <div style={styles.cardTitle}>최근 7일 변화</div>
-
-              <div
-                style={{
-                  ...styles.changeValue,
-                  color: selectedCompany.riskChange > 0 ? "#FF6B6B" : "#2E7DE9",
-                }}
-              >
-                {selectedCompany.riskChange > 0 ? "▲" : "▼"}{" "}
-                {Math.abs(selectedCompany.riskChange)}%
-              </div>
-
-              <div style={styles.smallText}>
-                위험도 {selectedCompany.riskChange > 0 ? "증가" : "감소"}
+              <div style={styles.cardTitle}>최신 뉴스 감성 현황</div>
+              <div style={styles.summaryPending}>
+                {isNewsLoading
+                  ? "최신 뉴스 분석 중"
+                  : `기업명 ${minimumKeywordMentions}회 이상 언급 ${analyzedCount.toLocaleString()}건 기준`}
               </div>
             </div>
           </div>
@@ -172,25 +295,7 @@ export default function CompanyAnalysisPage() {
           <div style={styles.summaryCard}>
             <div style={{ width: "100%" }}>
               <div style={styles.cardTitle}>주요 리스크 유형</div>
-
-              <div style={styles.riskMiniList}>
-                {selectedCompany.riskTypes
-                  .slice()
-                  .sort((a, b) => b.value - a.value)
-                  .slice(0, 3)
-                  .map((risk) => (
-                    <div key={risk.name} style={styles.riskMiniItem}>
-                      <span
-                        style={{
-                          ...styles.miniDot,
-                          background: risk.color,
-                        }}
-                      />
-                      <span>{risk.name}</span>
-                      <strong>{risk.value}</strong>
-                    </div>
-                  ))}
-              </div>
+              <div style={styles.summaryPending}>이슈 분류 모델 연동 예정</div>
             </div>
           </div>
         </section>
@@ -204,55 +309,9 @@ export default function CompanyAnalysisPage() {
           <div style={styles.panel}>
             <div style={styles.panelHeader}>
               <h3>종합 리스크 점수</h3>
-              <span>100점 기준</span>
+              <span>분석 모델 준비 중</span>
             </div>
-
-            <div style={styles.riskChartArea}>
-              <div
-                style={{
-                  ...styles.riskCircle,
-                  background: `conic-gradient(
-                  ${
-                    selectedCompany.riskScore >= 60
-                      ? "#FF6B6B"
-                      : selectedCompany.riskScore >= 40
-                        ? "#F6B84B"
-                        : "#35C98A"
-                  } ${selectedCompany.riskScore * 3.6}deg,
-                  #edf2f7 ${selectedCompany.riskScore * 3.6}deg
-                )`,
-                }}
-              >
-                <div style={styles.riskCircleInner}>
-                  <strong>{selectedCompany.riskScore}</strong>
-                  <span>
-                    {selectedCompany.riskScore >= 60
-                      ? "높음"
-                      : selectedCompany.riskScore >= 40
-                        ? "보통"
-                        : "낮음"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div style={styles.riskBreakdown}>
-              {selectedCompany.riskTypes.map((risk) => (
-                <div key={risk.name} style={styles.riskRow}>
-                  <div style={styles.riskRowName}>
-                    <span
-                      style={{
-                        ...styles.miniDot,
-                        background: risk.color,
-                      }}
-                    />
-                    {risk.name}
-                  </div>
-
-                  <strong>{risk.value}</strong>
-                </div>
-              ))}
-            </div>
+            <AnalysisUnavailable description="뉴스 감성, 이슈 유형, 언급량을 결합한 리스크 점수를 준비하고 있습니다." />
           </div>
 
           {/* 감성 분석 */}
@@ -260,7 +319,7 @@ export default function CompanyAnalysisPage() {
             <div style={styles.panelHeader}>
               <h3>감성 분석 요약</h3>
               <span>
-                전체 {selectedCompany.sentimentTotal.toLocaleString()}건
+                전체 {analyzedCount.toLocaleString()}건
               </span>
             </div>
 
@@ -269,22 +328,21 @@ export default function CompanyAnalysisPage() {
                 style={{
                   ...styles.donut,
                   background: `conic-gradient(
-                  #35C98A 0 ${selectedCompany.sentiment.positive}%,
-                  #4F8EF7 ${selectedCompany.sentiment.positive}% ${
-                    selectedCompany.sentiment.positive +
-                    selectedCompany.sentiment.neutral
-                  }%,
-                  #FF6B6B ${
-                    selectedCompany.sentiment.positive +
-                    selectedCompany.sentiment.neutral
-                  }% 100%
+                   #35C98A 0 ${sentiment.positive}%,
+                   #4F8EF7 ${sentiment.positive}% ${
+                     sentiment.positive +
+                     sentiment.neutral
+                   }%,
+                   #FF6B6B ${
+                     sentiment.positive + sentiment.neutral
+                   }% 100%
                 )`,
                 }}
               >
                 <div style={styles.donutInner}>
                   <span>전체</span>
                   <strong>
-                    {selectedCompany.sentimentTotal.toLocaleString()}건
+                    {analyzedCount.toLocaleString()}건
                   </strong>
                 </div>
               </div>
@@ -298,7 +356,7 @@ export default function CompanyAnalysisPage() {
                     }}
                   />
                   <span>긍정</span>
-                  <strong>{selectedCompany.sentiment.positive}%</strong>
+                  <strong>{sentiment.positive}%</strong>
                 </div>
 
                 <div>
@@ -309,7 +367,7 @@ export default function CompanyAnalysisPage() {
                     }}
                   />
                   <span>중립</span>
-                  <strong>{selectedCompany.sentiment.neutral}%</strong>
+                  <strong>{sentiment.neutral}%</strong>
                 </div>
 
                 <div>
@@ -320,95 +378,42 @@ export default function CompanyAnalysisPage() {
                     }}
                   />
                   <span>부정</span>
-                  <strong>{selectedCompany.sentiment.negative}%</strong>
+                  <strong>{sentiment.negative}%</strong>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 감성 추이 */}
           <div style={styles.panel}>
             <div style={styles.panelHeader}>
-              <h3>감성 추이</h3>
-
-              <select
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-                style={styles.periodSelect}
-              >
-                <option>최근 1개월</option>
-                <option>최근 3개월</option>
-                <option>최근 6개월</option>
-              </select>
+              <h3>최신 뉴스 감성 현황</h3>
+              <span>실시간 분석</span>
             </div>
-
-            <div style={styles.lineChart}>
-              <div style={styles.yAxis}>
-                <span>60</span>
-                <span>40</span>
-                <span>20</span>
-                <span>0</span>
+            <div style={styles.liveNewsDetails}>
+              <div>
+                <span>분석 기준</span>
+                <strong>기업명 {minimumKeywordMentions}회 이상 언급된 최신 뉴스 최대 100건</strong>
               </div>
-
-              <div style={styles.chartBody}>
-                <div style={styles.chartGridLine} />
-                <div style={{ ...styles.chartGridLine, top: "33%" }} />
-                <div style={{ ...styles.chartGridLine, top: "66%" }} />
-                <div style={{ ...styles.chartGridLine, top: "100%" }} />
-
-                <svg
-                  viewBox="0 0 400 170"
-                  preserveAspectRatio="none"
-                  style={styles.svg}
-                >
-                  <polyline
-                    fill="none"
-                    stroke="#35C98A"
-                    strokeWidth="3"
-                    points={makeChartPoints(
-                      selectedCompany.sentimentTrend,
-                      "positive",
-                    )}
-                  />
-
-                  <polyline
-                    fill="none"
-                    stroke="#4F8EF7"
-                    strokeWidth="3"
-                    points={makeChartPoints(
-                      selectedCompany.sentimentTrend,
-                      "neutral",
-                    )}
-                  />
-
-                  <polyline
-                    fill="none"
-                    stroke="#FF6B6B"
-                    strokeWidth="3"
-                    points={makeChartPoints(
-                      selectedCompany.sentimentTrend,
-                      "negative",
-                    )}
-                  />
-                </svg>
+              <div>
+                <span>수집 현황</span>
+                <strong>
+                  원본 {fetchedCount.toLocaleString()}건 확인 · 관련 기사 {relevantCount.toLocaleString()}건
+                </strong>
               </div>
-            </div>
-
-            <div style={styles.chartLegend}>
-              <span>
-                <i style={{ background: "#35C98A" }} />
-                긍정
-              </span>
-              <span>
-                <i style={{ background: "#4F8EF7" }} />
-                중립
-              </span>
-              <span>
-                <i style={{ background: "#FF6B6B" }} />
-                부정
-              </span>
+              <div>
+                <span>분석 시각</span>
+                <strong>{analyzedAt}</strong>
+              </div>
+              <div>
+                <span>가장 최신 기사</span>
+                <strong>{latestArticlePublishedAt}</strong>
+              </div>
+              <p>
+                {realtimeAnalysisNotice}
+              </p>
             </div>
           </div>
+
         </section>
 
         {/* ===================================================
@@ -420,106 +425,58 @@ export default function CompanyAnalysisPage() {
           <div style={styles.largePanel}>
             <div style={styles.panelHeader}>
               <h3>주요 이슈 타임라인</h3>
-              <button style={styles.moreButton}>전체보기 ›</button>
             </div>
-
-            <div style={styles.timeline}>
-              {selectedCompany.issues.map((issue, index) => (
-                <div key={`${issue.date}-${index}`} style={styles.timelineItem}>
-                  <div style={styles.timelineDate}>{issue.date}</div>
-
-                  <div style={styles.timelineLine}>
-                    <span
-                      style={{
-                        ...styles.timelineDot,
-                        background: getIssueColor(issue.type),
-                      }}
-                    />
-
-                    {index !== selectedCompany.issues.length - 1 && (
-                      <span style={styles.verticalLine} />
-                    )}
-                  </div>
-
-                  <div style={styles.timelineContent}>
-                    <div style={styles.issueTitleRow}>
-                      <span
-                        style={{
-                          ...styles.issueType,
-                          color: getIssueColor(issue.type),
-                          background: `${getIssueColor(issue.type)}15`,
-                        }}
-                      >
-                        {issue.type}
-                      </span>
-
-                      <strong>{issue.title}</strong>
-                    </div>
-
-                    <p>{issue.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <AnalysisUnavailable description="유사 기사를 묶어 주요 이슈와 발생 시점을 만드는 기능을 준비하고 있습니다." />
           </div>
 
           {/* 핵심 키워드 */}
           <div style={styles.mediumPanel}>
             <div style={styles.panelHeader}>
               <h3>핵심 키워드</h3>
-              <button style={styles.moreButton}>전체보기 ›</button>
             </div>
-
-            <div style={styles.keywordContainer}>
-              {selectedCompany.keywords.map((keyword) => (
-                <span
-                  key={keyword.text}
-                  style={{
-                    ...styles.keyword,
-                    ...keywordStyles[keyword.type],
-                  }}
-                >
-                  {keyword.text}
-                </span>
-              ))}
-            </div>
-
-            {/* 간단한 AI 분석 영역 */}
-            <div style={styles.analysisBox}>
-              <div style={styles.analysisIcon}>✦</div>
-
-              <div>
-                <strong>이슈 분석 요약</strong>
-
-                <p>
-                  최근 {selectedCompany.name} 관련 기사에서는{" "}
-                  <b>{selectedCompany.keywords[0]?.text.replace("#", "")}</b>와
-                  관련된 내용이 주요하게 언급되고 있습니다.
-                </p>
-              </div>
-            </div>
+            <AnalysisUnavailable description="기사 본문에서 기업별 핵심 키워드를 추출하는 기능을 준비하고 있습니다." />
           </div>
 
           {/* 관련 기사 */}
           <div style={styles.mediumPanel}>
             <div style={styles.panelHeader}>
               <h3>관련 기사</h3>
-              <button style={styles.moreButton}>전체보기 ›</button>
+              <span>최신 5건</span>
             </div>
 
             <div style={styles.articleList}>
-              {selectedCompany.articles.map((article, index) => (
-                <div key={index} style={styles.articleItem}>
-                  <div style={styles.articleSourceIcon}>{article.icon}</div>
+              {visibleArticles.map((article, index) => {
+                const source = getArticleSource(article);
+                const articleUrl = article.original_link || article.link;
 
-                  <div style={styles.articleInfo}>
-                    <strong>{article.source}</strong>
-                    <p>{article.title}</p>
+                return (
+                  <div key={`${articleUrl}-${index}`} style={styles.articleItem}>
+                    <div style={styles.articleSourceIcon}>{source.slice(0, 1).toUpperCase()}</div>
+
+                    <div style={styles.articleInfo}>
+                      <strong>{source}</strong>
+                      {articleUrl ? (
+                        <a href={articleUrl} rel="noreferrer" style={styles.articleTitle} target="_blank">
+                          {article.title}
+                        </a>
+                      ) : (
+                        <p style={styles.articleTitle}>{article.title}</p>
+                      )}
+                      <span style={{ ...styles.articleSentiment, ...sentimentStyles[article.sentiment] }}>
+                        {sentimentLabels[article.sentiment] ?? "분석 결과 없음"}
+                        {Number.isFinite(article.score) && ` · 신뢰도 ${Math.round(article.score * 100)}%`}
+                      </span>
+                    </div>
+
+                    <span style={styles.articleTime}>{formatArticleTime(article.pub_date)}</span>
                   </div>
-
-                  <span style={styles.articleTime}>{article.time}</span>
-                </div>
-              ))}
+                );
+              })}
+              {!isNewsLoading && !newsError && newsAnalysis && articles.length === 0 && (
+                <p style={styles.articleEmpty}>
+                  기업명이 {minimumKeywordMentions}회 이상 언급된 최신 기사가 없습니다.
+                </p>
+              )}
             </div>
           </div>
         </section>
@@ -530,48 +487,21 @@ export default function CompanyAnalysisPage() {
 }
 
 /* =========================================================
-   감성 추이 그래프 좌표 생성
-========================================================= */
-
-function makeChartPoints(data, key) {
-  const width = 400;
-  const height = 150;
-
-  if (!data || data.length === 0) return "";
-
-  return data
-    .map((item, index) => {
-      const x = (index / (data.length - 1)) * width;
-      const y = height - (item[key] / 60) * height;
-
-      return `${x},${y}`;
-    })
-    .join(" ");
-}
-
-/* =========================================================
    스타일
 ========================================================= */
 
-const keywordStyles = {
-  blue: {
+const sentimentStyles = {
+  positive: {
+    color: "#16845B",
+    background: "#EAF9F2",
+  },
+  neutral: {
     color: "#2877D6",
     background: "#EEF6FF",
   },
-
-  green: {
-    color: "#1FA66A",
-    background: "#ECFAF3",
-  },
-
-  red: {
-    color: "#E45656",
-    background: "#FFF0F0",
-  },
-
-  orange: {
-    color: "#D99420",
-    background: "#FFF7E8",
+  negative: {
+    color: "#D84A5A",
+    background: "#FFF0F1",
   },
 };
 
@@ -649,6 +579,27 @@ const styles = {
     padding: "20px 22px",
     marginBottom: "14px",
     boxShadow: "0 2px 10px rgba(31, 61, 96, 0.03)",
+  },
+
+  newsStatus: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    minHeight: "22px",
+    margin: "-4px 0 18px",
+    color: "#66768A",
+    fontSize: "13px",
+  },
+
+  retryButton: {
+    padding: "5px 9px",
+    border: "1px solid #BFD6ED",
+    borderRadius: "6px",
+    color: "#176FC5",
+    background: "#FFFFFF",
+    cursor: "pointer",
+    fontSize: "12px",
+    fontWeight: 700,
   },
 
   companyLogo: {
@@ -736,6 +687,41 @@ const styles = {
     color: "#718198",
     fontWeight: 700,
     marginBottom: "8px",
+  },
+
+  summaryPending: {
+    color: "#9AA6B5",
+    fontSize: "12px",
+    fontWeight: 600,
+  },
+
+  liveNewsDetails: {
+    display: "grid",
+    gap: "12px",
+    paddingTop: "8px",
+    color: "#718198",
+    fontSize: "12px",
+  },
+
+  analysisUnavailable: {
+    display: "flex",
+    minHeight: "190px",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
+    padding: "20px",
+    color: "#718198",
+    textAlign: "center",
+  },
+
+  analysisUnavailableBadge: {
+    padding: "4px 8px",
+    borderRadius: "999px",
+    color: "#4A78AA",
+    background: "#EEF4FB",
+    fontSize: "10px",
+    fontWeight: 800,
   },
 
   riskValueRow: {
@@ -1124,10 +1110,39 @@ const styles = {
     minWidth: 0,
   },
 
+  articleTitle: {
+    display: "block",
+    overflow: "hidden",
+    margin: "3px 0 5px",
+    color: "#263B5A",
+    fontSize: "11px",
+    fontWeight: 600,
+    lineHeight: 1.45,
+    textDecoration: "none",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+
+  articleSentiment: {
+    display: "inline-block",
+    padding: "2px 5px",
+    borderRadius: "4px",
+    fontSize: "9px",
+    fontWeight: 700,
+  },
+
   articleTime: {
     fontSize: "9px",
     color: "#9AA6B5",
     whiteSpace: "nowrap",
+  },
+
+  articleEmpty: {
+    margin: 0,
+    padding: "16px 0",
+    color: "#8090A5",
+    fontSize: "12px",
+    textAlign: "center",
   },
 
   emptyPage: {

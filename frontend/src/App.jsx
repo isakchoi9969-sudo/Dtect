@@ -1,6 +1,5 @@
 ﻿// 백엔드 연결 테스트를 위한 axios import 및 useEffect 추가
 import React, { useEffect } from "react";
-import axios from "axios";
 
 import Header from "./components/Header";
 import HeroSection from "./components/HeroSection";
@@ -17,6 +16,7 @@ import ResponseToolsPage from "./components/ResponseToolsPage";
 import CompanyAnalysisPage from "./components/CompanyAnalysisPage";
 import { WatchlistDashboard, RiskDashboard } from "./components/DashboardPages";
 import { ROUTES } from "./config/routes";
+import { api } from "./config/api";
 
 function LandingPage() {
   return (
@@ -39,8 +39,8 @@ function LandingPage() {
 
 function App() {
   useEffect(() => {
-    axios
-      .get("http://localhost:3000/api/test")
+    api
+      .get("/api/test")
       .then((response) => {
         console.log("백엔드 응답:", response.data.message);
       })

@@ -276,6 +276,8 @@ button:focus-visible {
 
   transition: 150ms ease;
 }
+.login-button { background: transparent; cursor: pointer; }
+.header-user-name { color: var(--color-text-secondary); font-size: 13px; font-weight: 700; white-space: nowrap; }
 
 .desktop-login {
   justify-self: end;
@@ -1153,49 +1155,33 @@ button:focus-visible {
 /* Tablet */
 
 @media (max-width: 950px) {
-  .desktop-nav,
-  .desktop-login {
+  .header-inner {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    justify-content: normal;
+  }
+
+  .desktop-nav {
+    display: flex;
+    min-width: 0;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .nav-link {
+    padding: 0 clamp(5px, 1.2vw, 12px);
+    font-size: clamp(11px, 1.5vw, 14px);
+    white-space: nowrap;
+  }
+
+  .desktop-login,
+  .mobile-menu-button {
     display: none;
   }
 
-  .header-inner {
-    display: flex;
-
-    justify-content: space-between;
-  }
-
   .landing-header-actions {
-    margin-left: auto;
-    margin-right: 4px;
-  }
-
-  .mobile-menu-button {
-    display: flex;
-    flex-direction: column;
-
-    justify-content: center;
-
-    gap: 5px;
-
-    width: 42px;
-    height: 42px;
-
-    padding: 9px;
-
-    background: transparent;
-
-    cursor: pointer;
-  }
-
-  .mobile-menu-button span {
-    display: block;
-
-    width: 100%;
-    height: 2px;
-
-    background: var(--color-text);
-
-    transition: 150ms ease;
+    margin: 0;
+    justify-self: end;
   }
 
   .mobile-nav {
@@ -1472,9 +1458,19 @@ button:focus-visible {
 .auth-heading p { margin: 0; color: #778294; font-size: 14px; }
 .auth-form { display: grid; gap: 19px; margin-top: 38px; }
 .auth-form > label { display: grid; gap: 8px; color: #3f4b5d; font-size: 13px; font-weight: 700; }
-.auth-form input { width: 100%; height: 51px; padding: 0 15px; border: 1px solid #dce2ea; border-radius: 9px; color: #172033; background: #fff; outline: 0; font: inherit; font-weight: 500; transition: border-color 160ms ease, box-shadow 160ms ease; }
+.auth-form input, .auth-form select { width: 100%; height: 51px; padding: 0 15px; border: 1px solid #dce2ea; border-radius: 9px; color: #172033; background: #fff; outline: 0; font: inherit; font-weight: 500; transition: border-color 160ms ease, box-shadow 160ms ease; }
 .auth-form input::placeholder { color: #a7b0bd; }
-.auth-form input:focus { border-color: #2584ec; box-shadow: 0 0 0 4px rgba(37,132,236,.12); }
+.auth-form input:focus, .auth-form select:focus { border-color: #2584ec; box-shadow: 0 0 0 4px rgba(37,132,236,.12); }
+.member-type-field { display: grid; gap: 8px; min-width: 0; margin: 0; padding: 0; border: 0; color: #3f4b5d; font-size: 13px; font-weight: 700; }
+.member-type-field legend { padding: 0; }
+.member-type-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.member-type-options label { display: flex; align-items: flex-start; gap: 9px; min-height: 73px; padding: 13px; border: 1px solid #dce2ea; border-radius: 9px; cursor: pointer; }
+.member-type-options label:has(input:checked) { border-color: #2584ec; background: #f1f7ff; }
+.member-type-options input { width: 16px; height: 16px; min-height: 0; margin: 2px 0 0; padding: 0; accent-color: #1676dc; }
+.member-type-options span { display: grid; gap: 3px; }
+.member-type-options strong { color: #172033; font-size: 13px; }
+.member-type-options small, .company-field-help { color: #778294; font-size: 11px; font-weight: 500; line-height: 1.45; }
+.company-field-help { margin-top: -2px; }
 .password-field { position: relative; display: block; }
 .password-field input { padding-right: 54px; }
 .password-field button { position: absolute; top: 50%; right: 12px; padding: 4px; transform: translateY(-50%); color: #718096; background: transparent; cursor: pointer; font-size: 11px; }
