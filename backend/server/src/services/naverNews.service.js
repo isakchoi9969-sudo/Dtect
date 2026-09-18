@@ -97,6 +97,16 @@ async function fetchNaverNews(query, page, perPage) {
     return response.data;
   } catch (error) {
     if (error instanceof NewsServiceError) throw error;
+
+    // 인증 헤더 값은 로그에 남기지 않는다. 네이버가 반환한 상태와 오류 본문만
+    // 남겨 설정/권한/호출 한도/네트워크 문제를 구분할 수 있게 한다.
+    console.error("네이버 뉴스 API 요청 실패:", {
+      status: error.response?.status || null,
+      response: error.response?.data || null,
+      code: error.code || null,
+      message: error.message,
+    });
+
     throw new NewsServiceError("네이버 뉴스 API에 연결하지 못했습니다.");
   }
 }

@@ -94,7 +94,6 @@ function Header() {
         <nav
           className="desktop-nav"
           aria-label={copy.primaryMenu}
-          style={{ display: "flex" }}
         >
           {navigationItems.map((item) => (
             <div className="nav-item" key={item.title}>
