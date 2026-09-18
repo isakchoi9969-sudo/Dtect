@@ -39,6 +39,9 @@ const sentimentLabels = {
 };
 
 function getArticleSource(article) {
+  const sourceName = article.source?.name?.trim();
+  if (sourceName) return sourceName;
+
   try {
     const hostname = new URL(article.original_link || article.link).hostname;
     return hostname.replace(/^www\./, "");
@@ -175,7 +178,7 @@ export default function CompanyAnalysisPage() {
     newsAnalysis?.latest_article_published_at,
     "최신 기사 발행 시각 확인 중",
   );
-  const visibleArticles = articles.slice(0, 5);
+  const visibleArticles = articles.slice(0, 10);
   const realtimeAnalysisNotice = !newsAnalysis
     ? "최신 뉴스를 불러오면 기업 관련성 기준의 분석 현황이 표시됩니다."
     : relevantCount === 0

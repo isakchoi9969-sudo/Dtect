@@ -1,6 +1,7 @@
 const {
   fetchAndPrepareNews,
   calculatePercentages,
+  MIN_COMPANY_MENTIONS,
 } = require("./naverNews.service");
 const { analyzeSentiments } = require("./aiClient.service");
 
@@ -11,6 +12,7 @@ async function analyzeCompanyNews(query, page, perPage) {
     analysisTexts,
     fetchedCount,
     pagesFetched,
+    sourceFilteredCount,
     mentionFilteredCount,
     duplicateCount,
   } = await fetchAndPrepareNews(query, page, perPage);
@@ -40,11 +42,16 @@ async function analyzeCompanyNews(query, page, perPage) {
     fetched_count: fetchedCount,
     pages_fetched: pagesFetched,
     relevant_count: articles.length,
+    source_filtered_count: sourceFilteredCount,
     mention_filtered_count: mentionFilteredCount,
     duplicate_count: duplicateCount,
-    processed_count: articles.length + mentionFilteredCount + duplicateCount,
+    processed_count:
+      articles.length +
+      sourceFilteredCount +
+      mentionFilteredCount +
+      duplicateCount,
     target_reached: articles.length === perPage,
-    minimum_keyword_mentions: 3,
+    minimum_keyword_mentions: MIN_COMPANY_MENTIONS,
     analyzed_count: analyzedNews.length,
     sentiment_summary: sentimentCounts,
     sentiment_percentages: calculatePercentages(sentimentCounts),
