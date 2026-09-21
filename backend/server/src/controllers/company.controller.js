@@ -11,7 +11,11 @@ async function getCompanies(_req, res) {
     const [companies] = await pool.query(`
       SELECT
         COMPANY_ID AS companyId,
-        COMPANY_NAME AS companyName
+        COMPANY_NAME AS companyName,
+        CEO_NAME AS ceoName,
+        INDUSTRY AS industry,
+        COMPANY_INFO AS companyInfo,
+        STOCK_CODE AS stockCode
       FROM COMPANY
       ORDER BY COMPANY_NAME ASC
     `);
@@ -70,7 +74,7 @@ async function searchCompany(req, res) {
       })
 
       // 관련도가 너무 낮은 기업은 제외
-      .filter((company) => company.score >= 0.6)
+      .filter((company) => company.score >= 0.4)
 
       // 관련도가 높은 기업부터 정렬
       .sort((a, b) => b.score - a.score)
