@@ -1,567 +1,316 @@
 import { ROUTES } from "../config/routes";
 
 function HeroSection() {
-  const styles = {
-    section: {
-      position: "relative",
-      minHeight: "calc(100vh - 56px)",
-      padding: "100px 0 110px",
-      background:
-        "radial-gradient(circle at 50% 25%, var(--hero-glow), transparent 32%), var(--hero-bg)",
-      overflow: "hidden",
-      color: "var(--hero-text)",
-    },
-
-    grid: {
-      position: "absolute",
-      inset: 0,
-      backgroundImage:
-        "linear-gradient(var(--hero-grid) 1px, transparent 1px), linear-gradient(90deg, var(--hero-grid) 1px, transparent 1px)",
-      backgroundSize: "48px 48px",
-      maskImage:
-        "linear-gradient(to bottom, black 0%, rgba(0,0,0,0.4) 55%, transparent 100%)",
-      pointerEvents: "none",
-    },
-
-    glow: {
-      position: "absolute",
-      width: "520px",
-      height: "520px",
-      borderRadius: "50%",
-      background: "var(--hero-glow-strong)",
-      filter: "blur(90px)",
-      top: "80px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      pointerEvents: "none",
-    },
-
-    container: {
-      position: "relative",
-      zIndex: 1,
-      maxWidth: "1180px",
-      margin: "0 auto",
-      padding: "0 24px",
-    },
-
-    heroContent: {
-      textAlign: "center",
-      maxWidth: "980px",
-      margin: "0 auto",
-    },
-
-    status: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "8px",
-      padding: "7px 13px",
-      marginBottom: "24px",
-      border: "1px solid var(--hero-status-border)",
-      borderRadius: "999px",
-      background: "var(--hero-status-bg)",
-      boxShadow: "0 4px 16px var(--hero-shadow)",
-      fontSize: "11px",
-      fontWeight: 700,
-      letterSpacing: "0.12em",
-      color: "var(--hero-primary)",
-    },
-
-    dot: {
-      width: "6px",
-      height: "6px",
-      borderRadius: "50%",
-      background: "var(--hero-primary)",
-      boxShadow: "0 0 0 4px var(--hero-primary-soft)",
-    },
-
-    eyebrow: {
-      margin: "0 0 20px",
-      fontSize: "11px",
-      fontWeight: 800,
-      letterSpacing: "0.18em",
-      color: "var(--hero-primary)",
-      textTransform: "uppercase",
-    },
-
-    title: {
-      margin: 0,
-      fontSize: "clamp(42px, 5.2vw, 72px)",
-      lineHeight: 1.08,
-      letterSpacing: "-0.055em",
-      fontWeight: 800,
-      color: "var(--hero-title)",
-    },
-
-    highlight: {
-      color: "var(--hero-primary)",
-    },
-
-    subtitle: {
-      margin: "28px 0 0",
-      fontSize: "20px",
-      lineHeight: 1.5,
-      fontWeight: 700,
-      letterSpacing: "-0.025em",
-      color: "var(--hero-subtitle)",
-    },
-
-    description: {
-      maxWidth: "700px",
-      margin: "18px auto 0",
-      fontSize: "14px",
-      lineHeight: 1.8,
-      letterSpacing: "-0.015em",
-      color: "var(--hero-muted)",
-    },
-
-    buttonArea: {
-      marginTop: "32px",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      gap: "12px",
-    },
-
-    primaryButton: {
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "9px",
-      minWidth: "190px",
-      height: "52px",
-      padding: "0 24px",
-      borderRadius: "12px",
-      background: "var(--hero-primary)",
-      color: "#ffffff",
-      textDecoration: "none",
-      fontSize: "14px",
-      fontWeight: 700,
-      letterSpacing: "-0.02em",
-      boxShadow:
-        "0 10px 24px var(--hero-btn-shadow), inset 0 1px 0 rgba(255,255,255,0.18)",
-      transition: "all 0.2s ease",
-    },
-
-    arrow: {
-      fontSize: "16px",
-      transition: "transform 0.2s ease",
-    },
-
-    dashboard: {
-      position: "relative",
-      maxWidth: "1040px",
-      margin: "76px auto 0",
-      padding: "1px",
-      borderRadius: "20px",
-      background:
-        "linear-gradient(135deg, var(--hero-dash-border-1), var(--hero-dash-border-2), var(--hero-dash-border-3))",
-      boxShadow:
-        "0 30px 70px var(--hero-shadow-strong), 0 8px 24px var(--hero-shadow)",
-    },
-
-    dashboardInner: {
-      borderRadius: "19px",
-      background: "var(--hero-card-bg)",
-      overflow: "hidden",
-      backdropFilter: "blur(20px)",
-    },
-
-    dashboardHeader: {
-      height: "48px",
-      padding: "0 18px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      borderBottom: "1px solid var(--hero-border)",
-    },
-
-    browserDots: {
-      display: "flex",
-      gap: "6px",
-    },
-
-    browserDot: {
-      width: "7px",
-      height: "7px",
-      borderRadius: "50%",
-      background: "var(--hero-dot)",
-    },
-
-    dashboardLabel: {
-      fontSize: "10px",
-      fontWeight: 700,
-      letterSpacing: "0.1em",
-      color: "var(--hero-label)",
-    },
-
-    live: {
-      display: "flex",
-      alignItems: "center",
-      gap: "6px",
-      fontSize: "10px",
-      fontWeight: 700,
-      color: "var(--hero-live)",
-    },
-
-    liveDot: {
-      width: "6px",
-      height: "6px",
-      borderRadius: "50%",
-      background: "var(--hero-live-dot)",
-    },
-
-    dashboardBody: {
-      display: "grid",
-      gridTemplateColumns: "1.35fr 1fr 1fr",
-      gap: "14px",
-      padding: "20px",
-      textAlign: "left",
-    },
-
-    card: {
-      minHeight: "145px",
-      padding: "18px",
-      border: "1px solid var(--hero-border)",
-      borderRadius: "14px",
-      background: "var(--hero-card-inner)",
-      boxShadow: "0 5px 18px var(--hero-shadow)",
-    },
-
-    cardLabel: {
-      marginBottom: "14px",
-      fontSize: "10px",
-      fontWeight: 800,
-      letterSpacing: "0.08em",
-      color: "var(--hero-label)",
-      textTransform: "uppercase",
-    },
-
-    issueTitle: {
-      margin: 0,
-      fontSize: "15px",
-      fontWeight: 700,
-      letterSpacing: "-0.025em",
-      color: "var(--hero-title)",
-    },
-
-    issueMeta: {
-      marginTop: "8px",
-      fontSize: "11px",
-      color: "var(--hero-muted)",
-    },
-
-    tag: {
-      display: "inline-flex",
-      alignItems: "center",
-      padding: "5px 8px",
-      marginTop: "14px",
-      borderRadius: "6px",
-      background: "var(--hero-tag-bg)",
-      color: "var(--hero-primary)",
-      fontSize: "10px",
-      fontWeight: 700,
-    },
-
-    sentimentRow: {
-      display: "flex",
-      alignItems: "flex-end",
-      justifyContent: "space-between",
-      marginTop: "10px",
-    },
-
-    sentimentNumber: {
-      fontSize: "30px",
-      lineHeight: 1,
-      fontWeight: 800,
-      letterSpacing: "-0.05em",
-      color: "var(--hero-title)",
-    },
-
-    sentimentUnit: {
-      marginLeft: "3px",
-      fontSize: "12px",
-      fontWeight: 600,
-      color: "var(--hero-label)",
-    },
-
-    bar: {
-      height: "6px",
-      marginTop: "16px",
-      borderRadius: "999px",
-      background: "var(--hero-bar-bg)",
-      overflow: "hidden",
-    },
-
-    barFill: {
-      width: "72%",
-      height: "100%",
-      borderRadius: "999px",
-      background: "var(--hero-primary)",
-    },
-
-    riskValue: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginTop: "12px",
-    },
-
-    riskBadge: {
-      padding: "6px 9px",
-      borderRadius: "6px",
-      background: "var(--hero-badge-bg)",
-      color: "var(--hero-badge-text)",
-      fontSize: "10px",
-      fontWeight: 800,
-    },
-
-    riskNumber: {
-      fontSize: "25px",
-      fontWeight: 800,
-      letterSpacing: "-0.04em",
-      color: "var(--hero-title)",
-    },
-
-    dashboardFooter: {
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      gap: "8px",
-      padding: "13px 20px",
-      borderTop: "1px solid var(--hero-border)",
-      fontSize: "10px",
-      color: "var(--hero-label)",
-    },
-
-    footerLine: {
-      width: "28px",
-      height: "1px",
-      background: "var(--hero-border)",
-    },
-  };
+  const isLoggedIn =
+    typeof window !== "undefined" &&
+    localStorage.getItem("isLoggedIn") === "true";
 
   return (
-    <section style={styles.section} className="dtect-hero">
-      {/* 라이트 / 다크 변수 정의 */}
+    <section className="dtect-hero">
       <style>{`
         .dtect-hero {
-          --hero-bg: #ffffff;
-          --hero-text: #111318;
-          --hero-title: #111318;
-          --hero-subtitle: #20242b;
-          --hero-muted: #6b7280;
-          --hero-primary: #1677e8;
-          --hero-primary-soft: rgba(37, 99, 235, 0.1);
-          --hero-glow: rgba(25, 118, 255, 0.07);
-          --hero-glow-strong: rgba(37, 99, 235, 0.08);
-          --hero-grid: rgba(15, 23, 42, 0.025);
-          --hero-status-bg: rgba(255, 255, 255, 0.8);
-          --hero-status-border: rgba(37, 99, 235, 0.16);
-          --hero-shadow: rgba(15, 23, 42, 0.04);
-          --hero-shadow-strong: rgba(15, 23, 42, 0.10);
-          --hero-btn-shadow: rgba(22, 119, 232, 0.22);
-          --hero-card-bg: rgba(255, 255, 255, 0.96);
-          --hero-card-inner: #ffffff;
-          --hero-border: #eef0f3;
-          --hero-dot: #d7dce3;
-          --hero-label: #9aa1ad;
-          --hero-live: #16a34a;
-          --hero-live-dot: #22c55e;
-          --hero-tag-bg: #eff6ff;
-          --hero-bar-bg: #edf1f5;
-          --hero-badge-bg: #ecfdf3;
-          --hero-badge-text: #16803c;
-          --hero-dash-border-1: rgba(37, 99, 235, 0.22);
-          --hero-dash-border-2: rgba(15, 23, 42, 0.06);
-          --hero-dash-border-3: rgba(37, 99, 235, 0.12);
+          --hero-bg: #fbfcfe;
+          --hero-title: #111827;
+          --hero-body: #687386;
+          --hero-primary: #2563eb;
+          --hero-primary-soft: #eff6ff;
+          --hero-border: #e7ebf1;
+          --hero-card: rgba(255,255,255,.9);
+          --hero-panel: #f7f9fc;
+          --hero-label: #98a1af;
+          --hero-green: #16a34a;
+          --hero-shadow: rgba(15,23,42,.08);
+          --hero-grid: rgba(37,99,235,.045);
+
+          position: relative;
+          min-height: min(690px, calc(100vh - 56px));
+          display: flex;
+          align-items: center;
+          overflow: hidden;
+          padding: 74px 0 66px;
+          background:
+            radial-gradient(circle at 68% 38%, rgba(37,99,235,.10), transparent 27%),
+            var(--hero-bg);
+          color: var(--hero-title);
         }
 
         :root[data-theme="dark"] .dtect-hero {
           --hero-bg: #0c111b;
-          --hero-text: #eef3fb;
           --hero-title: #eef3fb;
-          --hero-subtitle: #d5deeb;
-          --hero-muted: #8a96a8;
+          --hero-body: #8a96a8;
           --hero-primary: #4c9cff;
-          --hero-primary-soft: rgba(76, 156, 255, 0.18);
-          --hero-glow: rgba(76, 156, 255, 0.12);
-          --hero-glow-strong: rgba(76, 156, 255, 0.14);
-          --hero-grid: rgba(238, 243, 251, 0.04);
-          --hero-status-bg: rgba(20, 27, 39, 0.85);
-          --hero-status-border: rgba(76, 156, 255, 0.28);
-          --hero-shadow: rgba(0, 0, 0, 0.25);
-          --hero-shadow-strong: rgba(0, 0, 0, 0.35);
-          --hero-btn-shadow: rgba(76, 156, 255, 0.28);
-          --hero-card-bg: rgba(17, 24, 36, 0.96);
-          --hero-card-inner: #141b27;
+          --hero-primary-soft: #172a43;
           --hero-border: #263142;
-          --hero-dot: #3a4658;
+          --hero-card: rgba(17,24,36,.92);
+          --hero-panel: #101722;
           --hero-label: #7f8a9c;
-          --hero-live: #34d399;
-          --hero-live-dot: #34d399;
-          --hero-tag-bg: #172a43;
-          --hero-bar-bg: #263142;
-          --hero-badge-bg: #14352a;
-          --hero-badge-text: #34d399;
-          --hero-dash-border-1: rgba(76, 156, 255, 0.3);
-          --hero-dash-border-2: rgba(38, 49, 66, 0.6);
-          --hero-dash-border-3: rgba(76, 156, 255, 0.18);
+          --hero-green: #34d399;
+          --hero-shadow: rgba(0,0,0,.28);
+          --hero-grid: rgba(238,243,251,.045);
+          background:
+            radial-gradient(circle at 68% 38%, rgba(76,156,255,.14), transparent 27%),
+            var(--hero-bg);
         }
 
-        @media (max-width: 800px) {
-          .dtect-hero {
-            padding-top: 70px !important;
-            padding-bottom: 70px !important;
-          }
-          .dtect-hero .dashboard-body {
-            grid-template-columns: 1fr !important;
-          }
+        .dtect-hero::before {
+          position: absolute;
+          inset: 0;
+          background-image: linear-gradient(var(--hero-grid) 1px, transparent 1px), linear-gradient(90deg, var(--hero-grid) 1px, transparent 1px);
+          background-size: 44px 44px;
+          mask-image: linear-gradient(to bottom, black, transparent 82%);
+          content: "";
+          pointer-events: none;
         }
 
-        @media (max-width: 600px) {
-          .dtect-hero h1 {
-            font-size: 42px !important;
-          }
-          .dtect-hero h2 {
-            font-size: 17px !important;
-          }
-          .dtect-hero .dashboard {
-            margin-top: 50px !important;
-          }
+        .dtect-hero .hero-shell {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          grid-template-columns: minmax(0, .92fr) minmax(420px, 1.08fr);
+          align-items: center;
+          gap: clamp(42px, 7vw, 96px);
+          width: min(1160px, calc(100% - 48px));
+          margin: 0 auto;
+        }
+
+        .dtect-hero .hero-copy { max-width: 540px; }
+
+        .dtect-hero .hero-status {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 7px 11px;
+          margin-bottom: 20px;
+          border: 1px solid color-mix(in srgb, var(--hero-primary) 18%, transparent);
+          border-radius: 999px;
+          background: color-mix(in srgb, var(--hero-card) 82%, transparent);
+          color: var(--hero-primary);
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: .13em;
+        }
+
+        .dtect-hero .hero-status-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--hero-primary);
+          box-shadow: 0 0 0 4px color-mix(in srgb, var(--hero-primary) 13%, transparent);
+        }
+
+        .dtect-hero h1 {
+          margin: 0;
+          font-size: clamp(38px, 4.4vw, 58px);
+          font-weight: 700;
+          letter-spacing: -.065em;
+          line-height: 1.1;
+        }
+
+        .dtect-hero .hero-highlight { color: var(--hero-primary); }
+
+        .dtect-hero .hero-kicker {
+          margin: 20px 0 0;
+          color: var(--hero-title);
+          font-size: clamp(17px, 2vw, 21px);
+          font-weight: 700;
+          letter-spacing: -.045em;
+          line-height: 1.4;
+        }
+
+        .dtect-hero .hero-description {
+          max-width: 480px;
+          margin: 13px 0 0;
+          color: var(--hero-body);
+          font-size: 13px;
+          line-height: 1.75;
+          letter-spacing: -.02em;
+        }
+
+        .dtect-hero .hero-actions { display: flex; gap: 10px; margin-top: 26px; }
+
+        .dtect-hero .hero-button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          height: 45px;
+          padding: 0 18px;
+          border-radius: 10px;
+          background: var(--hero-primary);
+          box-shadow: 0 10px 25px color-mix(in srgb, var(--hero-primary) 23%, transparent), inset 0 1px 0 rgba(255,255,255,.18);
+          color: #fff;
+          font-size: 12px;
+          font-weight: 750;
+          letter-spacing: -.02em;
+          text-decoration: none;
+          transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .dtect-hero .hero-button:hover { transform: translateY(-2px); box-shadow: 0 14px 28px color-mix(in srgb, var(--hero-primary) 30%, transparent); }
+        .dtect-hero .hero-button-arrow { font-size: 16px; line-height: 1; }
+
+        .dtect-hero .hero-proof {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          margin-top: 24px;
+          color: var(--hero-label);
+          font-size: 10px;
+        }
+
+        .dtect-hero .hero-proof-line { width: 24px; height: 1px; background: var(--hero-border); }
+
+        .dtect-hero .hero-dashboard {
+          position: relative;
+          padding: 1px;
+          border: 1px solid color-mix(in srgb, var(--hero-primary) 16%, var(--hero-border));
+          border-radius: 18px;
+          background: linear-gradient(145deg, color-mix(in srgb, var(--hero-primary) 32%, transparent), var(--hero-border), transparent);
+          box-shadow: 0 26px 60px var(--hero-shadow), 0 8px 20px color-mix(in srgb, var(--hero-shadow) 50%, transparent);
+          transform: rotate(1.2deg);
+        }
+
+        .dtect-hero .hero-dashboard-inner { overflow: hidden; border-radius: 17px; background: var(--hero-card); backdrop-filter: blur(18px); transform: rotate(-1.2deg); }
+
+        .dtect-hero .dashboard-topbar { display: flex; align-items: center; justify-content: space-between; height: 42px; padding: 0 15px; border-bottom: 1px solid var(--hero-border); }
+        .dtect-hero .dashboard-dots { display: flex; gap: 5px; }
+        .dtect-hero .dashboard-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--hero-border); }
+        .dtect-hero .dashboard-name { color: var(--hero-label); font-size: 8px; font-weight: 800; letter-spacing: .11em; }
+        .dtect-hero .dashboard-live { display: flex; align-items: center; gap: 5px; color: var(--hero-green); font-size: 8px; font-weight: 800; letter-spacing: .08em; }
+        .dtect-hero .dashboard-live i { width: 5px; height: 5px; border-radius: 50%; background: var(--hero-green); }
+
+        .dtect-hero .dashboard-content { display: grid; grid-template-columns: 1.2fr .8fr; gap: 10px; padding: 13px; text-align: left; }
+        .dtect-hero .dashboard-card { padding: 14px; border: 1px solid var(--hero-border); border-radius: 11px; background: var(--hero-panel); }
+        .dtect-hero .dashboard-card-main { grid-row: span 2; }
+        .dtect-hero .dashboard-label { margin-bottom: 12px; color: var(--hero-label); font-size: 8px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+        .dtect-hero .dashboard-issue { margin: 0; color: var(--hero-title); font-size: 14px; font-weight: 750; letter-spacing: -.04em; line-height: 1.4; }
+        .dtect-hero .dashboard-meta { margin: 8px 0 0; color: var(--hero-body); font-size: 9px; }
+        .dtect-hero .dashboard-tag { display: inline-flex; margin-top: 14px; padding: 5px 7px; border-radius: 5px; background: var(--hero-primary-soft); color: var(--hero-primary); font-size: 8px; font-weight: 800; }
+        .dtect-hero .dashboard-stat { display: flex; align-items: baseline; justify-content: space-between; }
+        .dtect-hero .dashboard-value { color: var(--hero-title); font-size: 27px; font-weight: 800; letter-spacing: -.06em; }
+        .dtect-hero .dashboard-unit, .dtect-hero .dashboard-positive { color: var(--hero-primary); font-size: 9px; font-weight: 750; }
+        .dtect-hero .dashboard-bar { height: 4px; margin-top: 12px; overflow: hidden; border-radius: 999px; background: var(--hero-border); }
+        .dtect-hero .dashboard-bar span { display: block; width: 72%; height: 100%; border-radius: inherit; background: var(--hero-primary); }
+        .dtect-hero .dashboard-risk { display: flex; align-items: center; justify-content: space-between; }
+        .dtect-hero .dashboard-risk strong { color: var(--hero-title); font-size: 21px; letter-spacing: -.05em; }
+        .dtect-hero .dashboard-badge { padding: 5px 7px; border-radius: 5px; background: color-mix(in srgb, var(--hero-green) 11%, transparent); color: var(--hero-green); font-size: 8px; font-weight: 800; }
+        .dtect-hero .dashboard-footer { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px; border-top: 1px solid var(--hero-border); color: var(--hero-label); font-size: 8px; }
+        .dtect-hero .dashboard-footer::before, .dtect-hero .dashboard-footer::after { width: 22px; height: 1px; background: var(--hero-border); content: ""; }
+
+        @media (max-width: 860px) {
+          .dtect-hero { min-height: auto; padding: 72px 0 58px; }
+          .dtect-hero .hero-shell { grid-template-columns: 1fr; gap: 44px; }
+          .dtect-hero .hero-copy { max-width: 620px; }
+          .dtect-hero .hero-dashboard { max-width: 650px; width: 100%; margin: 0 auto; }
+        }
+
+        @media (max-width: 560px) {
+          .dtect-hero { padding: 54px 0 44px; }
+          .dtect-hero .hero-shell { width: min(100% - 36px, 1160px); gap: 32px; }
+          .dtect-hero h1 { font-size: 36px; }
+          .dtect-hero .hero-kicker { font-size: 17px; }
+          .dtect-hero .hero-description br { display: none; }
+          .dtect-hero .dashboard-content { grid-template-columns: 1fr; }
+          .dtect-hero .dashboard-card-main { grid-row: auto; }
+          .dtect-hero .hero-dashboard { transform: none; }
+          .dtect-hero .hero-dashboard-inner { transform: none; }
         }
       `}</style>
 
-      <div style={styles.grid} />
-      <div style={styles.glow} />
-
-      <div style={styles.container}>
-        <div style={styles.heroContent}>
-          <div style={styles.status}>
-            <span style={styles.dot} />
+      <div className="hero-shell">
+        <div className="hero-copy">
+          <div className="hero-status">
+            <span className="hero-status-dot" />
             CORPORATE INTELLIGENCE PLATFORM
           </div>
 
-          <h1 style={styles.title}>
-            기업 이슈를 <span style={styles.highlight}>발견하고,</span>
+          <h1>
+            기업 이슈를 <span className="hero-highlight">발견하고,</span>
             <br />
-            대응 전략까지 <span style={styles.highlight}>한눈에.</span>
+            대응 전략까지 <span className="hero-highlight">한눈에.</span>
           </h1>
 
-          <h2 style={styles.subtitle}>
+          <p className="hero-kicker">
             이슈 탐색을 넘어, 대응 전략까지 설계하는 기업 인텔리전스
-          </h2>
-
-          <p style={styles.eyebrow}>D:TECT BUSINESS INTELLIGENCE</p>
-
-          <p style={styles.description}>
+          </p>
+          <p className="hero-description">
             D:TECT는 파편화된 뉴스를 의미 있는 이슈로 구조화합니다.
             <br />
-            감성·위험도·시장 반응을 분석하고 실무에 바로 활용할 수 있는 대응
+            감성·위험도·시장 반응을 분석해 실무에 바로 활용할 수 있는 대응
             자료를 제공합니다.
           </p>
 
-          <div style={styles.buttonArea}>
+          <div className="hero-actions">
             <a
-              href={
-                localStorage.getItem("isLoggedIn") === "true"
-                  ? ROUTES.COMPANY_SEARCH
-                  : ROUTES.SIGNUP
-              }
-              style={styles.primaryButton}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow =
-                  "0 14px 30px var(--hero-btn-shadow)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 10px 24px var(--hero-btn-shadow), inset 0 1px 0 rgba(255,255,255,0.18)";
-              }}
+              className="hero-button"
+              href={isLoggedIn ? ROUTES.COMPANY_SEARCH : ROUTES.SIGNUP}
             >
               기업 분석 시작하기
-              <span style={styles.arrow}>→</span>
+              <span className="hero-button-arrow">→</span>
             </a>
+          </div>
+
+          <div className="hero-proof">
+            <span className="hero-proof-line" />
+            실시간 데이터 기반 기업 이슈 모니터링
           </div>
         </div>
 
-        <div style={styles.dashboard} className="dashboard">
-          <div style={styles.dashboardInner}>
-            <div style={styles.dashboardHeader}>
-              <div style={styles.browserDots}>
-                <span style={styles.browserDot} />
-                <span style={styles.browserDot} />
-                <span style={styles.browserDot} />
+        <div className="hero-dashboard">
+          <div className="hero-dashboard-inner">
+            <div className="dashboard-topbar">
+              <div className="dashboard-dots">
+                <span />
+                <span />
+                <span />
               </div>
-
-              <span style={styles.dashboardLabel}>
-                D:TECT CORPORATE MONITOR
-              </span>
-
-              <div style={styles.live}>
-                <span style={styles.liveDot} />
-                LIVE MONITORING
+              <span className="dashboard-name">D:TECT CORPORATE MONITOR</span>
+              <div className="dashboard-live">
+                <i /> LIVE
               </div>
             </div>
 
-            <div style={styles.dashboardBody} className="dashboard-body">
-              <div style={styles.card}>
-                <div style={styles.cardLabel}>Major Issue</div>
-                <p style={styles.issueTitle}>
+            <div className="dashboard-content">
+              <div className="dashboard-card dashboard-card-main">
+                <div className="dashboard-label">Major Issue</div>
+                <p className="dashboard-issue">
                   주요 기업 관련 이슈가
                   <br />
                   새롭게 감지되었습니다.
                 </p>
-                <p style={styles.issueMeta}>
+                <p className="dashboard-meta">
                   News · Market · Social · 12 min ago
                 </p>
-                <span style={styles.tag}>ISSUE DETECTED</span>
+                <span className="dashboard-tag">ISSUE DETECTED</span>
               </div>
 
-              <div style={styles.card}>
-                <div style={styles.cardLabel}>Sentiment Analysis</div>
-                <div style={styles.sentimentRow}>
+              <div className="dashboard-card">
+                <div className="dashboard-label">Sentiment Analysis</div>
+                <div className="dashboard-stat">
                   <div>
-                    <span style={styles.sentimentNumber}>72</span>
-                    <span style={styles.sentimentUnit}>%</span>
+                    <strong className="dashboard-value">72</strong>
+                    <span className="dashboard-unit">%</span>
                   </div>
-                  <span
-                    style={{ fontSize: "11px", color: "var(--hero-primary)" }}
-                  >
-                    긍정
-                  </span>
+                  <span className="dashboard-positive">긍정</span>
                 </div>
-                <div style={styles.bar}>
-                  <div style={styles.barFill} />
+                <div className="dashboard-bar">
+                  <span />
                 </div>
               </div>
 
-              <div style={styles.card}>
-                <div style={styles.cardLabel}>Risk Monitoring</div>
-                <div style={styles.riskValue}>
-                  <span style={styles.riskNumber}>LOW</span>
-                  <span style={styles.riskBadge}>STABLE</span>
+              <div className="dashboard-card">
+                <div className="dashboard-label">Risk Monitoring</div>
+                <div className="dashboard-risk">
+                  <strong>LOW</strong>
+                  <span className="dashboard-badge">STABLE</span>
                 </div>
-                <p
-                  style={{
-                    margin: "14px 0 0",
-                    fontSize: "11px",
-                    lineHeight: 1.5,
-                    color: "var(--hero-muted)",
-                  }}
-                >
-                  현재 모니터링 중인
-                  <br />
-                  주요 리스크 지표
+                <p className="dashboard-meta">
+                  현재 모니터링 중인 주요 리스크 지표
                 </p>
               </div>
             </div>
 
-            <div style={styles.dashboardFooter}>
-              <span style={styles.footerLine} />
-              실시간 데이터 기반 기업 이슈 모니터링
-              <span style={styles.footerLine} />
-            </div>
+            <div className="dashboard-footer">실시간 분석 대시보드</div>
           </div>
         </div>
       </div>
