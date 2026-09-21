@@ -255,11 +255,11 @@ export default function CompanyAnalysisPage() {
             <button
               style={styles.watchButton}
               onClick={() => {
-                toggleCompany(selectedCompany.ticker);
+                toggleCompany(selectedCompany.id);
               }}
             >
-              {isWatched(selectedCompany.ticker) ? "★ 관심기업" : "☆ 관심기업"}{" "}
-              ({count}/{limit})
+              {isWatched(selectedCompany.id) ? "★ 관심기업" : "☆ 관심기업"} (
+              {count}/{limit})
             </button>
           </section>
 
