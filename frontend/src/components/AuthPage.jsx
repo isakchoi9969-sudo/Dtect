@@ -50,7 +50,9 @@ function AuthPage({ mode }) {
       } catch (error) {
         if (error.name !== "CanceledError") {
           console.error("회사 목록 조회 실패:", error);
-          setCompaniesError("회사 목록을 불러오지 못했습니다. '없음'은 선택할 수 있습니다.");
+          setCompaniesError(
+            "회사 목록을 불러오지 못했습니다. '없음'은 선택할 수 있습니다.",
+          );
         }
       } finally {
         if (!controller.signal.aborted) setIsCompaniesLoading(false);
@@ -87,6 +89,8 @@ function AuthPage({ mode }) {
           password: data.password,
         });
         alert(response.data.message || "로그인 성공!");
+        localStorage.setItem("isLoggedIn", "true");
+
         window.location.href = ROUTES.DASHBOARD; // 대시보드로 이동
       }
     } catch (error) {
@@ -194,7 +198,8 @@ function AuthPage({ mode }) {
                 <small className="company-field-help">
                   {isCompaniesLoading
                     ? "등록된 회사 목록을 불러오는 중입니다."
-                    : companiesError || `등록된 회사 ${companies.length}개를 불러왔습니다.`}
+                    : companiesError ||
+                      `등록된 회사 ${companies.length}개를 불러왔습니다.`}
                 </small>
               </label>
             )}
@@ -262,7 +267,11 @@ function AuthPage({ mode }) {
                 </span>
               </label>
             )}
-            <button className="auth-submit" disabled={isSubmitting} type="submit">
+            <button
+              className="auth-submit"
+              disabled={isSubmitting}
+              type="submit"
+            >
               {isSubmitting
                 ? "처리 중..."
                 : isSignup
