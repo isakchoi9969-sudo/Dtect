@@ -49,7 +49,31 @@ export default function MajorIssueAlert() {
   };
 
   useEffect(() => {
-    fetchAlerts();
+    let isActive = true;
+
+    const loadInitialAlerts = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/company/major-issue",
+          { params: { hours: 24 } },
+        );
+        if (isActive) setAlerts(response.data.data || []);
+      } catch (error) {
+        console.error("주요 이슈 발생 알림 조회 실패:", error);
+        if (isActive) {
+          setAlerts([]);
+          setNotice("주요 이슈 발생 알림을 불러오는 중 오류가 발생했습니다.");
+        }
+      } finally {
+        if (isActive) setLoading(false);
+      }
+    };
+
+    void loadInitialAlerts();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const openAnalysis = (company) => {
@@ -60,7 +84,7 @@ export default function MajorIssueAlert() {
 
   const toggleWatchlist = (event, company) => {
     event.stopPropagation();
-    toggleCompany(company);
+    toggleCompany(company.companyId);
   };
 
   const filteredAlerts =

@@ -138,9 +138,6 @@ export default function CompanyAnalysisPage() {
 
     const controller = new AbortController();
 
-    setIsNewsLoading(true);
-    setNewsError("");
-
     api
       .get("/api/news", {
         params: {
