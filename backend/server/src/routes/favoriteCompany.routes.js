@@ -16,7 +16,7 @@ const { pool } = require("../db/pool");
 const { requireAuth } = require("../middlewares/auth.middleware");
 
 const router = express.Router();
-const WATCHLIST_LIMIT = 10; // 프론트 useWatchlist 의 limit 과 동일하게 유지
+const WATCHLIST_LIMIT = 15; // 프론트 useWatchlist 의 limit 과 동일하게 유지
 
 router.use(requireAuth);
 

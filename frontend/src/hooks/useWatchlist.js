@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "../config/api"; // 경로는 프로젝트 구조에 맞게 수정
 
 const API_URL = "/api/favorite-company";
-const WATCHLIST_LIMIT = 10; // 서버 라우터의 WATCHLIST_LIMIT 과 동일하게 유지
+const WATCHLIST_LIMIT = 15; // 서버 라우터의 WATCHLIST_LIMIT 과 동일하게 유지
 
 const getErrorMessage = (e) =>
   e.response?.data?.message || e.message || "요청에 실패했습니다.";

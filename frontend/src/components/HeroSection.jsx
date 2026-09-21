@@ -462,7 +462,11 @@ function HeroSection() {
 
           <div style={styles.buttonArea}>
             <a
-              href={ROUTES.SIGNUP}
+              href={
+                localStorage.getItem("isLoggedIn") === "true"
+                  ? ROUTES.COMPANY_SEARCH
+                  : ROUTES.SIGNUP
+              }
               style={styles.primaryButton}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-2px)";

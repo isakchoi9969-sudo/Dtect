@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Header from "./Header";
 import { useWatchlist } from "../hooks/useWatchlist";
-
+import AnalysisLoader from "./AnalysisLoader";
 import { api } from "../config/api";
 
 /* =========================================================
@@ -208,6 +208,7 @@ export default function CompanyAnalysisPage() {
   if (isCompanyLoading) {
     return <div>기업 정보를 불러오는 중입니다...</div>;
   }
+
   if (!selectedCompany) {
     return (
       <div style={styles.emptyPage}>
@@ -218,6 +219,27 @@ export default function CompanyAnalysisPage() {
     );
   }
 
+  if (!selectedCompany) {
+    return (
+      <div style={styles.emptyPage}>
+        <div style={styles.emptyIcon}>☆</div>
+        <h2>등록된 관심기업이 없습니다.</h2>
+        <p>기업 검색에서 관심기업을 등록해주세요.</p>
+      </div>
+    );
+  }
+
+  // 뉴스 분석 오류
+  if (newsError) {
+    return (
+      <div style={styles.emptyPage}>
+        <div style={styles.emptyIcon}>!</div>
+        <h2>AI 분석 결과를 불러오지 못했습니다.</h2>
+        <p>{newsError}</p>
+        <button onClick={retryNewsAnalysis}>다시 분석하기</button>
+      </div>
+    );
+  }
   return (
     <>
       <Header />
@@ -530,6 +552,7 @@ export default function CompanyAnalysisPage() {
           </section>
         </div>
       </main>
+      {isNewsLoading && <AnalysisLoader companyName={selectedCompany.name} />}
     </>
   );
 }
