@@ -10,6 +10,8 @@
   CASE_SIMULATOR: "/response-center/case-simulator",
   RESPONSE_GENERATOR: "/response-center/response-generator",
   ALERTS: "/alerts",
+  RISK_ALERT: "/alerts/risk-alert",
+  MAJOR_ISSUE_ALERT: "/alerts/major-issue",
   COMPANY_SEARCH: "/company-analysis/search",
   LOGIN: "/login",
   SIGNUP: "/signup",

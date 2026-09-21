@@ -14,6 +14,8 @@ import CompanySearchPage from "./components/CompanySearchPage";
 import WatchlistPage from "./components/WatchlistPage";
 import ResponseToolsPage from "./components/ResponseToolsPage";
 import CompanyAnalysisPage from "./components/CompanyAnalysisPage";
+import RiskAlert from "./components/RiskAlert";
+import MajorIssueAlert from "./components/MajorIssueAlert";
 import { WatchlistDashboard, RiskDashboard } from "./components/DashboardPages";
 import { ROUTES } from "./config/routes";
 import { api } from "./config/api";
@@ -64,6 +66,14 @@ function App() {
 
   if (pathname === ROUTES.COMPANY_SEARCH) {
     return <CompanySearchPage />;
+  }
+
+  if (pathname === ROUTES.RISK_ALERT) {
+    return <RiskAlert />;
+  }
+
+  if (pathname === ROUTES.MAJOR_ISSUE_ALERT) {
+    return <MajorIssueAlert />;
   }
 
   if (pathname === ROUTES.COMPANY_WATCHLIST) {
