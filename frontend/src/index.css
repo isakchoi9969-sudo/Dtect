@@ -2828,7 +2828,7 @@ button:focus-visible {
 .company-analysis-detail {
   min-height: calc(100vh - var(--header-height));
   color-scheme: light;
-  background: #f7f9fc;
+  background: #f4f6f8;
 }
 .company-analysis-canvas {
   --analysis-card-border: #dfe7f0;
@@ -3052,11 +3052,16 @@ button:focus-visible {
   height: 28px;
   place-items: center;
   padding: 0;
+  border: none;
   border-radius: 8px;
+
   color: #eca31d;
   background: #fff8e8;
   cursor: pointer;
   font-size: 15px;
+
+  align-self: center;
+  justify-self: center;
 }
 .watchlist-empty {
   padding: 100px 24px;
