@@ -26,7 +26,24 @@ export function useWatchlist() {
   }, []);
 
   useEffect(() => {
-    fetchCompanies();
+    let isActive = true;
+
+    const loadInitialCompanies = async () => {
+      try {
+        const { data } = await api.get(API_URL);
+        if (isActive) setCompanies(data);
+      } catch (e) {
+        if (isActive) setError(getErrorMessage(e));
+      } finally {
+        if (isActive) setLoading(false);
+      }
+    };
+
+    void loadInitialCompanies();
+
+    return () => {
+      isActive = false;
+    };
   }, [fetchCompanies]);
 
   const isFavorite = useCallback(
