@@ -3,6 +3,7 @@ const cors = require("cors");
 const { port, frontendOrigin } = require("./config/env");
 const { pool } = require("./db/pool");
 
+const favoriteCompanyRoutes = require("./routes/favoriteCompany.routes");
 const authRoutes = require("./routes/auth.routes");
 const newsRoutes = require("./routes/news.routes");
 const companyRoutes = require("./routes/company.routes");
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/company", companyRoutes);
+app.use("/api/favorite-company", favoriteCompanyRoutes);
 app.use("/api", healthRoutes);
 
 // 프론트엔드 빌드 결과물을 이 서버에서 함께 서빙하려면 아래 주석을 해제하세요.

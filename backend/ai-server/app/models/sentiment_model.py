@@ -91,7 +91,9 @@ def analyze_sentiments(texts: list[str]) -> list[dict]:
         max_length=512,
         batch_size=batch_size,
     )
-
+    
+    logger.info("KR-FinBERT 원본 결과: %s", results)
+   
     return [
         {
             "label": normalize_label(result["label"]),
