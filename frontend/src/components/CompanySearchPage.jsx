@@ -1,14 +1,10 @@
 import { useState } from "react";
-import axios from "axios";
+import { api } from "../config/api";
 import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
 import Header from "./Header";
 
 const recommendedKeywords = ["삼성", "현대", "카카오", "바이오", "2차전지"];
-
-function riskClass(level) {
-  return level === "낮음" ? "safe" : level === "주의" ? "caution" : "danger";
-}
 
 export default function CompanySearchPage() {
   const [query, setQuery] = useState("");
@@ -16,26 +12,26 @@ export default function CompanySearchPage() {
   const [notice, setNotice] = useState("");
   const [searchResults, setSearchResults] = useState([]);
 
-  const { isWatched, toggleCompany, count, limit } = useWatchlist();
+  const {
+    isWatched,
+    toggleCompany,
+    count,
+    limit,
+    error: watchlistError,
+  } = useWatchlist();
 
-  const submitSearch = async (event) => {
-    event.preventDefault();
-
-    const keyword = query.trim();
+  // 검색 실행 (폼 제출과 추천 검색어 클릭에서 공통 사용)
+  const runSearch = async (rawKeyword) => {
+    const keyword = rawKeyword.trim();
 
     if (!keyword) {
       return;
     }
 
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/company/search",
-        {
-          params: {
-            keyword,
-          },
-        },
-      );
+      const response = await api.get("/api/company/search", {
+        params: { keyword },
+      });
 
       setSearchResults(response.data.data || []);
       setSubmittedQuery(keyword);
@@ -46,6 +42,23 @@ export default function CompanySearchPage() {
       setSubmittedQuery(keyword);
       setNotice("기업 검색 중 오류가 발생했습니다.");
     }
+  };
+
+  const submitSearch = (event) => {
+    event.preventDefault();
+    runSearch(query);
+  };
+
+  const chooseKeyword = (keyword) => {
+    setQuery(keyword);
+    runSearch(keyword);
+  };
+
+  // 별표 클릭: 카드 이동(openAnalysis)이 같이 실행되지 않도록 전파를 막고,
+  // DB의 COMPANY_ID 기준으로 관심기업 등록/해제
+  const toggleWatchlist = (event, company) => {
+    event.stopPropagation();
+    toggleCompany(company.companyId);
   };
 
   const openAnalysis = (company) => {
@@ -89,7 +102,7 @@ export default function CompanySearchPage() {
             <input
               autoFocus
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="기업명, 종목코드, 업종을 검색하세요"
+              placeholder="기업명을 검색하세요"
               value={query}
             />
 
@@ -114,6 +127,12 @@ export default function CompanySearchPage() {
         {notice && (
           <p className="company-search-notice" role="status">
             {notice}
+          </p>
+        )}
+
+        {watchlistError && (
+          <p className="company-search-notice" role="alert">
+            {watchlistError}
           </p>
         )}
 
