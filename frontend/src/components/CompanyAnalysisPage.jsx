@@ -58,6 +58,11 @@ const companyDomains = {
   롯데에너지머티리얼즈: "lotteenergymaterials.com",
   롯데칠성음료: "company.lottechilsung.co.kr",
   롯데케미칼: "lottechem.com",
+  CJ대한통운: "cjlogistics.com",
+  대웅제약: "daewoong.co.kr",
+  대한항공: "koreanair.com",
+  아시아나항공: "flyasiana.com",
+  제주항공: "jejuair.net",
 };
 /* =========================================================
    유틸
