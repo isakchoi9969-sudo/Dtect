@@ -17,7 +17,21 @@ const CATEGORY_CONFIG = Object.freeze({
   "보안·개인정보": { defaultMode: CLUSTER_MODE.COMPANY },
   "제품·품질": { defaultMode: CLUSTER_MODE.COMPANY },
   "환경": { defaultMode: CLUSTER_MODE.HYBRID },
-  "노동·노사": { defaultMode: CLUSTER_MODE.COMPANY },
+  "노동·노사": {
+    // 파업·노사 분쟁 기사는 기업명이 제목에 없는 경우가 흔하므로 주제 경로도 보존한다.
+    defaultMode: CLUSTER_MODE.HYBRID,
+    subcategoryOverrides: {
+      "파업": {
+        aliases: ["노조 파업", "쟁의행위", "총파업", "부분파업", "파업 돌입", "파업 예고"],
+      },
+      "노사 갈등": { aliases: ["노사분규", "노사 협상", "노조 갈등", "노사 대립"] },
+      "임금 체불": { aliases: ["체불 임금", "임금 미지급", "급여 체불"] },
+      "부당해고 논란": { aliases: ["부당 해고", "해고 논란", "해고 무효"] },
+      "직장 내 괴롭힘": { aliases: ["직장내 괴롭힘", "괴롭힘 신고", "갑질 논란"] },
+      "장시간 노동 논란": { aliases: ["장시간 근로", "과로", "연장근로 논란"] },
+      "노동환경 논란": { aliases: ["근로환경", "작업 환경", "노동 조건"] },
+    },
+  },
   "법률·수사": { defaultMode: CLUSTER_MODE.COMPANY },
   "공정거래·규제": { defaultMode: CLUSTER_MODE.COMPANY },
   "소비자·고객": { defaultMode: CLUSTER_MODE.COMPANY },
@@ -64,6 +78,9 @@ function getCategoryRule(majorCategory, minorCategory) {
   return {
     mode: override.mode || category.defaultMode || CLUSTER_MODE.COMPANY,
     aliases: override.aliases || [],
+    // 소분류만으로 검색하면 짧은 쿼리의 cosine 점수가 낮아지는 특성을 보완한다.
+    articleSimilarityCut: override.articleSimilarityCut
+      || (minorCategory ? 0.5 : undefined),
   };
 }
 

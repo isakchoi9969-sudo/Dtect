@@ -5,6 +5,7 @@ const {
   searchSimilarNewsByQueries,
 } = require("./aiClient.service");
 const {
+  getKeywordNewsCandidates,
   getSimilarNewsCandidates,
   getSimulatorCompanies,
 } = require("./simulatorCandidate.service");
@@ -23,6 +24,20 @@ const {
   selectTopSimilarCases,
 } = require("./simulatorScoring.service");
 const { getCategoryRule } = require("../config/simulatorCategory.config");
+
+function mergeCandidatesByNewsId(candidates) {
+  const candidatesByNewsId = new Map();
+
+  for (const candidate of candidates) {
+    const key = `${candidate.newsId}:${candidate.companyId ?? "none"}`;
+    const previous = candidatesByNewsId.get(key);
+    if (!previous || candidate.searchSource === "keyword") {
+      candidatesByNewsId.set(key, candidate);
+    }
+  }
+
+  return [...candidatesByNewsId.values()];
+}
 
 /**
  * 현재 이슈를 유사 뉴스 후보로 변환한다.
@@ -47,10 +62,26 @@ async function getValidatedIssueGroupResult(
     searchSimilarNewsByQueries(queries),
     getSimulatorCompanies(),
   ]);
-  const candidates = await getSimilarNewsCandidates(similarNews);
+  const semanticCandidates = await getSimilarNewsCandidates(similarNews);
+  const articleSimilarityCut = categoryRule.articleSimilarityCut
+    || SIMULATOR_RULES.articleSearchCut;
+  const semanticCandidatesPassed = semanticCandidates.filter(
+    (candidate) => candidate.similarity >= articleSimilarityCut,
+  );
+  // 소수 후보만 남아도 이후 기업·기간 군집화에서 전부 소실될 수 있으므로
+  // 정확 소분류 검색으로 표본을 보충한다.
+  const keywordFallbackUsed = Boolean(minorCategory) && semanticCandidatesPassed.length < 10;
+  const keywordCandidates = keywordFallbackUsed
+    ? await getKeywordNewsCandidates([minorCategory, ...categoryRule.aliases])
+    : [];
+  const candidates = mergeCandidatesByNewsId([
+    ...semanticCandidates,
+    ...keywordCandidates,
+  ]);
   const preparedCandidates = prepareCandidatesForClustering(candidates, companies, {
     mode: categoryRule.mode,
     topicName: minorCategory || majorCategory || title,
+    articleSimilarityCut,
   });
   const timeGroups = groupCandidatesByTime(preparedCandidates);
   const newsIds = [...new Set(
@@ -61,10 +92,11 @@ async function getValidatedIssueGroupResult(
     mode: categoryRule.mode,
     searchQueries: queries.length,
     chromaMatches: similarNews.length,
-    enrichedCandidates: candidates.length,
-    articleSimilarityPassed: candidates.filter(
-      (candidate) => candidate.similarity >= SIMULATOR_RULES.articleSearchCut,
-    ).length,
+    enrichedCandidates: semanticCandidates.length,
+    articleSimilarityCut,
+    articleSimilarityPassed: semanticCandidatesPassed.length,
+    keywordFallbackUsed,
+    keywordCandidates: keywordCandidates.length,
     clusteringCandidates: preparedCandidates.length,
     timeGroups: timeGroups.length,
   };
@@ -237,6 +269,7 @@ module.exports = {
   buildIssueSearchContent,
   buildIssueSearchQueries,
   buildDynamicCaseGroups,
+  mergeCandidatesByNewsId,
   removeDuplicateDynamicGroups,
   getSimulationCandidates,
   getValidatedIssueGroupResult,

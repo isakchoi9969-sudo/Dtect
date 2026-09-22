@@ -49,7 +49,11 @@ function publishedAtTimestamp(article) {
 function prepareCandidatesForClustering(
   candidates,
   companies,
-  { mode = CLUSTER_MODE.COMPANY, topicName = "주제 기반 사례" } = {},
+  {
+    mode = CLUSTER_MODE.COMPANY,
+    topicName = "주제 기반 사례",
+    articleSimilarityCut = SIMULATOR_RULES.articleSearchCut,
+  } = {},
 ) {
   const aliasesByCompany = buildCompanyAliases(companies);
   const companiesByName = new Map(
@@ -57,7 +61,9 @@ function prepareCandidatesForClustering(
   );
 
   const detectedCandidates = candidates
-    .filter((candidate) => candidate.similarity >= SIMULATOR_RULES.articleSearchCut)
+    .filter((candidate) =>
+      candidate.searchSource === "keyword" || candidate.similarity >= articleSimilarityCut
+    )
     .map((candidate) => ({
       ...candidate,
       coreCompanies: detectCoreCompanies(candidate, aliasesByCompany),
