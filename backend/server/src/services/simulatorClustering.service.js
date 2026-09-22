@@ -3,6 +3,7 @@ const {
   buildCompanyAliases,
   detectCoreCompanies,
 } = require("./simulatorCompany.service");
+const { CLUSTER_MODE } = require("../config/simulatorCategory.config");
 
 /**
  * Colab에서 검증한 과거 유사사례 시뮬레이터 기준값.
@@ -12,15 +13,18 @@ const SIMULATOR_RULES = Object.freeze({
   searchTopN: 100,
   articleSearchCut: 0.55,
   maxGapDays: 10,
-  minArticles: 3,
+  // 1건도 과거 사례 후보로 표시하고, 0건일 때만 빈 결과로 처리한다.
+  minArticles: 1,
   issueSimilarityCut: 0.7,
-  caseSimilarityCut: 0.6,
+  // 사용자 결정: 현재 이슈와 사례 군집의 의미 유사도 기준을 0.40으로 완화한다.
+  caseSimilarityCut: 0.4,
   bgeScoreWeight: 60,
   riskScoreWeight: 20,
   industryScoreWeight: 10,
   recencyScoreWeight: 10,
   // 사용자 요청: 업종 점수 미전달 시에도 의미적으로 충분히 유사한 사례를 표시한다.
-  finalScoreCut: 60,
+  // 사용자 결정: 1건 기반 사례도 표시할 수 있도록 최종 표시 점수를 40점으로 완화한다.
+  finalScoreCut: 40,
   topK: 3,
 });
 
@@ -38,9 +42,15 @@ function publishedAtTimestamp(article) {
 }
 
 /**
- * 검색된 기사를 원안 순서대로 필터링·핵심 기업 판별·중복 제거·기업별 분리한다.
+ * 검색된 기사를 기준 유사도로 필터링·중복 제거한 뒤, 검색 모드에 맞게 군집 경로를 정한다.
+ * COMPANY는 기업이 확인된 기사만, TOPIC은 모든 기사를 하나의 주제 경로로,
+ * HYBRID 계열은 기업 기사와 기업 미확인 기사를 각각의 경로로 전달한다.
  */
-function prepareCandidatesForClustering(candidates, companies) {
+function prepareCandidatesForClustering(
+  candidates,
+  companies,
+  { mode = CLUSTER_MODE.COMPANY, topicName = "주제 기반 사례" } = {},
+) {
   const aliasesByCompany = buildCompanyAliases(companies);
   const companiesByName = new Map(
     companies.map((company) => [company.companyName, company]),
@@ -53,7 +63,6 @@ function prepareCandidatesForClustering(candidates, companies) {
       coreCompanies: detectCoreCompanies(candidate, aliasesByCompany),
       textHash: makeArticleTextHash(candidate),
     }))
-    .filter((candidate) => candidate.coreCompanies.length > 0)
     .sort((a, b) => publishedAtTimestamp(a) - publishedAtTimestamp(b));
 
   const seenHashes = new Set();
@@ -63,8 +72,15 @@ function prepareCandidatesForClustering(candidates, companies) {
     return true;
   });
 
-  return uniqueCandidates.flatMap(({ coreCompanies, textHash, ...candidate }) =>
-    coreCompanies.flatMap((companyName) => {
+  return uniqueCandidates.flatMap(({ coreCompanies, textHash, ...candidate }) => {
+    const topicCandidate = () => ([{
+      ...candidate,
+      companyId: null,
+      companyName: topicName,
+      industry: null,
+      clusterKey: `topic:${topicName}`,
+    }]);
+    const companyCandidates = () => coreCompanies.flatMap((companyName) => {
       const company = companiesByName.get(companyName);
       if (!company) return [];
 
@@ -73,9 +89,20 @@ function prepareCandidatesForClustering(candidates, companies) {
         companyId: company.companyId,
         companyName,
         industry: company.industry,
+        clusterKey: `company:${company.companyId}`,
       }];
-    }),
-  );
+    });
+
+    if (mode === CLUSTER_MODE.TOPIC) return topicCandidate();
+    if (mode === CLUSTER_MODE.MARKET_HYBRID) {
+      // 시장 이슈는 회사명이 있는 기사도 시장 전체 흐름의 일부일 수 있으므로 두 경로에 모두 보낸다.
+      return [...companyCandidates(), ...topicCandidate()];
+    }
+    if (mode === CLUSTER_MODE.HYBRID) {
+      return coreCompanies.length > 0 ? companyCandidates() : topicCandidate();
+    }
+    return companyCandidates();
+  });
 }
 
 function toPublishedAt(article) {
@@ -85,14 +112,14 @@ function toPublishedAt(article) {
 
 /**
  * 같은 기업의 이전 기사와 10일을 초과해 벌어질 때 새 사건 군집을 시작한다.
- * 각 군집은 최소 3개 기사를 포함해야 다음 단계로 전달한다.
+ * 1건 이상인 군집을 다음 단계로 전달한다.
  */
 function groupCandidatesByTime(candidates) {
   const orderedCandidates = candidates
     .map((candidate) => ({ ...candidate, publishedAtDate: toPublishedAt(candidate) }))
     .filter((candidate) => candidate.publishedAtDate !== null)
     .sort((a, b) =>
-      a.companyName.localeCompare(b.companyName, "ko")
+      String(a.companyName || "").localeCompare(String(b.companyName || ""), "ko")
       || a.publishedAtDate - b.publishedAtDate
       || a.newsId - b.newsId,
     );
@@ -103,7 +130,7 @@ function groupCandidatesByTime(candidates) {
   const groupByKey = new Map();
 
   for (const candidate of orderedCandidates) {
-    const companyKey = String(candidate.companyId);
+    const companyKey = candidate.clusterKey || String(candidate.companyId);
     const previous = previousByCompany.get(companyKey);
     const gapDays = previous
       ? Math.floor((candidate.publishedAtDate - previous) / (24 * 60 * 60 * 1000))
@@ -184,11 +211,55 @@ function filterGroupsByInternalSimilarity(groups, embeddingsByNewsId) {
       }
     }
 
-    const averagePairSimilarity = pairSimilarities.reduce(
-      (sum, similarity) => sum + similarity,
-      0,
-    ) / pairSimilarities.length;
+    // 기사 1건 군집은 비교할 기사 쌍이 없으므로 내부 유사도 조건을 충족한 것으로 본다.
+    const averagePairSimilarity = pairSimilarities.length === 0
+      ? 1
+      : pairSimilarities.reduce(
+        (sum, similarity) => sum + similarity,
+        0,
+      ) / pairSimilarities.length;
     return [{ ...group, minimumPairSimilarity, averagePairSimilarity }];
+  });
+}
+
+/**
+ * 날짜 기준으로 넓게 묶인 기사 안에서, 모든 기사 쌍이 기준 유사도를 만족하는
+ * 작은 사건 군집을 만든다. 원래의 0.70 pairwise 기준은 그대로 유지한다.
+ */
+function splitGroupsBySemanticSimilarity(groups, embeddingsByNewsId) {
+  return groups.flatMap((group) => {
+    const articles = group.articles.filter((article) =>
+      embeddingsByNewsId.has(article.newsId)
+    );
+    const clusters = [];
+
+    for (const article of articles) {
+      const articleEmbedding = embeddingsByNewsId.get(article.newsId);
+      const compatibleCluster = clusters.find((cluster) =>
+        cluster.every((clusterArticle) => {
+          const clusterEmbedding = embeddingsByNewsId.get(clusterArticle.newsId);
+          const similarity = cosineSimilarity(articleEmbedding, clusterEmbedding);
+          return similarity !== null && similarity >= SIMULATOR_RULES.issueSimilarityCut;
+        })
+      );
+
+      if (compatibleCluster) {
+        compatibleCluster.push(article);
+      } else {
+        clusters.push([article]);
+      }
+    }
+
+    return clusters
+      .filter((cluster) => cluster.length >= SIMULATOR_RULES.minArticles)
+      .map((articlesInCluster, semanticGroup) => ({
+        ...group,
+        semanticGroup: semanticGroup + 1,
+        articles: articlesInCluster,
+        startDate: articlesInCluster[0].publishedAt,
+        lastDate: articlesInCluster[articlesInCluster.length - 1].publishedAt,
+        articleCount: articlesInCluster.length,
+      }));
   });
 }
 
@@ -308,6 +379,7 @@ module.exports = {
   makeArticleTextHash,
   prepareCandidatesForClustering,
   groupCandidatesByTime,
+  splitGroupsBySemanticSimilarity,
   filterGroupsByInternalSimilarity,
   buildIssueCentroids,
   buildStoredCaseCentroids,
