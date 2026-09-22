@@ -5,6 +5,29 @@ import { ROUTES } from "../config/routes";
 import Header from "./Header";
 
 const recommendedKeywords = ["삼성", "현대", "카카오", "바이오", "2차전지"];
+const LOGO_DEV_TOKEN = "pk_LmDNVeHjR3Sh2eSen5P1yA";
+const companyDomains = {
+  삼성SDI: "samsungsdi.co.kr",
+  삼성물산: "samsungcnt.com",
+  삼성바이오로직스: "samsungbiologics.com",
+  삼성생명: "samsunglife.com",
+  삼성엔지니어링: "samsungena.com",
+  삼성전기: "samsungsem.com",
+  삼성전자: "samsung.com",
+  삼성중공업: "samsungcareers.com",
+  삼성화재: "samsungfire.com",
+  HD현대중공업: "hd-hhi.com",
+  현대건설: "hdec.kr",
+  현대글로비스: "glovis.net",
+  현대모비스: "mobis.com",
+  현대백화점: "ehyundai.com",
+  현대위아: "hyundai-wia.com",
+  현대자동차: "hyundai.com",
+  현대제철: "hyundai-steel.com",
+  카카오: "kakao.com",
+  카카오게임즈: "kakaogames.com",
+  SK바이오팜: "skbp.com",
+};
 
 export default function CompanySearchPage() {
   const [query, setQuery] = useState("");
@@ -164,8 +187,43 @@ export default function CompanySearchPage() {
                         onClick={() => openAnalysis(company)}
                         type="button"
                       >
-                        <span className="company-result-mark">
-                          {company.companyName.slice(0, 2)}
+                        <span
+                          className="company-result-mark"
+                          style={{
+                            width: "52px",
+                            height: "52px",
+                            minWidth: "52px",
+                            minHeight: "52px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            overflow: "hidden",
+                            flexShrink: 0,
+                            borderRadius: "14px",
+                            background: "#fff",
+                            border: "1px solid #e5e7eb",
+                            boxSizing: "border-box",
+                          }}
+                        >
+                          {companyDomains[company.companyName] ? (
+                            <img
+                              src={`https://img.logo.dev/${companyDomains[company.companyName]}?token=${LOGO_DEV_TOKEN}&size=128&format=png`}
+                              alt={`${company.companyName} 로고`}
+                              style={{
+                                width: "34px",
+                                height: "34px",
+                                maxWidth: "34px",
+                                maxHeight: "34px",
+                                objectFit: "contain",
+                                objectPosition: "center",
+                                display: "block",
+                                margin: 0,
+                                padding: 0,
+                              }}
+                            />
+                          ) : (
+                            company.companyName.slice(0, 2)
+                          )}
                         </span>
 
                         <span className="company-result-copy">
