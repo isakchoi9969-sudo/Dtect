@@ -4,6 +4,29 @@ import { useWatchlist } from "../hooks/useWatchlist";
 import AnalysisLoader from "./AnalysisLoader";
 import { api } from "../config/api";
 
+const LOGO_DEV_TOKEN = "pk_LmDNVeHjR3Sh2eSen5P1yA";
+const companyDomains = {
+  삼성SDI: "samsungsdi.co.kr",
+  삼성물산: "samsungcnt.com",
+  삼성바이오로직스: "samsungbiologics.com",
+  삼성생명: "samsunglife.com",
+  삼성엔지니어링: "samsungena.com",
+  삼성전기: "samsungsem.com",
+  삼성전자: "samsung.com",
+  삼성중공업: "samsungcareers.com",
+  삼성화재: "samsungfire.com",
+  HD현대중공업: "hd-hhi.com",
+  현대건설: "hdec.kr",
+  현대글로비스: "glovis.net",
+  현대모비스: "mobis.com",
+  현대백화점: "ehyundai.com",
+  현대위아: "hyundai-wia.com",
+  현대자동차: "hyundai.com",
+  현대제철: "hyundai-steel.com",
+  카카오: "kakao.com",
+  카카오게임즈: "kakaogames.com",
+  SK바이오팜: "skbp.com",
+};
 /* =========================================================
    유틸
 ========================================================= */
@@ -251,7 +274,27 @@ export default function CompanyAnalysisPage() {
             style={styles.companyHeader}
           >
             <div style={styles.companyLogo}>
-              {selectedCompany.name.slice(0, 2)}
+              {companyDomains[selectedCompany.name] ? (
+                <img
+                  src={`https://img.logo.dev/${
+                    companyDomains[selectedCompany.name]
+                  }?token=${LOGO_DEV_TOKEN}&size=128&format=png`}
+                  alt={`${selectedCompany.name} 로고`}
+                  style={{
+                    width: "46px",
+                    height: "46px",
+                    maxWidth: "46px",
+                    maxHeight: "46px",
+                    objectFit: "contain",
+                    objectPosition: "center",
+                    display: "block",
+                    margin: 0,
+                    padding: 0,
+                  }}
+                />
+              ) : (
+                <span>{selectedCompany.name.slice(0, 2)}</span>
+              )}
             </div>
 
             <div style={styles.companyInfo}>
