@@ -1,6 +1,7 @@
 const axios = require("axios");
 const { naver } = require("../config/env");
 const { getApprovedNewsSource } = require("../config/approvedNewsSources");
+const { getCompanyNewsTerms } = require("../config/companyNewsAliases");
 
 const NAVER_NEWS_URL = "https://naverapihub.apigw.ntruss.com/search/v1/news";
 const HTML_TAG_PATTERN = /<[^>]+>/g;
@@ -54,6 +55,45 @@ function countKeywordOccurrences(text, keyword) {
   return (
     text.toLocaleLowerCase("ko-KR").split(normalizedKeyword).length - 1
   );
+}
+
+function hasAsciiWordBoundary(text, startIndex, term) {
+  if (!/^[a-z0-9]+$/i.test(term)) return true;
+
+  const previousCharacter = text[startIndex - 1] || "";
+  const nextCharacter = text[startIndex + term.length] || "";
+  return !/[a-z0-9]/i.test(previousCharacter) && !/[a-z0-9]/i.test(nextCharacter);
+}
+
+/**
+ * 정식 회사명과 별칭의 등장 횟수를 합산한다.
+ * 긴 표기를 먼저 확인해 `삼성바이오로직스` 한 번을 `삼성바이오`까지
+ * 중복해서 두 번 세지 않도록 한다.
+ */
+function countCompanyMentions(text, companyName) {
+  const normalizedText = String(text || "").toLocaleLowerCase("ko-KR");
+  const searchTerms = getCompanyNewsTerms(companyName)
+    .map((term) => term.toLocaleLowerCase("ko-KR"))
+    .sort((a, b) => b.length - a.length);
+  let mentionCount = 0;
+  let currentIndex = 0;
+
+  while (currentIndex < normalizedText.length) {
+    const matchedTerm = searchTerms.find(
+      (term) =>
+        normalizedText.startsWith(term, currentIndex) &&
+        hasAsciiWordBoundary(normalizedText, currentIndex, term),
+    );
+
+    if (matchedTerm) {
+      mentionCount += 1;
+      currentIndex += matchedTerm.length;
+    } else {
+      currentIndex += 1;
+    }
+  }
+
+  return mentionCount;
 }
 
 function makeArticleIdentifier(article) {
@@ -124,8 +164,9 @@ async function fetchAndPrepareNews(query, page = 1) {
   }
 
   const articles = [];
-  const analysisTexts = [];
+  const searchTerms = getCompanyNewsTerms(trimmedQuery);
   const seenArticleIds = new Set();
+  const exhaustedSearchTerms = new Set();
   let totalResults = 0;
   let fetchedCount = 0;
   let pagesFetched = 0;
@@ -138,87 +179,109 @@ async function fetchAndPrepareNews(query, page = 1) {
     currentPage <= MAX_NEWS_PAGES;
     currentPage += 1
   ) {
-    const data = await fetchNaverNews(
-      trimmedQuery,
-      currentPage,
-      NEWS_PAGE_SIZE,
-    );
-    const items = data.items || [];
-
-    if (pagesFetched === 0) {
-      totalResults = data.total || 0;
-    }
-
-    pagesFetched += 1;
-    fetchedCount += items.length;
-
-    for (const item of items) {
-      // 네이버 검색 결과의 원문 링크 기준으로, 합의한 26개 언론사 기사만 분석한다.
-      // `link`는 네이버 경유 주소이므로 반드시 `originallink`를 우선 사용한다.
-      const approvedSource = getApprovedNewsSource(item.originallink);
-
-      if (!approvedSource) {
-        sourceFilteredCount += 1;
+    for (const searchTerm of searchTerms) {
+      if (
+        exhaustedSearchTerms.has(searchTerm) ||
+        fetchedCount >= MAX_RAW_NEWS
+      ) {
         continue;
       }
 
-      const title = cleanNaverText(item.title);
-      const description = cleanNaverText(item.description);
-
-      if (!title && !description) {
-        mentionFilteredCount += 1;
-        continue;
-      }
-
-      const mentionCount = countKeywordOccurrences(
-        `${title} ${description}`,
-        trimmedQuery,
+      const data = await fetchNaverNews(
+        searchTerm,
+        currentPage,
+        NEWS_PAGE_SIZE,
       );
+      const fetchedItems = data.items || [];
+      const remainingRawCapacity = MAX_RAW_NEWS - fetchedCount;
+      const items = fetchedItems.slice(0, remainingRawCapacity);
 
-      if (mentionCount < MIN_COMPANY_MENTIONS) {
-        mentionFilteredCount += 1;
-        continue;
+      if (currentPage === Math.max(page, 1)) {
+        totalResults += data.total || 0;
       }
 
-      const article = {
-        title,
-        description,
-        link: item.link || "",
-        original_link: item.originallink || "",
-        pub_date: item.pubDate || "",
-        // 프론트는 도메인을 다시 해석하지 않고 이 정보를 그대로 표시할 수 있다.
-        source: {
-          id: approvedSource.id,
-          name: approvedSource.name,
-        },
-      };
-      const articleId = makeArticleIdentifier(article);
+      pagesFetched += 1;
+      fetchedCount += items.length;
 
-      if (seenArticleIds.has(articleId)) {
-        duplicateCount += 1;
-        continue;
+      if (fetchedItems.length < NEWS_PAGE_SIZE) {
+        exhaustedSearchTerms.add(searchTerm);
       }
 
-      seenArticleIds.add(articleId);
-      articles.push(article);
+      for (const item of items) {
+        // 네이버 검색 결과의 원문 링크 기준으로, 허용된 언론사 기사만 분석한다.
+        // `link`는 네이버 경유 주소이므로 반드시 `originallink`를 우선 사용한다.
+        const approvedSource = getApprovedNewsSource(item.originallink);
 
-      // 제목만 분석하지 않고 제목과 요약문을 함께 분석한다.
-      analysisTexts.push(`${title}. ${description}`);
+        if (!approvedSource) {
+          sourceFilteredCount += 1;
+          continue;
+        }
 
-      if (articles.length === TARGET_RELEVANT_NEWS) break;
+        const title = cleanNaverText(item.title);
+        const description = cleanNaverText(item.description);
+
+        if (!title && !description) {
+          mentionFilteredCount += 1;
+          continue;
+        }
+
+        const mentionCount = countCompanyMentions(
+          `${title} ${description}`,
+          trimmedQuery,
+        );
+
+        if (mentionCount < MIN_COMPANY_MENTIONS) {
+          mentionFilteredCount += 1;
+          continue;
+        }
+
+        const article = {
+          title,
+          description,
+          link: item.link || "",
+          original_link: item.originallink || "",
+          pub_date: item.pubDate || "",
+          // 프론트는 도메인을 다시 해석하지 않고 이 정보를 그대로 표시할 수 있다.
+          source: {
+            id: approvedSource.id,
+            name: approvedSource.name,
+          },
+        };
+        const articleId = makeArticleIdentifier(article);
+
+        if (seenArticleIds.has(articleId)) {
+          duplicateCount += 1;
+          continue;
+        }
+
+        seenArticleIds.add(articleId);
+        articles.push(article);
+      }
     }
 
     if (
-      articles.length === TARGET_RELEVANT_NEWS ||
-      items.length < NEWS_PAGE_SIZE
+      articles.length >= TARGET_RELEVANT_NEWS ||
+      fetchedCount >= MAX_RAW_NEWS ||
+      exhaustedSearchTerms.size === searchTerms.length
     ) {
       break;
     }
   }
 
+  const relevantArticles = articles
+    .sort((a, b) => {
+      const publishedAtA = Date.parse(a.pub_date) || 0;
+      const publishedAtB = Date.parse(b.pub_date) || 0;
+      return publishedAtB - publishedAtA;
+    })
+    .slice(0, TARGET_RELEVANT_NEWS);
+  const analysisTexts = relevantArticles.map(
+    (article) => `${article.title}. ${article.description}`,
+  );
+
   return {
     totalResults,
-    articles,
+    articles: relevantArticles,
     analysisTexts,
     fetchedCount,
     pagesFetched,
@@ -233,6 +296,7 @@ module.exports = {
   fetchAndPrepareNews,
   calculatePercentages,
   countKeywordOccurrences,
+  countCompanyMentions,
   makeArticleIdentifier,
   NEWS_PAGE_SIZE,
   MAX_NEWS_PAGES,

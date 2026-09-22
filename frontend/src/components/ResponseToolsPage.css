@@ -1,4 +1,44 @@
+<<<<<<< HEAD
 ﻿.response-page {
+=======
+﻿/* =========================================
+   D:TECT DARK MODE - HEADER TEXT
+   이 페이지에서는 헤더 글자만 흰색
+   ========================================= */
+
+[data-theme="dark"] .response-page header,
+[data-theme="dark"] .response-page header a,
+[data-theme="dark"] .response-page header button,
+[data-theme="dark"] .response-page header span {
+  color: #ffffff !important;
+}
+
+/* 헤더 네비게이션 글자 */
+[data-theme="dark"] .response-page header nav a,
+[data-theme="dark"] .response-page header nav button {
+  color: #ffffff !important;
+}
+
+/* 로고 */
+[data-theme="dark"] .response-page header .logo,
+[data-theme="dark"] .response-page header .header-logo {
+  color: #ffffff !important;
+}
+
+/* 헤더 안의 아이콘/메뉴 버튼 */
+[data-theme="dark"] .response-page header svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* 모바일 메뉴가 있다면 메뉴 글자도 흰색 */
+[data-theme="dark"] .response-page header ul,
+[data-theme="dark"] .response-page header li,
+[data-theme="dark"] .response-page header li a {
+  color: #ffffff !important;
+}
+.response-page {
+>>>>>>> f7e87115956cb865792a46b4785f5a82f2e33f4a
   min-height: 100vh;
   background: #f7f9fc;
   color: #1b2a3d;
@@ -206,6 +246,7 @@
     font-size: 12px;
   }
 }
+<<<<<<< HEAD
 
 /* AI 초안 결과의 가독성을 위한 영역 */
 .draft-content {
@@ -240,3 +281,5 @@
   color: #257be7;
   font-weight: bold;
 }
+=======
+>>>>>>> f7e87115956cb865792a46b4785f5a82f2e33f4a

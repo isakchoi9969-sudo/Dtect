@@ -1,9 +1,32 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Header from "./Header";
 import { useWatchlist } from "../hooks/useWatchlist";
 import AnalysisLoader from "./AnalysisLoader";
 import { api } from "../config/api";
 
+const LOGO_DEV_TOKEN = "pk_LmDNVeHjR3Sh2eSen5P1yA";
+const companyDomains = {
+  삼성SDI: "samsungsdi.co.kr",
+  삼성물산: "samsungcnt.com",
+  삼성바이오로직스: "samsungbiologics.com",
+  삼성생명: "samsunglife.com",
+  삼성엔지니어링: "samsungena.com",
+  삼성전기: "samsungsem.com",
+  삼성전자: "samsung.com",
+  삼성중공업: "samsungcareers.com",
+  삼성화재: "samsungfire.com",
+  HD현대중공업: "hd-hhi.com",
+  현대건설: "hdec.kr",
+  현대글로비스: "glovis.net",
+  현대모비스: "mobis.com",
+  현대백화점: "ehyundai.com",
+  현대위아: "hyundai-wia.com",
+  현대자동차: "hyundai.com",
+  현대제철: "hyundai-steel.com",
+  카카오: "kakao.com",
+  카카오게임즈: "kakaogames.com",
+  SK바이오팜: "skbp.com",
+};
 /* =========================================================
    유틸
 ========================================================= */
@@ -90,6 +113,7 @@ export default function CompanyAnalysisPage() {
   const [isNewsLoading, setIsNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
+  const newsRequestIdRef = useRef(0);
 
   // DB에서 기업 목록 가져오기
   useEffect(() => {
@@ -137,6 +161,8 @@ export default function CompanyAnalysisPage() {
     if (!selectedCompany?.name) return undefined;
 
     const controller = new AbortController();
+    const requestId = newsRequestIdRef.current + 1;
+    newsRequestIdRef.current = requestId;
 
     api
       .get("/api/news", {
@@ -147,10 +173,18 @@ export default function CompanyAnalysisPage() {
         signal: controller.signal,
       })
       .then((response) => {
+        if (newsRequestIdRef.current !== requestId) return;
+
         setNewsAnalysis(response.data);
+        setNewsError("");
       })
       .catch((error) => {
-        if (error.code === "ERR_CANCELED") return;
+        if (
+          error.code === "ERR_CANCELED" ||
+          newsRequestIdRef.current !== requestId
+        ) {
+          return;
+        }
 
         setNewsError(
           getApiErrorMessage(
@@ -160,7 +194,10 @@ export default function CompanyAnalysisPage() {
         );
       })
       .finally(() => {
-        if (!controller.signal.aborted) {
+        if (
+          !controller.signal.aborted &&
+          newsRequestIdRef.current === requestId
+        ) {
           setIsNewsLoading(false);
         }
       });
@@ -198,7 +235,7 @@ export default function CompanyAnalysisPage() {
   const realtimeAnalysisNotice = !newsAnalysis
     ? "최신 뉴스를 불러오면 기업 관련성 기준의 분석 현황이 표시됩니다."
     : relevantCount === 0
-      ? `원본 기사 ${fetchedCount.toLocaleString()}건을 확인했지만 기업명이 ${minimumKeywordMentions}회 이상 언급된 기사가 없습니다.`
+      ? `원본 기사 ${fetchedCount.toLocaleString()}건을 확인했지만 기업명 또는 별칭이 합계 ${minimumKeywordMentions}회 이상 언급된 기사가 없습니다.`
       : !targetReached
         ? `원본 기사 ${fetchedCount.toLocaleString()}건을 모두 확인해 관련 기사 ${relevantCount.toLocaleString()}건을 분석했습니다. 조건을 충족하는 기사가 100건보다 적을 수 있습니다.`
         : "새로고침 또는 기업 변경 시 최신 기사 기준으로 다시 분석됩니다. 이전 분석 결과는 저장하지 않습니다.";
@@ -251,7 +288,27 @@ export default function CompanyAnalysisPage() {
             style={styles.companyHeader}
           >
             <div style={styles.companyLogo}>
-              {selectedCompany.name.slice(0, 2)}
+              {companyDomains[selectedCompany.name] ? (
+                <img
+                  src={`https://img.logo.dev/${
+                    companyDomains[selectedCompany.name]
+                  }?token=${LOGO_DEV_TOKEN}&size=128&format=png`}
+                  alt={`${selectedCompany.name} 로고`}
+                  style={{
+                    width: "46px",
+                    height: "46px",
+                    maxWidth: "46px",
+                    maxHeight: "46px",
+                    objectFit: "contain",
+                    objectPosition: "center",
+                    display: "block",
+                    margin: 0,
+                    padding: 0,
+                  }}
+                />
+              ) : (
+                <span>{selectedCompany.name.slice(0, 2)}</span>
+              )}
             </div>
 
             <div style={styles.companyInfo}>
@@ -301,7 +358,7 @@ export default function CompanyAnalysisPage() {
                 <span>
                   {relevantCount === 0
                     ? `원본 기사 ${fetchedCount.toLocaleString()}건(${pagesFetched}페이지)에서 조건을 충족한 기사가 없습니다.`
-                    : `원본 기사 ${fetchedCount.toLocaleString()}건(${pagesFetched}페이지) 중 기업명 ${minimumKeywordMentions}회 이상 언급된 ${relevantCount.toLocaleString()}건을 분석했습니다.`}
+                    : `원본 기사 ${fetchedCount.toLocaleString()}건(${pagesFetched}페이지) 중 기업명 또는 별칭이 합계 ${minimumKeywordMentions}회 이상 언급된 ${relevantCount.toLocaleString()}건을 분석했습니다.`}
                 </span>
                 <button
                   onClick={retryNewsAnalysis}
@@ -332,7 +389,7 @@ export default function CompanyAnalysisPage() {
                 <div style={styles.summaryPending}>
                   {isNewsLoading
                     ? "최신 뉴스 분석 중"
-                    : `기업명 ${minimumKeywordMentions}회 이상 언급 ${analyzedCount.toLocaleString()}건 기준`}
+                    : `기업명·별칭 합계 ${minimumKeywordMentions}회 이상 언급 ${analyzedCount.toLocaleString()}건 기준`}
                 </div>
               </div>
             </div>
@@ -436,8 +493,8 @@ export default function CompanyAnalysisPage() {
                 <div>
                   <span>분석 기준</span>
                   <strong>
-                    기업명 {minimumKeywordMentions}회 이상 언급된 최신 뉴스 최대
-                    100건
+                    기업명·별칭 합계 {minimumKeywordMentions}회 이상 언급된 최신
+                    뉴스 최대 100건
                   </strong>
                 </div>
                 <div>
@@ -485,7 +542,7 @@ export default function CompanyAnalysisPage() {
             <div style={styles.mediumPanel}>
               <div style={styles.panelHeader}>
                 <h3>관련 기사</h3>
-                <span>최신 5건</span>
+                <span>최신 10건</span>
               </div>
 
               <div style={styles.articleList}>
@@ -540,8 +597,8 @@ export default function CompanyAnalysisPage() {
                   newsAnalysis &&
                   articles.length === 0 && (
                     <p style={styles.articleEmpty}>
-                      기업명이 {minimumKeywordMentions}회 이상 언급된 최신
-                      기사가 없습니다.
+                      기업명 또는 별칭이 합계 {minimumKeywordMentions}회 이상 언급된
+                      최신 기사가 없습니다.
                     </p>
                   )}
               </div>

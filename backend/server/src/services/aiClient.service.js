@@ -10,11 +10,27 @@ async function analyzeSentiments(texts) {
     return [];
   }
 
+<<<<<<< HEAD
   const response = await axios.post(
     `${aiServerUrl}/api/ai/sentiment`,
     { texts },
     { timeout: 30000 },
   );
+=======
+  let response;
+
+  try {
+    response = await axios.post(
+      `${aiServerUrl}/api/ai/sentiment`,
+      { texts },
+      { timeout: 30000 },
+    );
+  } catch (error) {
+    const detail = error.response?.data?.detail;
+    const reason = detail || error.message;
+    throw new Error(`AI 감성분석 처리 오류: ${reason}`, { cause: error });
+  }
+>>>>>>> f7e87115956cb865792a46b4785f5a82f2e33f4a
 
   return response.data.results;
 }
