@@ -13,7 +13,7 @@ async function analyzeSentiments(texts) {
   const response = await axios.post(
     `${aiServerUrl}/api/ai/sentiment`,
     { texts },
-    { timeout: 30000 }
+    { timeout: 30000 },
   );
 
   return response.data.results;
@@ -64,9 +64,21 @@ async function getIssueEmbedding(title, content) {
   return response.data.embedding;
 }
 
+/** FastAPI AI 서버에 대응자료 초안 생성을 요청합니다. */
+async function generateResponseDraft(payload) {
+  const response = await axios.post(
+    `${aiServerUrl}/api/ai/response-draft`,
+    payload,
+    { timeout: 60000 },
+  );
+
+  return response.data;
+}
+
 module.exports = {
   analyzeSentiments,
   searchSimilarNews,
   getNewsEmbeddings,
   getIssueEmbedding,
+  generateResponseDraft, // 대응자료 생성 함수 내보내기
 };
