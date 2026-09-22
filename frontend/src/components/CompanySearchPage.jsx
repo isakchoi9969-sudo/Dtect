@@ -45,6 +45,13 @@ const companyDomains = {
   LG이노텍: "lginnotek.com",
   LG전자: "lge.co.kr",
   LG화학: "lgchem.com",
+  HMM: "www.hmm21.com",
+  HD한국조선해양: "hd-ksoe.com",
+  한국가스공사: "kogas.or.kr",
+  한국전력: "kepco.co.kr",
+  한국콜마: "kolmar.co.kr",
+  한국타이어앤테크놀로지: "hankooktire.com",
+  코스맥스: "cosmax.com",
 };
 
 export default function CompanySearchPage() {
