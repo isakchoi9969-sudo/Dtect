@@ -25,6 +25,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.sentiment import router as sentiment_router
 from app.api.simulator import router as simulator_router
 
+# 대응자료 생성 API 라우터
+from app.api.response_draft import router as response_draft_router
+
 load_dotenv()
 logging.basicConfig(
     level=logging.INFO,
@@ -47,6 +50,7 @@ app.add_middleware(
 
 app.include_router(sentiment_router)
 app.include_router(simulator_router)
+app.include_router(response_draft_router)  # 대응자료 생성 API 등록
 
 
 @app.get("/api/ai/health")

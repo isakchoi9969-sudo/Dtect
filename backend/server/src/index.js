@@ -9,6 +9,7 @@ const newsRoutes = require("./routes/news.routes");
 const companyRoutes = require("./routes/company.routes");
 const healthRoutes = require("./routes/health.routes");
 const simulatorRoutes = require("./routes/simulator.routes");
+const responseDraftRoutes = require("./routes/responseDraft.routes");
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/company", companyRoutes);
 app.use("/api/favorite-company", favoriteCompanyRoutes);
 app.use("/api/simulator", simulatorRoutes);
 app.use("/api", healthRoutes);
+app.use("/api/response-drafts", responseDraftRoutes);
 
 // 프론트엔드 빌드 결과물을 이 서버에서 함께 서빙하려면 아래 주석을 해제하세요.
 // const path = require("path");

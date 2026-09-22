@@ -9,3 +9,6 @@ torch>=2.4,<3
 # 과거 유사사례 시뮬레이터: 로컬 Chroma 검색 및 BGE-M3 임베딩
 chromadb==1.5.9
 sentence-transformers==6.1.0
+
+pandas>=2.0.0
+openai>=1.0.0
