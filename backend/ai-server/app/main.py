@@ -23,6 +23,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.sentiment import router as sentiment_router
+from app.api.simulator import router as simulator_router
 
 load_dotenv()
 logging.basicConfig(
@@ -45,6 +46,7 @@ app.add_middleware(
 )
 
 app.include_router(sentiment_router)
+app.include_router(simulator_router)
 
 
 @app.get("/api/ai/health")

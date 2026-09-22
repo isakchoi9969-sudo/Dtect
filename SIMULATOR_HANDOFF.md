@@ -72,7 +72,7 @@ UI만 준비된 상태다. `similarCases`는 임시 배열이고, `caseLoadStatu
    - SHA-256 중복 제거
    - 10일 간격 군집화, 최소 기사 3건
    - issue pairwise similarity 0.70
-   - centroid, case similarity 0.60, 최종 점수 70점, Top 3
+   - centroid, case similarity 0.60, 최종 점수 60점, Top 3
    - `RISK_TYPE`의 현재 20점은 임시값임을 응답에 명시한다.
 
 6. Node에서 DB 사례 정보와 결합해 프런트 응답을 만든다.
