@@ -69,6 +69,12 @@ const companyDomains = {
   SK스퀘어: "sksquare.com",
   SK하이닉스: "skhynix.com",
   펄어비스: "pearlabyss.com",
+  BGF리테일: "bgfretail.com",
+  CJ제일제당: "www.cj.co.kr",
+  GS리테일: "gsretail.com",
+  CJ: "cj.net",
+  HLB: "hlbbio.co.kr",
+  HL만도: "hlmando.com",
 };
 
 export default function CompanySearchPage() {
