@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-﻿.response-page {
-=======
 ﻿/* =========================================
    D:TECT DARK MODE - HEADER TEXT
    이 페이지에서는 헤더 글자만 흰색
@@ -38,7 +35,6 @@
   color: #ffffff !important;
 }
 .response-page {
->>>>>>> f7e87115956cb865792a46b4785f5a82f2e33f4a
   min-height: 100vh;
   background: #f7f9fc;
   color: #1b2a3d;
@@ -246,8 +242,6 @@
     font-size: 12px;
   }
 }
-<<<<<<< HEAD
-
 /* AI 초안 결과의 가독성을 위한 영역 */
 .draft-content {
   margin-top: 18px;
@@ -281,5 +275,3 @@
   color: #257be7;
   font-weight: bold;
 }
-=======
->>>>>>> f7e87115956cb865792a46b4785f5a82f2e33f4a
