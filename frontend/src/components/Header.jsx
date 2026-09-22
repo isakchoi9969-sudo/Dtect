@@ -59,6 +59,7 @@ function Header() {
     } catch (error) {
       console.error("로그아웃 실패:", error);
     } finally {
+      localStorage.removeItem("isLoggedIn");
       window.location.href = ROUTES.HOME;
     }
   };
@@ -77,6 +78,12 @@ function Header() {
       return ROUTES.CASE_SIMULATOR;
     if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 1)
       return ROUTES.RESPONSE_GENERATOR;
+
+    if (item.href === ROUTES.ALERTS && childIndex === 0)
+      return ROUTES.RISK_ALERT;
+    if (item.href === ROUTES.ALERTS && childIndex === 1)
+      return ROUTES.MAJOR_ISSUE_ALERT;
+
     return item.href;
   };
 
@@ -91,10 +98,7 @@ function Header() {
         >
           D:TECT
         </a>
-        <nav
-          className="desktop-nav"
-          aria-label={copy.primaryMenu}
-        >
+        <nav className="desktop-nav" aria-label={copy.primaryMenu}>
           {navigationItems.map((item) => (
             <div className="nav-item" key={item.title}>
               <a href={item.href} className="nav-link">

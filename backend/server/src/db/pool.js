@@ -11,7 +11,7 @@ const pool = mysql.createPool({
   password: db.password,
   charset: "utf8mb4_general_ci",
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 15,
 });
 
 async function checkDbConnection() {
