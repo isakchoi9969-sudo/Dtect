@@ -63,6 +63,11 @@ const companyDomains = {
   대한항공: "koreanair.com",
   아시아나항공: "flyasiana.com",
   제주항공: "jejuair.net",
+  OCI홀딩스: "oci-holdings.co.kr",
+  POSCO홀딩스: "posco-inc.com",
+  SK스퀘어: "sksquare.com",
+  SK하이닉스: "skhynix.com",
+  펄어비스: "pearlabyss.com",
 };
 /* =========================================================
    유틸
