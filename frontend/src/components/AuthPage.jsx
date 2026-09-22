@@ -1,31 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ROUTES } from "../config/routes";
 // 🔧 변경 1: axios 를 직접 쓰지 않고 config/api.js 의 공용 인스턴스를 쓴다.
 //    - baseURL 이 한 곳(api.js)에만 있으므로 포트가 바뀌어도 여기는 안 건드려도 된다.
 //    - "http://localhost:3000" 하드코딩이 파일마다 흩어지는 걸 막는다.
 import { api } from "../config/api";
 
-// 🔧 변경 2: FastAPI 에러 응답을 안전하게 문자열로 뽑아내는 헬퍼.
-//
-//   FastAPI 에러는 두 가지 모양으로 온다.
-//   ① 우리가 직접 raise HTTPException(detail="비밀번호가 일치하지 않습니다.")
-//      → { detail: "비밀번호가 일치하지 않습니다." }              (문자열)
-//   ② Pydantic 자동 검증 실패 (예: 이메일 형식 오류, 비밀번호 8자 미만)
-//      → { detail: [{ loc: [...], msg: "...", type: "..." }] }   (배열)
-//
-//   기존 코드처럼 error.response?.data?.message 로 읽으면 항상 undefined 다.
-//   Express 는 message 필드를 썼지만 FastAPI 는 detail 필드를 쓰기 때문이다.
 function extractErrorMessage(error) {
+  const message = error.response?.data?.message;
   const detail = error.response?.data?.detail;
 
+  if (typeof message === "string") {
+    return message;
+  }
+
   if (typeof detail === "string") {
-    // ① HTTPException 케이스: 그대로 사용자에게 보여줄 수 있는 문장
     return detail;
   }
 
   if (Array.isArray(detail) && detail.length > 0) {
-    // ② Pydantic 검증 실패 케이스: 첫 번째 오류만 한글 문구로 변환해서 보여준다.
-    //    예: "email" 필드가 이메일 형식이 아니면 detail[0].msg 에 원인이 들어있다.
     return `입력값을 확인해주세요. (${detail[0].msg})`;
   }
 
@@ -35,12 +27,48 @@ function extractErrorMessage(error) {
 function AuthPage({ mode }) {
   const isSignup = mode === "signup";
   const [showPassword, setShowPassword] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userType, setUserType] = useState("PERSONAL");
+  const [companies, setCompanies] = useState([]);
+  const [companyId, setCompanyId] = useState("NONE");
+  const [isCompaniesLoading, setIsCompaniesLoading] = useState(isSignup);
+  const [companiesError, setCompaniesError] = useState("");
+
+  useEffect(() => {
+    if (!isSignup) return undefined;
+
+    const controller = new AbortController();
+
+    async function loadCompanies() {
+      try {
+        setIsCompaniesLoading(true);
+        setCompaniesError("");
+        const response = await api.get("/api/company", {
+          signal: controller.signal,
+        });
+        setCompanies(response.data?.data || []);
+      } catch (error) {
+        if (error.name !== "CanceledError") {
+          console.error("회사 목록 조회 실패:", error);
+          setCompaniesError(
+            "회사 목록을 불러오지 못했습니다. '없음'은 선택할 수 있습니다.",
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsCompaniesLoading(false);
+      }
+    }
+
+    loadCompanies();
+    return () => controller.abort();
+  }, [isSignup]);
 
   // 🔌 백엔드로 데이터 전송 로직 ----------------------------------
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setSubmitted(true);
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
 
     // 폼 안에 입력된 데이터들을 객체 형태로 추출
     const formData = new FormData(event.target);
@@ -61,12 +89,15 @@ function AuthPage({ mode }) {
           password: data.password,
         });
         alert(response.data.message || "로그인 성공!");
+        localStorage.setItem("isLoggedIn", "true");
+
         window.location.href = ROUTES.DASHBOARD; // 대시보드로 이동
       }
     } catch (error) {
       console.error("인증 실패:", error);
-      // 🔧 변경 4: message 대신 detail 을 읽는 헬퍼로 교체
       alert(extractErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -116,15 +147,60 @@ function AuthPage({ mode }) {
               </label>
             )}
             {isSignup && (
+              <fieldset className="member-type-field">
+                <legend>회원 유형</legend>
+                <div className="member-type-options">
+                  <label>
+                    <input
+                      type="radio"
+                      name="userType"
+                      value="PERSONAL"
+                      checked={userType === "PERSONAL"}
+                      onChange={() => setUserType("PERSONAL")}
+                    />
+                    <span>
+                      <strong>일반회원</strong>
+                      <small>개인 사용자를 위한 기본 회원가입</small>
+                    </span>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="userType"
+                      value="COMPANY"
+                      checked={userType === "COMPANY"}
+                      onChange={() => setUserType("COMPANY")}
+                    />
+                    <span>
+                      <strong>기업회원</strong>
+                      <small>등록된 회사와 계정을 연결</small>
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
+            )}
+            {isSignup && userType === "COMPANY" && (
               <label>
                 소속 기업
-                <input
-                  type="text"
-                  name="company"
-                  placeholder="예: 삼성전자"
-                  autoComplete="organization"
-                  required
-                />
+                <select
+                  name="companyId"
+                  value={companyId}
+                  onChange={(event) => setCompanyId(event.target.value)}
+                  disabled={isCompaniesLoading}
+                >
+                  <option value="NONE">없음 (등록된 회사가 아닌 경우)</option>
+                  {companies.map((company) => (
+                    <option key={company.companyId} value={company.companyId}>
+                      {company.companyName}
+                    </option>
+                  ))}
+                </select>
+                <small className="company-field-help">
+                  {isCompaniesLoading
+                    ? "등록된 회사 목록을 불러오는 중입니다."
+                    : companiesError ||
+                      `등록된 회사 ${companies.length}개를 불러왔습니다.`}
+                </small>
               </label>
             )}
             <label>
@@ -191,16 +267,17 @@ function AuthPage({ mode }) {
                 </span>
               </label>
             )}
-            <button className="auth-submit" type="submit">
-              {isSignup ? "무료로 시작하기" : "로그인"}
+            <button
+              className="auth-submit"
+              disabled={isSubmitting}
+              type="submit"
+            >
+              {isSubmitting
+                ? "처리 중..."
+                : isSignup
+                  ? "무료로 시작하기"
+                  : "로그인"}
             </button>
-            {submitted && (
-              <p className="auth-notice" role="status">
-                {isSignup
-                  ? "회원가입 요청이 준비되었습니다. 백엔드 연결 후 계정이 생성됩니다."
-                  : "로그인 요청이 준비되었습니다. 백엔드 연결 후 이용할 수 있습니다."}
-              </p>
-            )}
           </form>
           <p className="auth-switch">
             {isSignup ? "이미 계정이 있으신가요?" : "아직 계정이 없으신가요?"}

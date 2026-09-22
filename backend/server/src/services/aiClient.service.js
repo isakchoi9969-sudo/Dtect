@@ -13,10 +13,72 @@ async function analyzeSentiments(texts) {
   const response = await axios.post(
     `${aiServerUrl}/api/ai/sentiment`,
     { texts },
-    { timeout: 30000 }
+    { timeout: 30000 },
   );
 
   return response.data.results;
 }
 
-module.exports = { analyzeSentiments };
+/**
+ * FastAPI 시뮬레이터에 현재 이슈를 보내 유사 뉴스 최대 100건을 조회한다.
+ * 반환값은 [{ news_id, similarity }]이며, 실제 뉴스 정보는 Node에서 MySQL로 보강한다.
+ */
+async function searchSimilarNews(title, content) {
+  const response = await axios.post(
+    `${aiServerUrl}/api/ai/simulator/search`,
+    { title, content },
+    { timeout: 60000 },
+  );
+
+  return response.data.results;
+}
+
+/**
+ * Chroma에 저장된 뉴스 BGE-M3 벡터를 ID별 Map으로 반환한다.
+ * 군집 내부 유사도와 centroid 계산에만 사용한다.
+ */
+async function getNewsEmbeddings(newsIds) {
+  if (!newsIds || newsIds.length === 0) {
+    return new Map();
+  }
+
+  const response = await axios.post(
+    `${aiServerUrl}/api/ai/simulator/embeddings`,
+    { news_ids: newsIds },
+    { timeout: 60000 },
+  );
+
+  return new Map(
+    response.data.results.map((item) => [Number(item.news_id), item.embedding]),
+  );
+}
+
+/** 현재 이슈를 과거 사례 centroid 비교용 BGE-M3 벡터로 변환한다. */
+async function getIssueEmbedding(title, content) {
+  const response = await axios.post(
+    `${aiServerUrl}/api/ai/simulator/embed`,
+    { title, content },
+    { timeout: 60000 },
+  );
+
+  return response.data.embedding;
+}
+
+/** FastAPI AI 서버에 대응자료 초안 생성을 요청합니다. */
+async function generateResponseDraft(payload) {
+  const response = await axios.post(
+    `${aiServerUrl}/api/ai/response-draft`,
+    payload,
+    { timeout: 60000 },
+  );
+
+  return response.data;
+}
+
+module.exports = {
+  analyzeSentiments,
+  searchSimilarNews,
+  getNewsEmbeddings,
+  getIssueEmbedding,
+  generateResponseDraft, // 대응자료 생성 함수 내보내기
+};

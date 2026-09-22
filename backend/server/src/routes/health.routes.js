@@ -25,9 +25,17 @@ router.get("/health/ai", async (req, res) => {
     const response = await axios.get(`${aiServerUrl}/api/ai/health`, {
       timeout: 5000,
     });
-    res.json({ success: true, message: "AI 서버 연결 성공", detail: response.data });
+    res.json({
+      success: true,
+      message: "AI 서버 연결 성공",
+      detail: response.data,
+    });
   } catch (error) {
-    res.json({ success: false, message: "AI 서버 연결 실패", error: error.message });
+    res.json({
+      success: false,
+      message: "AI 서버 연결 실패",
+      error: error.message,
+    });
   }
 });
 

@@ -1,0 +1,149 @@
+.analysis-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.03);
+
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.analysis-loading-card {
+  width: min(420px, calc(100% - 40px));
+  padding: 40px 36px;
+
+  box-sizing: border-box;
+
+  text-align: center;
+
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+/* D:TECT */
+.analysis-loading-logo {
+  display: block;
+
+  margin: 0 auto 22px;
+
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+
+  letter-spacing: -1px;
+
+  color: #111827;
+
+  opacity: 1;
+  visibility: visible;
+
+  animation: none;
+}
+
+/* 제목 */
+.analysis-loading-card h2 {
+  margin: 0;
+
+  font-size: 21px;
+  font-weight: 700;
+
+  color: #111827;
+}
+
+/* 기업명 */
+.analysis-loading-company {
+  margin: 10px 0 0;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  color: #374151;
+}
+
+/* 설명 */
+.analysis-loading-description {
+  margin: 14px 0 0;
+
+  font-size: 14px;
+  line-height: 1.7;
+
+  color: #6b7280;
+}
+
+/* 로딩바 */
+.analysis-loading-bar {
+  width: 100%;
+  height: 6px;
+
+  margin-top: 28px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #e5e7eb;
+}
+
+.analysis-loading-bar-fill {
+  width: 30%;
+  height: 100%;
+
+  border-radius: 999px;
+
+  background: #111827;
+
+  animation: analysisLoading 1.2s linear infinite;
+}
+
+/* 로딩 상태 */
+.analysis-loading-status {
+  display: block;
+
+  margin: 14px 0 0;
+
+  font-size: 13px;
+  line-height: 1.4;
+
+  color: #6b7280;
+
+  opacity: 1;
+  visibility: visible;
+
+  animation: none;
+}
+
+/* 경과 시간 */
+.analysis-loading-time {
+  display: block;
+
+  margin: 8px 0 0;
+
+  font-size: 12px;
+  line-height: 1.4;
+
+  color: #9ca3af;
+
+  opacity: 1;
+  visibility: visible;
+
+  animation: none;
+}
+
+/* 로딩바만 움직임 */
+@keyframes analysisLoading {
+  from {
+    transform: translateX(-130%);
+  }
+
+  to {
+    transform: translateX(430%);
+  }
+}

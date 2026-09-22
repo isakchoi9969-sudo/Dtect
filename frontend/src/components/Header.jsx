@@ -1,12 +1,13 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { navigationItems } from "../data/landingData";
 import { ROUTES } from "../config/routes";
+import { api } from "../config/api";
 import ThemeToggle from "./ThemeToggle";
 
 const copy = {
   homeLabel: "D:TECT \uba54\uc778 \ud398\uc774\uc9c0",
   primaryMenu: "\uc8fc\uc694 \uba54\ub274",
-  businessOnly: "\uae30\uc5c5 \ud68c\uc6d0 \uc804\uc6a9",
+  paidService: "\uc720\ub8cc \uc11c\ube44\uc2a4",
   login: "\ub85c\uadf8\uc778",
   openMenu: "\uba54\ub274 \uc5f4\uae30",
 };
@@ -14,7 +15,23 @@ const copy = {
 function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMobileMenu, setOpenMobileMenu] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    api
+      .get("/api/auth/me", { signal: controller.signal })
+      .then((response) => setCurrentUser(response.data.user))
+      .catch((error) => {
+        if (error.name !== "CanceledError" && error.response?.status !== 401) {
+          console.error("로그인 정보 확인 실패:", error);
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -36,6 +53,17 @@ function Header() {
     setOpenMobileMenu(null);
   };
 
+  const handleLogout = async () => {
+    try {
+      await api.post("/api/auth/logout");
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+    } finally {
+      localStorage.removeItem("isLoggedIn");
+      window.location.href = ROUTES.HOME;
+    }
+  };
+
   const getChildHref = (item, child) => {
     const childIndex = item.children.indexOf(child);
     if (item.href === ROUTES.DASHBOARD && childIndex === 0)
@@ -50,6 +78,12 @@ function Header() {
       return ROUTES.CASE_SIMULATOR;
     if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 1)
       return ROUTES.RESPONSE_GENERATOR;
+
+    if (item.href === ROUTES.ALERTS && childIndex === 0)
+      return ROUTES.RISK_ALERT;
+    if (item.href === ROUTES.ALERTS && childIndex === 1)
+      return ROUTES.MAJOR_ISSUE_ALERT;
+
     return item.href;
   };
 
@@ -72,8 +106,8 @@ function Header() {
               </a>
               <div className="dropdown">
                 <div className="dropdown-inner">
-                  {item.businessOnly && (
-                    <span className="business-badge">{copy.businessOnly}</span>
+                  {item.paidService && (
+                    <span className="business-badge">{copy.paidService}</span>
                   )}
                   {item.children.map((child) => (
                     <a href={getChildHref(item, child)} key={child}>
@@ -87,9 +121,22 @@ function Header() {
         </nav>
         <div className="landing-header-actions">
           <ThemeToggle />
-          <a href={ROUTES.LOGIN} className="login-button desktop-login">
-            {copy.login}
-          </a>
+          {currentUser ? (
+            <>
+              <span className="header-user-name">{currentUser.name} 님</span>
+              <button
+                type="button"
+                className="login-button desktop-login"
+                onClick={handleLogout}
+              >
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <a href={ROUTES.LOGIN} className="login-button desktop-login">
+              {copy.login}
+            </a>
+          )}
         </div>
         <button
           className={`mobile-menu-button ${mobileOpen ? "is-open" : ""}`}
@@ -123,8 +170,8 @@ function Header() {
               </button>
               {openMobileMenu === index && (
                 <div className="mobile-submenu">
-                  {item.businessOnly && (
-                    <span className="business-badge">{copy.businessOnly}</span>
+                  {item.paidService && (
+                    <span className="business-badge">{copy.paidService}</span>
                   )}
                   {item.children.map((child) => (
                     <a
@@ -139,13 +186,23 @@ function Header() {
               )}
             </div>
           ))}
-          <a
-            href={ROUTES.LOGIN}
-            className="login-button mobile-login"
-            onClick={closeMobileMenu}
-          >
-            {copy.login}
-          </a>
+          {currentUser ? (
+            <button
+              type="button"
+              className="login-button mobile-login"
+              onClick={handleLogout}
+            >
+              로그아웃
+            </button>
+          ) : (
+            <a
+              href={ROUTES.LOGIN}
+              className="login-button mobile-login"
+              onClick={closeMobileMenu}
+            >
+              {copy.login}
+            </a>
+          )}
         </div>
       </div>
     </header>
