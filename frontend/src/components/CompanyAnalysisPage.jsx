@@ -51,6 +51,13 @@ const companyDomains = {
   한국콜마: "kolmar.co.kr",
   한국타이어앤테크놀로지: "hankooktire.com",
   코스맥스: "cosmax.com",
+  두산에너빌리티: "doosanenerbility.com",
+  두산로보틱스: "doosanrobotics.com",
+  두산밥캣: "doosanbobcat.com",
+  롯데쇼핑: "lotteshoppingir.com",
+  롯데에너지머티리얼즈: "lotteenergymaterials.com",
+  롯데칠성음료: "company.lottechilsung.co.kr",
+  롯데케미칼: "lottechem.com",
 };
 /* =========================================================
    유틸
