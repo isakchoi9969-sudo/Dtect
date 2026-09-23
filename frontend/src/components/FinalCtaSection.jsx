@@ -37,6 +37,7 @@ function FinalCtaSection() {
             transparent 72%
           );
           pointer-events: none;
+          animation: ctaGlow 8s ease-in-out infinite;
         }
 
         /* 상단 포인트 라인 */
@@ -54,6 +55,7 @@ function FinalCtaSection() {
             rgba(37, 99, 235, 0.55),
             transparent
           );
+          animation: ctaLinePulse 2.8s ease-in-out infinite;
         }
 
         .dtect-final-cta .container {
@@ -78,6 +80,40 @@ function FinalCtaSection() {
 
           backdrop-filter: blur(14px);
           -webkit-backdrop-filter: blur(14px);
+          overflow: hidden;
+          animation: ctaCardIn 720ms cubic-bezier(0.22, 1, 0.36, 1) both, ctaCardFloat 7s ease-in-out 1s infinite;
+        }
+
+        .dtect-final-cta .final-cta-content::before {
+          content: "";
+          position: absolute;
+          top: -70px;
+          right: -54px;
+          width: 150px;
+          height: 150px;
+          border: 1px solid rgba(37, 99, 235, 0.14);
+          border-radius: 50%;
+          box-shadow: 0 0 0 16px rgba(37, 99, 235, 0.035), 0 0 0 34px rgba(37, 99, 235, 0.018);
+          pointer-events: none;
+          animation: ctaOrbit 9s linear infinite;
+        }
+
+        .dtect-final-cta .final-cta-content::after {
+          content: "";
+          position: absolute;
+          top: -25%;
+          bottom: -25%;
+          left: -35%;
+          width: 18%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent);
+          pointer-events: none;
+          transform: skewX(-18deg);
+          animation: ctaShine 5.5s ease-in-out 1.2s infinite;
+        }
+
+        .dtect-final-cta .final-cta-content > * {
+          position: relative;
+          z-index: 1;
         }
 
         /* 작은 라벨 */
@@ -107,6 +143,7 @@ function FinalCtaSection() {
           border-radius: 50%;
           background: currentColor;
           box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+          animation: ctaDotPulse 1.9s ease-in-out infinite;
         }
 
         /* 제목 */
@@ -129,6 +166,8 @@ function FinalCtaSection() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
+          background-size: 180% 100%;
+          animation: ctaTextShimmer 4.5s ease-in-out infinite;
         }
 
         /* 설명 */
@@ -194,6 +233,52 @@ function FinalCtaSection() {
 
         .dtect-final-cta .primary-button:hover .button-arrow {
           transform: translateX(3px);
+        }
+
+        .dtect-final-cta .primary-button:focus-visible {
+          outline: 3px solid color-mix(in srgb, var(--blue) 35%, transparent);
+          outline-offset: 4px;
+        }
+
+        @keyframes ctaCardIn {
+          from { opacity: 0; transform: translateY(18px) scale(.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes ctaCardFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+
+        @keyframes ctaGlow {
+          0%, 100% { opacity: .62; transform: translate(-50%, -50%) scale(.94); }
+          50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+        }
+
+        @keyframes ctaLinePulse {
+          0%, 100% { opacity: .45; width: 72px; }
+          50% { opacity: .9; width: 108px; }
+        }
+
+        @keyframes ctaDotPulse {
+          0%, 100% { transform: scale(.8); opacity: .6; }
+          50% { transform: scale(1.25); opacity: 1; }
+        }
+
+        @keyframes ctaTextShimmer {
+          0%, 70%, 100% { background-position: 0% 50%; }
+          84% { background-position: 100% 50%; }
+        }
+
+        @keyframes ctaOrbit {
+          from { transform: rotate(0deg) translateX(3px); }
+          to { transform: rotate(360deg) translateX(3px); }
+        }
+
+        @keyframes ctaShine {
+          0%, 45% { left: -35%; opacity: 0; }
+          55% { opacity: 1; }
+          80%, 100% { left: 135%; opacity: 0; }
         }
 
         /* =========================
