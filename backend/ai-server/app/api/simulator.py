@@ -5,13 +5,18 @@
 Node 서버 단계에서 담당한다.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.services.simulator_service import find_similar_news
 
 
 router = APIRouter(prefix="/api/ai/simulator", tags=["simulator"])
+
+
+def simulator_data_unavailable(error: FileNotFoundError) -> HTTPException:
+    """벡터 DB가 준비되지 않은 환경임을 Node 서버가 구분할 수 있게 한다."""
+    return HTTPException(status_code=503, detail=str(error))
 
 
 class SimilarNewsSearchRequest(BaseModel):
@@ -60,7 +65,10 @@ def search_similar_news(
     payload: SimilarNewsSearchRequest,
 ) -> SimilarNewsSearchResponse:
     """현재 이슈 텍스트와 유사한 과거 뉴스 상위 100건을 반환한다."""
-    matches = find_similar_news(payload.title, payload.content)
+    try:
+        matches = find_similar_news(payload.title, payload.content)
+    except FileNotFoundError as error:
+        raise simulator_data_unavailable(error) from error
     return SimilarNewsSearchResponse(
         results=[
             SimilarNewsItem(news_id=match.news_id, similarity=match.similarity)
@@ -76,7 +84,10 @@ def get_similar_news_embeddings(
     """군집화에 필요한 기존 뉴스의 BGE-M3 벡터를 반환한다."""
     from app.services.simulator_service import get_news_embeddings
 
-    embeddings_by_news_id = get_news_embeddings(payload.news_ids)
+    try:
+        embeddings_by_news_id = get_news_embeddings(payload.news_ids)
+    except FileNotFoundError as error:
+        raise simulator_data_unavailable(error) from error
     return NewsEmbeddingsResponse(
         results=[
             NewsEmbeddingItem(news_id=news_id, embedding=embedding)
@@ -92,6 +103,9 @@ def embed_current_issue(
     """현재 이슈를 과거 사례 centroid 비교용 BGE-M3 벡터로 변환한다."""
     from app.services.simulator_service import encode_query
 
-    return CurrentIssueEmbeddingResponse(
-        embedding=encode_query(payload.title, payload.content),
-    )
+    try:
+        embedding = encode_query(payload.title, payload.content)
+    except FileNotFoundError as error:
+        raise simulator_data_unavailable(error) from error
+
+    return CurrentIssueEmbeddingResponse(embedding=embedding)

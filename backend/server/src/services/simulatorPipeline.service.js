@@ -22,7 +22,11 @@ const { buildSimulatorResponse } = require("./simulatorResponse.service");
 const {
   scoreCaseGroups,
   selectTopSimilarCases,
+  selectTopRankedCases,
 } = require("./simulatorScoring.service");
+const {
+  getStoredCaseArticleIndex,
+} = require("./simulatorCaseMapping.service");
 const { getCategoryRule } = require("../config/simulatorCategory.config");
 
 function mergeCandidatesByNewsId(candidates) {
@@ -214,6 +218,75 @@ function removeDuplicateDynamicGroups(groups) {
   });
 }
 
+function normalizeFallbackText(value) {
+  return String(value || "")
+    .toLocaleLowerCase("ko-KR")
+    .replace(/[\s·._/\\-]+/g, "");
+}
+
+/**
+ * Chroma 원본 파일이 없는 개발 환경에서는 MySQL에 등록된 실제 과거 사례를
+ * 사례명·이슈명·설명·위험 유형과 선택한 분류어로 비교해 반환한다.
+ */
+async function getStoredCaseFallbackGroups(
+  title,
+  majorCategory,
+  minorCategory,
+) {
+  const { aliases } = getCategoryRule(majorCategory, minorCategory);
+  const weightedTerms = [
+    { text: minorCategory, similarity: 0.95 },
+    { text: title, similarity: 0.9 },
+    ...aliases.map((text) => ({ text, similarity: 0.85 })),
+    { text: majorCategory, similarity: 0.75 },
+  ]
+    .map((term) => ({
+      ...term,
+      normalized: normalizeFallbackText(term.text),
+    }))
+    .filter((term) => term.normalized);
+  const storedCases = await getStoredCaseArticleIndex();
+
+  return storedCases.flatMap((storedCase) => {
+    const searchableText = normalizeFallbackText([
+      storedCase.caseName,
+      storedCase.issueName,
+      storedCase.description,
+      storedCase.caseRiskType,
+      storedCase.issueRiskType,
+    ].join(" "));
+    const matchedTerms = weightedTerms.filter((term) =>
+      searchableText.includes(term.normalized),
+    );
+
+    if (matchedTerms.length === 0) return [];
+
+    const semanticSimilarity = Math.max(
+      ...matchedTerms.map((term) => term.similarity),
+    );
+    const newsIds = [...storedCase.newsIds];
+
+    return [{
+      ...storedCase,
+      startDate: storedCase.issueStartDate,
+      lastDate: storedCase.issueLastDate,
+      articleCount: storedCase.issueArticleCount,
+      storedStartDate: storedCase.issueStartDate,
+      storedLastDate: storedCase.issueLastDate,
+      storedArticleCount: storedCase.issueArticleCount,
+      storedRiskType: storedCase.caseRiskType || storedCase.issueRiskType,
+      representativeNewsId: newsIds[0] ?? null,
+      representativeTitle: storedCase.issueName,
+      semanticSimilarity,
+      matchMethod: "category",
+    }];
+  });
+}
+
+function isVectorStoreUnavailable(error) {
+  return error?.response?.status === 503;
+}
+
 /**
  * Chroma에서 찾은 동적 사례만 점수화한다.
  * 과거에 등록한 개인정보 유출 사례를 결과 부족 시 대신 반환하지 않는다.
@@ -241,11 +314,41 @@ async function simulateSimilarCases(
     majorCategory,
     minorCategory,
   );
-  const validationResult = await getValidatedIssueGroupResult(title, searchContent, {
-    majorCategory,
-    minorCategory,
-    searchQueries,
-  });
+  let validationResult;
+
+  try {
+    validationResult = await getValidatedIssueGroupResult(title, searchContent, {
+      majorCategory,
+      minorCategory,
+      searchQueries,
+    });
+  } catch (error) {
+    if (!isVectorStoreUnavailable(error)) throw error;
+
+    const fallbackGroups = await getStoredCaseFallbackGroups(
+      title,
+      majorCategory,
+      minorCategory,
+    );
+    const scoredFallbackGroups = scoreCaseGroups(fallbackGroups, {
+      currentIndustry,
+      currentDate,
+    });
+    const selectedFallbackGroups = selectTopRankedCases(scoredFallbackGroups);
+    const fallbackResponse = buildSimulatorResponse(selectedFallbackGroups);
+
+    if (!includeDiagnostics) return fallbackResponse;
+
+    return {
+      ...fallbackResponse,
+      diagnostics: {
+        mode: "STORED_CASE_FALLBACK",
+        reason: error.response?.data?.detail || "vector store unavailable",
+        storedCasesMatched: fallbackGroups.length,
+        finalCases: selectedFallbackGroups.length,
+      },
+    };
+  }
   const scoredDynamicGroups = scoreCaseGroups(
     removeDuplicateDynamicGroups(buildDynamicCaseGroups(validationResult.groups)),
     { currentIndustry, currentDate },
@@ -269,6 +372,8 @@ module.exports = {
   buildIssueSearchContent,
   buildIssueSearchQueries,
   buildDynamicCaseGroups,
+  getStoredCaseFallbackGroups,
+  isVectorStoreUnavailable,
   mergeCandidatesByNewsId,
   removeDuplicateDynamicGroups,
   getSimulationCandidates,
