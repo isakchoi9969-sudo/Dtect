@@ -75,6 +75,7 @@ const companyDomains = {
   CJ: "cj.net",
   HLB: "hlbbio.co.kr",
   HL만도: "hlmando.com",
+  에코프로비엠: "ecoprobm.com",
 };
 
 export default function CompanySearchPage() {

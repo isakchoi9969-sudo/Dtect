@@ -74,6 +74,7 @@ const companyDomains = {
   CJ: "cj.net",
   HLB: "hlbbio.co.kr",
   HL만도: "hlmando.com",
+  에코프로비엠: "ecoprobm.com",
 };
 /* =========================================================
    유틸
@@ -427,21 +428,27 @@ export default function CompanyAnalysisPage() {
                       </strong>
                       <div style={styles.liveNewsDetails}>
                         <div style={styles.liveNewsDetailRow}>
-                          <span style={styles.liveNewsDetailLabel}>분석 기준</span>
+                          <span style={styles.liveNewsDetailLabel}>
+                            분석 기준
+                          </span>
                           <strong>
-                            기업명·별칭 합계 {minimumKeywordMentions}회 이상 언급된
-                            최신 뉴스 최대 100건
+                            기업명·별칭 합계 {minimumKeywordMentions}회 이상
+                            언급된 최신 뉴스 최대 100건
                           </strong>
                         </div>
                         <div style={styles.liveNewsDetailRow}>
-                          <span style={styles.liveNewsDetailLabel}>수집 현황</span>
+                          <span style={styles.liveNewsDetailLabel}>
+                            수집 현황
+                          </span>
                           <strong>
-                            원본 {fetchedCount.toLocaleString()}건 확인 · 관련 기사{" "}
-                            {relevantCount.toLocaleString()}건
+                            원본 {fetchedCount.toLocaleString()}건 확인 · 관련
+                            기사 {relevantCount.toLocaleString()}건
                           </strong>
                         </div>
                         <div style={styles.liveNewsDetailRow}>
-                          <span style={styles.liveNewsDetailLabel}>분석 시각</span>
+                          <span style={styles.liveNewsDetailLabel}>
+                            분석 시각
+                          </span>
                           <strong>{analyzedAt}</strong>
                         </div>
                         <div style={styles.liveNewsDetailRow}>
@@ -515,7 +522,6 @@ export default function CompanyAnalysisPage() {
                 </div>
               </div>
             </div>
-
           </section>
 
           {/* ===================================================
