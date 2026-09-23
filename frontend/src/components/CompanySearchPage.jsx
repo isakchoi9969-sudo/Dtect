@@ -86,6 +86,7 @@ const companyDomains = {
   농심: "nongshim.com",
   오뚜기: "otoki.com",
   신세계: "shinsegae.com",
+  GS건설: "gsenc.com",
 };
 
 export default function CompanySearchPage() {
