@@ -16,7 +16,7 @@ async function analyzeSentiments(texts) {
     response = await axios.post(
       `${aiServerUrl}/api/ai/sentiment`,
       { texts },
-      { timeout: 30000 },
+      { timeout: 120000 },
     );
   } catch (error) {
     const detail = error.response?.data?.detail;
