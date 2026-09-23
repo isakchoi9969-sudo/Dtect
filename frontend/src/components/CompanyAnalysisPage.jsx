@@ -84,6 +84,7 @@ const companyDomains = {
   우리금융지주: "www.woorifg.com",
   농심: "nongshim.com",
   오뚜기: "otoki.com",
+  신세계: "shinsegae.com",
 };
 /* =========================================================
    유틸
