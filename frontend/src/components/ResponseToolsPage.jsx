@@ -22,23 +22,8 @@ function formatDate(value) {
   return match ? `${match[1]}. ${match[2]}. ${match[3]}.` : "정보 준비 중";
 }
 
-function formatDateRange(startDate, lastDate) {
-  if (!startDate || !lastDate) return "정보 준비 중";
-  return `${formatDate(startDate)} ~ ${formatDate(lastDate)}`;
-}
-
-function formatFinalScore(value) {
-  if (value == null || value === "") return "정보 준비 중";
-  const score = Number(value);
-  return Number.isFinite(score) ? `${score.toFixed(1)}점` : "정보 준비 중";
-}
-
-function formatSemanticSimilarity(value) {
-  if (value == null || value === "") return "정보 준비 중";
-  const similarity = Number(value);
-  return Number.isFinite(similarity)
-    ? `${(similarity * 100).toFixed(1)}%`
-    : "정보 준비 중";
+function formatIncidentDate(startDate) {
+  return startDate ? formatDate(startDate) : "정보 준비 중";
 }
 
 function CurrentIssueContext({
@@ -134,10 +119,11 @@ function SimulatorContent({
   cases,
   selectedCase,
   onSelect,
+  showDetails,
+  onShowDetails,
   errorMessage,
   displayValue,
-  displayDateRange,
-  displayScore,
+  displayIncidentDate,
 }) {
   if (status === "idle") {
     return (
@@ -171,99 +157,99 @@ function SimulatorContent({
     );
   }
 
+  const renderCaseDetails = (similarCase) => (
+    <div className="tool-card simulation-result">
+      <span>SIMILAR CASE</span>
+      <h2>{similarCase.issueName}</h2>
+      <p>{similarCase.description}</p>
+      <button
+        type="button"
+        className="case-detail-trigger"
+        onClick={onShowDetails}
+        aria-expanded={showDetails}
+      >
+        {showDetails ? "상세 내용 닫기" : "상세 내용 보기"}
+      </button>
+      {showDetails && (
+        <>
+          <div className="case-detail-grid">
+            <div>
+              <span>기업</span>
+              <strong>{displayValue(similarCase.companyName)}</strong>
+            </div>
+            <div>
+              <span>업종</span>
+              <strong>{displayValue(similarCase.industry)}</strong>
+            </div>
+            <div>
+              <span>리스크 유형</span>
+              <strong>
+                {similarCase.riskType
+                  ? RISK_TYPE_LABELS[similarCase.riskType] || similarCase.riskType
+                  : "정보 준비 중"}
+              </strong>
+            </div>
+            <div>
+              <span>사건 발생일</span>
+              <strong>{displayIncidentDate(similarCase.startDate)}</strong>
+            </div>
+            <div>
+              <span>지속기간</span>
+              <strong>
+                {similarCase.durationDays == null
+                  ? "정보 준비 중"
+                  : `약 ${similarCase.durationDays}일`}
+              </strong>
+            </div>
+            <div>
+              <span>관련 기사</span>
+              <strong>
+                {similarCase.articleCount == null
+                  ? "정보 준비 중"
+                  : `${similarCase.articleCount}건`}
+              </strong>
+            </div>
+          </div>
+          <div className="representative-news">
+            <span>대표기사</span>
+            <strong>{displayValue(similarCase.representativeTitle)}</strong>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   const selectedSimilarCase = cases[selectedCase] || cases[0];
 
   return (
     <section className="tool-grid">
-      <div className="tool-card">
+      <div className="tool-card case-library-card">
         <span>CASE LIBRARY</span>
         <h2>유사 사례를 선택하세요</h2>
         <div className="case-options">
           {cases.map((item, index) => (
-            <button
-              type="button"
-              className={selectedCase === index ? "selected" : ""}
-              onClick={() => onSelect(index)}
-              key={item.issueName}
-            >
-              <span>{item.issueName}</span>
-              <small>{displayScore(item.finalScore)}</small>
-              <i>›</i>
-            </button>
+            <div className="case-option" key={`${item.issueName}-${index}`}>
+              <button
+                type="button"
+                className={selectedCase === index ? "selected" : ""}
+                onClick={() => onSelect(index)}
+                aria-pressed={selectedCase === index}
+              >
+                <span>{item.issueName}</span>
+                <i aria-hidden="true">›</i>
+              </button>
+            </div>
           ))}
         </div>
       </div>
-      <div className="tool-card simulation-result">
-        <span>SIMILAR CASE</span>
-        <h2>{selectedSimilarCase.issueName}</h2>
-        <p>{selectedSimilarCase.description}</p>
-        <div className="case-detail-grid">
-          <div>
-            <span>기업</span>
-            <strong>{displayValue(selectedSimilarCase.companyName)}</strong>
-          </div>
-          <div>
-            <span>업종</span>
-            <strong>{displayValue(selectedSimilarCase.industry)}</strong>
-          </div>
-          <div>
-            <span>리스크 유형</span>
-            <strong>
-              {selectedSimilarCase.riskType
-                ? RISK_TYPE_LABELS[selectedSimilarCase.riskType] ||
-                  selectedSimilarCase.riskType
-                : "정보 준비 중"}
-            </strong>
-          </div>
-          <div>
-            <span>사건 기간</span>
-            <strong>
-              {displayDateRange(
-                selectedSimilarCase.startDate,
-                selectedSimilarCase.lastDate,
-              )}
-            </strong>
-          </div>
-          <div>
-            <span>지속기간</span>
-            <strong>
-              {selectedSimilarCase.durationDays == null
-                ? "정보 준비 중"
-                : `${selectedSimilarCase.durationDays}일`}
-            </strong>
-          </div>
-          <div>
-            <span>관련 기사</span>
-            <strong>
-              {selectedSimilarCase.articleCount == null
-                ? "정보 준비 중"
-                : `${selectedSimilarCase.articleCount}건`}
-            </strong>
-          </div>
-          <div>
-            <span>종합 유사도</span>
-            <strong>{displayScore(selectedSimilarCase.finalScore)}</strong>
-          </div>
-          <div>
-            <span>의미 유사도</span>
-            <strong>
-              {formatSemanticSimilarity(selectedSimilarCase.semanticSimilarity)}
-            </strong>
-          </div>
-        </div>
-        <div className="representative-news">
-          <span>대표기사</span>
-          <strong>
-            {displayValue(selectedSimilarCase.representativeTitle)}
-          </strong>
-        </div>
-      </div>
+      {renderCaseDetails(selectedSimilarCase)}
     </section>
   );
 }
 function ResponseToolsPage({ mode }) {
   const [activeMode, setActiveMode] = useState(mode);
   const [selectedCase, setSelectedCase] = useState(0);
+  const [isCaseDetailVisible, setIsCaseDetailVisible] = useState(false);
   const [currentIssue, setCurrentIssue] = useState({ name: "" });
   const [caseType, setCaseType] = useState({ major: "", minor: "" });
   const [similarCases, setSimilarCases] = useState([]);
@@ -334,6 +320,7 @@ function ResponseToolsPage({ mode }) {
         Array.isArray(response.similarCases) ? response.similarCases : [],
       );
       setSelectedCase(0);
+      setIsCaseDetailVisible(false);
       setCaseLoadStatus("success");
     } catch (error) {
       setSimilarCases([]);
@@ -391,11 +378,15 @@ function ResponseToolsPage({ mode }) {
               status={caseLoadStatus}
               cases={similarCases}
               selectedCase={selectedCase}
-              onSelect={setSelectedCase}
+              onSelect={(index) => {
+                setSelectedCase(index);
+                setIsCaseDetailVisible(false);
+              }}
+              showDetails={isCaseDetailVisible}
+              onShowDetails={() => setIsCaseDetailVisible((visible) => !visible)}
               errorMessage={caseError}
               displayValue={displayValue}
-              displayDateRange={formatDateRange}
-              displayScore={formatFinalScore}
+              displayIncidentDate={formatIncidentDate}
             />
           </>
         ) : (
