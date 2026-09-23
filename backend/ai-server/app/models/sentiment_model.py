@@ -10,6 +10,25 @@ _sentiment_pipeline = None
 _model_lock = Lock()
 
 
+def resolve_model_source(model_name: str) -> str:
+    """캐시된 모델을 우선 사용하고, 없을 때만 원격 저장소를 사용한다."""
+    from huggingface_hub import snapshot_download
+
+    try:
+        local_model_path = snapshot_download(
+            repo_id=model_name,
+            local_files_only=True,
+        )
+        logger.info("로컬 감성분석 모델 캐시 사용: %s", local_model_path)
+        return local_model_path
+    except Exception as error:
+        logger.warning(
+            "로컬 감성분석 모델 캐시를 사용할 수 없어 원격 모델을 조회합니다: %s",
+            error,
+        )
+        return model_name
+
+
 def get_sentiment_pipeline():
     """
     KR-FinBERT 모델을 최초 한 번만 불러온다.
@@ -37,10 +56,11 @@ def get_sentiment_pipeline():
             )
 
             logger.info("감성분석 모델 로딩 시작: %s", model_name)
+            model_source = resolve_model_source(model_name)
 
             _sentiment_pipeline = pipeline(
                 "text-classification",
-                model=model_name,
+                model=model_source,
             )
 
             logger.info("감성분석 모델 로딩 완료")
@@ -92,8 +112,8 @@ def analyze_sentiments(texts: list[str]) -> list[dict]:
         batch_size=batch_size,
     )
     
-    logger.info("KR-FinBERT 원본 결과: %s", results)
-   
+    logger.info("KR-FinBERT 감성분석 완료: %d건", len(results))
+
     return [
         {
             "label": normalize_label(result["label"]),

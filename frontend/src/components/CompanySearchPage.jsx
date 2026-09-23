@@ -75,6 +75,18 @@ const companyDomains = {
   CJ: "cj.net",
   HLB: "hlbbio.co.kr",
   HL만도: "hlmando.com",
+  에코프로비엠: "ecoprobm.com",
+  포스코퓨처엠: "poscofuturem.com",
+  하나금융: "hanafn.com",
+  하나금융지주: "hanafn.com",
+  KB금융: "kbfg.com",
+  메리츠금융지주: "meritzgroup.com",
+  우리금융: "woorifg.com",
+  우리금융지주: "www.woorifg.com",
+  농심: "nongshim.com",
+  오뚜기: "otoki.com",
+  신세계: "shinsegae.com",
+  GS건설: "gsenc.com",
 };
 
 export default function CompanySearchPage() {

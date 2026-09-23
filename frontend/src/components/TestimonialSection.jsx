@@ -35,6 +35,7 @@ function TestimonialSection() {
           transform: translateX(-50%);
           background: radial-gradient(ellipse, rgba(37, 99, 235, 0.065), transparent 70%);
           pointer-events: none;
+          animation: testimonialGlow 8s ease-in-out infinite;
         }
 
         :root[data-theme="dark"] .dtect-testimonial {
@@ -58,6 +59,7 @@ function TestimonialSection() {
           max-width: 570px;
           margin: 0 auto clamp(34px, 5vw, 48px);
           text-align: center;
+          animation: testimonialHeadingIn 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
         .dtect-testimonial .testimonial-eyebrow {
@@ -78,7 +80,10 @@ function TestimonialSection() {
           height: 1px;
           background: currentColor;
           opacity: 0.5;
+          animation: testimonialLinePulse 2.4s ease-in-out infinite;
         }
+
+        .dtect-testimonial .testimonial-eyebrow::before { animation-delay: .35s; }
 
         .dtect-testimonial .testimonial-title {
           margin: 0;
@@ -129,6 +134,7 @@ function TestimonialSection() {
           animation: testimonialCardIn 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
           animation-delay: calc(var(--testimonial-index) * 90ms);
           transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+          perspective: 900px;
         }
 
         .dtect-testimonial .testimonial-card::before {
@@ -142,10 +148,28 @@ function TestimonialSection() {
           opacity: 0.75;
         }
 
+        .dtect-testimonial .testimonial-card::after {
+          content: "";
+          position: absolute;
+          top: -30%;
+          bottom: -30%;
+          left: -45%;
+          width: 26%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+          opacity: 0;
+          pointer-events: none;
+          transform: skewX(-18deg);
+        }
+
         .dtect-testimonial .testimonial-card:hover {
-          transform: translateY(-4px);
+          transform: translateY(-6px) rotateX(1deg) rotateY(-1deg);
           border-color: color-mix(in srgb, var(--ts-accent) 30%, transparent);
           box-shadow: 0 24px 44px -32px rgba(37, 99, 235, 0.45);
+        }
+
+        .dtect-testimonial .testimonial-card:hover::after {
+          opacity: 1;
+          animation: testimonialShine 850ms ease-out;
         }
 
         .dtect-testimonial .testimonial-meta {
@@ -175,6 +199,7 @@ function TestimonialSection() {
           height: 5px;
           border-radius: 50%;
           background: currentColor;
+          animation: testimonialDot 1.8s ease-in-out infinite;
         }
 
         .dtect-testimonial .testimonial-index {
@@ -205,6 +230,8 @@ function TestimonialSection() {
           font-weight: 700;
           line-height: 0.7;
           opacity: 0.55;
+          transform-origin: 50% 80%;
+          animation: testimonialQuoteFloat 3.2s ease-in-out infinite;
         }
 
         .dtect-testimonial .testimonial-user {
@@ -227,6 +254,12 @@ function TestimonialSection() {
           color: #fff;
           font-size: 12px;
           font-weight: 750;
+          transition: transform 320ms cubic-bezier(.22, 1, .36, 1), border-radius 320ms ease;
+        }
+
+        .dtect-testimonial .testimonial-card:hover .testimonial-avatar {
+          border-radius: 50%;
+          transform: rotate(-8deg) scale(1.12);
         }
 
         .dtect-testimonial .testimonial-name {
@@ -246,6 +279,36 @@ function TestimonialSection() {
         @keyframes testimonialCardIn {
           from { opacity: 0; transform: translateY(12px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes testimonialHeadingIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes testimonialGlow {
+          0%, 100% { opacity: .55; transform: translateX(-50%) scale(.94); }
+          50% { opacity: 1; transform: translateX(-50%) scale(1.06); }
+        }
+
+        @keyframes testimonialLinePulse {
+          0%, 100% { transform: scaleX(.72); opacity: .35; }
+          50% { transform: scaleX(1.08); opacity: .8; }
+        }
+
+        @keyframes testimonialDot {
+          0%, 100% { opacity: .55; transform: scale(.8); }
+          50% { opacity: 1; transform: scale(1.25); }
+        }
+
+        @keyframes testimonialQuoteFloat {
+          0%, 100% { transform: translateY(0) rotate(-2deg); }
+          50% { transform: translateY(-3px) rotate(2deg); }
+        }
+
+        @keyframes testimonialShine {
+          from { left: -45%; }
+          to { left: 135%; }
         }
 
         @media (max-width: 700px) {

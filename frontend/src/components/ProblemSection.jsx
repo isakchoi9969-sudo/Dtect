@@ -30,6 +30,7 @@ function ProblemSection() {
           transform: translateX(-50%);
           background: radial-gradient(ellipse, rgba(37, 99, 235, 0.07), transparent 68%);
           pointer-events: none;
+          animation: problemGlow 7s ease-in-out infinite;
         }
 
         :root[data-theme="dark"] .dtect-problem {
@@ -50,6 +51,7 @@ function ProblemSection() {
         .dtect-problem .problem-heading {
           max-width: 560px;
           margin: 0 0 clamp(34px, 5vw, 52px);
+          animation: problemHeadingIn 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
         .dtect-problem .problem-eyebrow {
@@ -69,6 +71,7 @@ function ProblemSection() {
           height: 1px;
           background: currentColor;
           opacity: 0.55;
+          animation: problemEyebrowPulse 2.2s ease-in-out infinite;
         }
 
         .dtect-problem .problem-title {
@@ -105,12 +108,32 @@ function ProblemSection() {
           animation: problemCardIn 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
           animation-delay: calc(var(--card-index) * 80ms);
           transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+          isolation: isolate;
         }
 
         .dtect-problem .problem-card:hover {
-          transform: translateY(-4px);
+          transform: translateY(-6px) rotate(-0.4deg);
           border-color: color-mix(in srgb, var(--prob-accent) 30%, transparent);
           box-shadow: 0 22px 42px -30px rgba(37, 99, 235, 0.45);
+        }
+
+        .dtect-problem .problem-card::before {
+          content: "";
+          position: absolute;
+          z-index: -1;
+          top: -40%;
+          bottom: -40%;
+          left: -45%;
+          width: 24%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent);
+          opacity: 0;
+          pointer-events: none;
+          transform: skewX(-18deg);
+        }
+
+        .dtect-problem .problem-card:hover::before {
+          opacity: 1;
+          animation: problemScan 850ms ease-out;
         }
 
         .dtect-problem .problem-card::after {
@@ -139,6 +162,12 @@ function ProblemSection() {
           font-weight: 700;
           letter-spacing: 0.08em;
           opacity: 0.65;
+          transition: color 220ms ease, transform 220ms ease;
+        }
+
+        .dtect-problem .problem-card:hover .problem-number {
+          color: var(--prob-title);
+          transform: translateY(-2px) scale(1.08);
         }
 
         .dtect-problem .problem-icon {
@@ -153,6 +182,14 @@ function ProblemSection() {
           color: var(--prob-accent);
           font-size: 11px;
           font-weight: 750;
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--prob-accent) 22%, transparent);
+          animation: problemIconPulse 2.8s ease-in-out infinite;
+          transition: transform 260ms cubic-bezier(.22, 1, .36, 1), border-radius 260ms ease;
+        }
+
+        .dtect-problem .problem-card:hover .problem-icon {
+          border-radius: 50%;
+          transform: rotate(12deg) scale(1.16);
         }
 
         .dtect-problem .problem-card h3 {
@@ -176,6 +213,31 @@ function ProblemSection() {
         @keyframes problemCardIn {
           from { opacity: 0; transform: translateY(12px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes problemGlow {
+          0%, 100% { opacity: .55; transform: translateX(-50%) scale(.94); }
+          50% { opacity: 1; transform: translateX(-50%) scale(1.06); }
+        }
+
+        @keyframes problemHeadingIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes problemEyebrowPulse {
+          0%, 100% { transform: scaleX(.7); opacity: .3; }
+          50% { transform: scaleX(1.1); opacity: .85; }
+        }
+
+        @keyframes problemIconPulse {
+          0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--prob-accent) 22%, transparent); }
+          50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--prob-accent) 0%, transparent); }
+        }
+
+        @keyframes problemScan {
+          from { left: -45%; }
+          to { left: 135%; }
         }
 
         @media (max-width: 820px) {

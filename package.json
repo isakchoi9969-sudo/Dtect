@@ -3,9 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "concurrently --names frontend,backend --prefix-colors blue,green \"npm --prefix frontend run dev\" \"npm --prefix backend/server run dev\"",
+    "predev": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/clean-dev-ports.ps1",
+    "dev": "concurrently --kill-others-on-fail --names frontend,backend,ai --prefix-colors blue,green,magenta \"npm --prefix frontend run dev\" \"npm --prefix backend/server run dev\" \"npm run dev:ai\"",
     "dev:ai": "cd backend\\ai-server && .venv\\Scripts\\python.exe run.py",
-    "dev:all": "concurrently --kill-others-on-fail --names frontend,backend,ai --prefix-colors blue,green,magenta \"npm --prefix frontend run dev\" \"npm --prefix backend/server run dev\" \"npm run dev:ai\"",
+    "dev:all": "npm run dev",
     "build": "npm --prefix frontend run build",
     "lint": "npm --prefix frontend run lint",
     "preview": "npm --prefix frontend run preview"

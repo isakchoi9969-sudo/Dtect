@@ -60,6 +60,32 @@ function HeroSection() {
           mask-image: linear-gradient(to bottom, black, transparent 82%);
           content: "";
           pointer-events: none;
+          animation: dtect-grid-drift 24s linear infinite;
+        }
+
+        @keyframes dtect-grid-drift {
+          from { background-position: 0 0, 0 0; }
+          to { background-position: 44px 44px, 44px 44px; }
+        }
+
+        @keyframes dtect-fade-up {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes dtect-float {
+          0%, 100% { transform: rotate(1.2deg) translateY(0); }
+          50% { transform: rotate(1.2deg) translateY(-6px); }
+        }
+
+        @keyframes dtect-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: .58; transform: scale(.82); }
+        }
+
+        @keyframes dtect-shimmer {
+          from { transform: translateX(-105%); }
+          to { transform: translateX(105%); }
         }
 
         .dtect-hero .hero-shell {
@@ -74,6 +100,18 @@ function HeroSection() {
         }
 
         .dtect-hero .hero-copy { max-width: 540px; }
+
+        .dtect-hero .hero-copy > * {
+          opacity: 0;
+          animation: dtect-fade-up .7s cubic-bezier(.22, 1, .36, 1) forwards;
+        }
+
+        .dtect-hero .hero-copy > :nth-child(1) { animation-delay: .08s; }
+        .dtect-hero .hero-copy > :nth-child(2) { animation-delay: .16s; }
+        .dtect-hero .hero-copy > :nth-child(3) { animation-delay: .24s; }
+        .dtect-hero .hero-copy > :nth-child(4) { animation-delay: .32s; }
+        .dtect-hero .hero-copy > :nth-child(5) { animation-delay: .4s; }
+        .dtect-hero .hero-copy > :nth-child(6) { animation-delay: .48s; }
 
         .dtect-hero .hero-status {
           display: inline-flex;
@@ -96,6 +134,7 @@ function HeroSection() {
           border-radius: 50%;
           background: var(--hero-primary);
           box-shadow: 0 0 0 4px color-mix(in srgb, var(--hero-primary) 13%, transparent);
+          animation: dtect-pulse 2.4s ease-in-out infinite;
         }
 
         .dtect-hero h1 {
@@ -149,6 +188,12 @@ function HeroSection() {
         .dtect-hero .hero-button:hover { transform: translateY(-2px); box-shadow: 0 14px 28px color-mix(in srgb, var(--hero-primary) 30%, transparent); }
         .dtect-hero .hero-button-arrow { font-size: 16px; line-height: 1; }
 
+        .dtect-hero .hero-button:hover .hero-button-arrow { animation: dtect-arrow-nudge .7s ease-in-out infinite alternate; }
+
+        @keyframes dtect-arrow-nudge {
+          to { transform: translateX(3px); }
+        }
+
         .dtect-hero .hero-proof {
           display: flex;
           align-items: center;
@@ -168,6 +213,7 @@ function HeroSection() {
           background: linear-gradient(145deg, color-mix(in srgb, var(--hero-primary) 32%, transparent), var(--hero-border), transparent);
           box-shadow: 0 26px 60px var(--hero-shadow), 0 8px 20px color-mix(in srgb, var(--hero-shadow) 50%, transparent);
           transform: rotate(1.2deg);
+          animation: dtect-float 6s ease-in-out 1s infinite;
         }
 
         .dtect-hero .hero-dashboard-inner { overflow: hidden; border-radius: 17px; background: var(--hero-card); backdrop-filter: blur(18px); transform: rotate(-1.2deg); }
@@ -177,10 +223,13 @@ function HeroSection() {
         .dtect-hero .dashboard-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--hero-border); }
         .dtect-hero .dashboard-name { color: var(--hero-label); font-size: 8px; font-weight: 800; letter-spacing: .11em; }
         .dtect-hero .dashboard-live { display: flex; align-items: center; gap: 5px; color: var(--hero-green); font-size: 8px; font-weight: 800; letter-spacing: .08em; }
-        .dtect-hero .dashboard-live i { width: 5px; height: 5px; border-radius: 50%; background: var(--hero-green); }
+        .dtect-hero .dashboard-live i { width: 5px; height: 5px; border-radius: 50%; background: var(--hero-green); animation: dtect-pulse 1.8s ease-in-out infinite; }
 
         .dtect-hero .dashboard-content { display: grid; grid-template-columns: 1.2fr .8fr; gap: 10px; padding: 13px; text-align: left; }
-        .dtect-hero .dashboard-card { padding: 14px; border: 1px solid var(--hero-border); border-radius: 11px; background: var(--hero-panel); }
+        .dtect-hero .dashboard-card { padding: 14px; border: 1px solid var(--hero-border); border-radius: 11px; background: var(--hero-panel); animation: dtect-fade-up .7s cubic-bezier(.22, 1, .36, 1) both; }
+        .dtect-hero .dashboard-card:nth-child(1) { animation-delay: .4s; }
+        .dtect-hero .dashboard-card:nth-child(2) { animation-delay: .52s; }
+        .dtect-hero .dashboard-card:nth-child(3) { animation-delay: .64s; }
         .dtect-hero .dashboard-card-main { grid-row: span 2; }
         .dtect-hero .dashboard-label { margin-bottom: 12px; color: var(--hero-label); font-size: 8px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
         .dtect-hero .dashboard-issue { margin: 0; color: var(--hero-title); font-size: 14px; font-weight: 750; letter-spacing: -.04em; line-height: 1.4; }
@@ -190,7 +239,8 @@ function HeroSection() {
         .dtect-hero .dashboard-value { color: var(--hero-title); font-size: 27px; font-weight: 800; letter-spacing: -.06em; }
         .dtect-hero .dashboard-unit, .dtect-hero .dashboard-positive { color: var(--hero-primary); font-size: 9px; font-weight: 750; }
         .dtect-hero .dashboard-bar { height: 4px; margin-top: 12px; overflow: hidden; border-radius: 999px; background: var(--hero-border); }
-        .dtect-hero .dashboard-bar span { display: block; width: 72%; height: 100%; border-radius: inherit; background: var(--hero-primary); }
+        .dtect-hero .dashboard-bar span { position: relative; display: block; width: 72%; height: 100%; overflow: hidden; border-radius: inherit; background: var(--hero-primary); }
+        .dtect-hero .dashboard-bar span::after { position: absolute; inset: 0; width: 45%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent); content: ""; animation: dtect-shimmer 2.8s ease-in-out infinite; }
         .dtect-hero .dashboard-risk { display: flex; align-items: center; justify-content: space-between; }
         .dtect-hero .dashboard-risk strong { color: var(--hero-title); font-size: 21px; letter-spacing: -.05em; }
         .dtect-hero .dashboard-badge { padding: 5px 7px; border-radius: 5px; background: color-mix(in srgb, var(--hero-green) 11%, transparent); color: var(--hero-green); font-size: 8px; font-weight: 800; }
@@ -214,6 +264,14 @@ function HeroSection() {
           .dtect-hero .dashboard-card-main { grid-row: auto; }
           .dtect-hero .hero-dashboard { transform: none; }
           .dtect-hero .hero-dashboard-inner { transform: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .dtect-hero *, .dtect-hero::before {
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
+            scroll-behavior: auto !important;
+          }
         }
       `}</style>
 
