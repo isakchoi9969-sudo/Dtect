@@ -1,24 +1,48 @@
 .case-options button {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
+}
+
+.case-option {
+  overflow: hidden;
+  border: 1px solid #e6ebf1;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.case-option > button {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.case-option:has(button.selected) {
+  border-color: #84b8f3;
+}
+
+.case-detail-trigger {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #84b8f3;
+  border-radius: 9px;
+  color: #1779df;
+  background: #f0f7ff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.case-detail-trigger:hover {
+  background: #e5f2ff;
 }
 
 .case-options button span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.case-options button small {
-  color: #94a0af;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.case-options button.selected small {
-  color: #1779df;
 }
 
 .case-detail-grid {

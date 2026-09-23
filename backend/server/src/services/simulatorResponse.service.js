@@ -9,8 +9,9 @@ function toDateOnly(value) {
 /** 현재 시뮬레이터 UI의 similarCases 데이터 구조로 최종 사례를 변환한다. */
 function toSimilarCaseResponse(group) {
   return {
-    caseId: group.caseId,
-    issueId: group.issueId,
+    caseId: Number.isInteger(group.caseId) ? group.caseId : null,
+    issueId: Number.isInteger(group.issueId) ? group.issueId : null,
+    source: Number.isInteger(group.caseId) ? "stored" : "dynamic",
     issueName: group.issueName || group.caseName,
     companyName: group.companyName,
     industry: group.industry,
@@ -39,9 +40,7 @@ function getDurationDays(startDate, lastDate) {
 
 function buildSimulatorResponse(groups) {
   return {
-    similarCases: groups
-      .filter((group) => Number.isInteger(group.caseId) && Number.isInteger(group.issueId))
-      .map(toSimilarCaseResponse),
+    similarCases: groups.map(toSimilarCaseResponse),
   };
 }
 

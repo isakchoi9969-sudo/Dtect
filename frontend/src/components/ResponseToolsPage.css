@@ -178,7 +178,7 @@
   font-weight: 800;
 }
 .generator-card {
-  max-width: 650px;
+  max-width: 900px;
   margin-top: 22px;
 }
 .generator-card label {
@@ -274,4 +274,253 @@
   left: 0;
   color: #257be7;
   font-weight: bold;
+}
+
+/* 산업과 이슈 선택 영역을 2열로 배치합니다. */
+.generator-selection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* 선택한 이슈의 요약 정보를 보여주는 카드입니다. */
+.selected-issue-summary {
+  margin-top: 16px;
+  padding: 15px 16px;
+  border: 1px solid #cfe2f8;
+  border-radius: 9px;
+  background: #f5f9fe;
+}
+
+.selected-issue-summary > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #1779df;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+}
+
+.selected-issue-summary strong {
+  color: #203552;
+  font-size: 14px;
+}
+
+.selected-issue-summary p {
+  margin: 7px 0 0;
+  color: #718095;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.generator-intro {
+  margin: -8px 0 6px;
+  color: #718095;
+  font-size: 13px;
+}
+
+.generator-card small {
+  color: #97a3b4;
+  font-weight: 500;
+}
+
+/* 모바일에서는 산업·이슈 선택칸을 세로로 표시합니다. */
+@media (max-width: 600px) {
+  .generator-selection-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.issue-insight-card {
+  margin-top: 22px;
+  padding: 20px;
+  border: 1px solid #cfe2f8;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #f5f9fe 0%, #fbfdff 100%);
+}
+
+.issue-insight-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.issue-insight-header span {
+  display: block;
+  margin-bottom: 7px;
+  color: #1779df;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+}
+
+.issue-insight-header h3 {
+  margin: 0;
+  color: #203552;
+  font-size: 16px;
+}
+
+.risk-badge {
+  height: fit-content;
+  padding: 6px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* 관심: 아직 초기 언급 단계 */
+.risk-interest {
+  color: #355a7a;
+  background: #dcebf7;
+}
+
+/* 주의: 증가 추세라 모니터링 필요 */
+.risk-caution {
+  color: #805600;
+  background: #ffe7a3;
+}
+
+/* 경계: 확산 또는 실질적 영향 발생 */
+.risk-warning {
+  color: #9a3d00;
+  background: #ffd5b8;
+}
+
+/* 심각: 즉각적인 대응이 필요한 상태 */
+.risk-critical {
+  color: #971b1b;
+  background: #ffcaca;
+}
+
+.issue-insight-card > p {
+  margin: 10px 0 17px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.insight-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
+  border: 1px solid #dde9f5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.insight-metrics div {
+  padding: 11px 13px;
+}
+
+.insight-metrics div + div {
+  border-left: 1px solid #e5edf5;
+}
+
+.insight-metrics span,
+.insight-metrics strong {
+  display: block;
+}
+
+.insight-metrics span {
+  color: #93a0b0;
+  font-size: 10px;
+}
+
+.insight-metrics strong {
+  margin-top: 4px;
+  color: #334155;
+  font-size: 13px;
+}
+
+.keyword-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 13px;
+}
+
+.keyword-tags span {
+  padding: 5px 8px;
+  border-radius: 5px;
+  color: #3874ae;
+  background: #eaf4ff;
+  font-size: 11px;
+}
+
+.document-guide {
+  margin: 8px 0 0;
+  color: #718095;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 단계 번호와 제목을 한 줄로 묶어 정렬합니다. */
+.step-heading {
+  margin-bottom: 14px;
+}
+
+.step-title-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.step-heading > p {
+  margin: 6px 0 0 25px;
+  color: #7d8ca0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.step-heading b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  color: #1779df;
+  background: #eaf4ff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.step-heading h2 {
+  margin: 0;
+  color: #203552;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+
+.generator-step {
+  padding: 20px 0;
+}
+
+.generator-card-header {
+  padding-bottom: 17px;
+}
+
+.generator-card-header p {
+  margin: 7px 0 0;
+  color: #718095;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* 입력 항목 제목과 '선택' 표시를 같은 줄에 배치합니다. */
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4e5e73;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.field-label em {
+  color: #97a3b4;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
 }

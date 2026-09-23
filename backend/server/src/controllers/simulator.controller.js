@@ -7,6 +7,7 @@ async function getSimilarCases(req, res) {
   const majorCategory = String(req.body?.majorCategory || "").trim() || null;
   const minorCategory = String(req.body?.minorCategory || "").trim() || null;
   const currentIndustry = String(req.body?.currentIndustry || "").trim() || null;
+  const includeDiagnostics = req.body?.debug === true;
 
   if (!title && !majorCategory && !minorCategory) {
     return res.status(422).json({
@@ -21,6 +22,7 @@ async function getSimilarCases(req, res) {
       currentIndustry,
       majorCategory,
       minorCategory,
+      includeDiagnostics,
     });
     return res.json({ success: true, ...result });
   } catch (error) {

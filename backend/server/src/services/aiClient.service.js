@@ -42,6 +42,44 @@ async function searchSimilarNews(title, content) {
 }
 
 /**
+ * 별칭별 검색 결과를 NEWS_ID 기준으로 합친 뒤, 가장 높은 cosine 점수를 유지한다.
+ * 합친 뒤에도 Chroma 후보 상한 100건은 그대로 적용한다.
+ */
+function mergeSimilarNewsMatches(matchLists) {
+  const matchesByNewsId = new Map();
+
+  for (const matches of matchLists) {
+    for (const match of matches || []) {
+      const newsId = Number(match.news_id);
+      const similarity = Number(match.similarity);
+      if (!Number.isInteger(newsId) || !Number.isFinite(similarity)) continue;
+
+      const previous = matchesByNewsId.get(newsId);
+      if (!previous || similarity > previous.similarity) {
+        matchesByNewsId.set(newsId, { ...match, news_id: newsId, similarity });
+      }
+    }
+  }
+
+  return [...matchesByNewsId.values()]
+    .sort((left, right) => right.similarity - left.similarity || left.news_id - right.news_id)
+    .slice(0, 100);
+}
+
+/** 별칭별 독립 검색을 실행해 주제 검색의 recall을 보완한다. */
+async function searchSimilarNewsByQueries(queries) {
+  const normalizedQueries = (queries || [])
+    .filter((query) => String(query?.title || "").trim() || String(query?.content || "").trim());
+
+  if (normalizedQueries.length === 0) return [];
+
+  const matchLists = await Promise.all(
+    normalizedQueries.map((query) => searchSimilarNews(query.title, query.content)),
+  );
+  return mergeSimilarNewsMatches(matchLists);
+}
+
+/**
  * Chroma에 저장된 뉴스 BGE-M3 벡터를 ID별 Map으로 반환한다.
  * 군집 내부 유사도와 centroid 계산에만 사용한다.
  */
@@ -85,7 +123,9 @@ async function generateResponseDraft(payload) {
 
 module.exports = {
   analyzeSentiments,
+  mergeSimilarNewsMatches,
   searchSimilarNews,
+  searchSimilarNewsByQueries,
   getNewsEmbeddings,
   getIssueEmbedding,
   generateResponseDraft, // 대응자료 생성 함수 내보내기
