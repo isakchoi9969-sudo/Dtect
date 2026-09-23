@@ -76,6 +76,7 @@ const companyDomains = {
   HLB: "hlbbio.co.kr",
   HL만도: "hlmando.com",
   에코프로비엠: "ecoprobm.com",
+  포스코퓨처엠: "poscofuturem.com",
 };
 
 export default function CompanySearchPage() {
