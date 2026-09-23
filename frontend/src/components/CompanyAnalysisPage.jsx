@@ -76,6 +76,8 @@ const companyDomains = {
   HL만도: "hlmando.com",
   에코프로비엠: "ecoprobm.com",
   포스코퓨처엠: "poscofuturem.com",
+  하나금융: "hanafn.com",
+  하나금융지주: "hanafn.com",
 };
 /* =========================================================
    유틸
