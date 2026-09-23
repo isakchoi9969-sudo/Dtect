@@ -83,6 +83,7 @@ const companyDomains = {
   메리츠금융지주: "meritzgroup.com",
   우리금융: "woorifg.com",
   우리금융지주: "www.woorifg.com",
+  농심: "nongshim.com",
 };
 
 export default function CompanySearchPage() {
