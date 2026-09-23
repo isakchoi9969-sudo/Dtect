@@ -1,6 +1,5 @@
-﻿import { useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import Header from "./Header";
-import { useCallback } from "react";
 import { ROUTES } from "../config/routes";
 import { CASE_TYPE_OPTIONS } from "../data/caseTypeOptions";
 import { fetchSimilarCases } from "../services/simulatorApi";
@@ -10,202 +9,14 @@ import { api } from "../config/api";
 
 const documents = ["보도자료", "고객 안내문", "임직원 공지", "Q&A 문서"];
 
-// 산업별로 선택할 대표 이슈 목록입니다.
-// 나중에는 이 부분을 기업 분석 결과 API 데이터로 바꿀 수 있습니다.
-const INDUSTRY_ISSUES = {
-  건설: [
-    {
-      title: "건설 현장 안전사고 관련 보도 증가",
-      summary:
-        "최근 건설 현장 안전관리와 사고 예방 조치에 대한 보도가 증가하고 있습니다.",
-    },
-    {
-      title: "공사 지연 및 공급망 이슈",
-      summary: "자재 수급과 공정 일정 관련 문의가 늘어나고 있습니다.",
-    },
-    {
-      title: "하자 및 품질관리 관련 민원 증가",
-      summary:
-        "시공 품질과 하자 보수 절차에 대한 소비자 민원과 보도가 늘어나고 있습니다.",
-    },
-    {
-      title: "건설 경기 침체 및 자금 유동성 우려",
-      summary:
-        "프로젝트 파이낸싱과 건설 경기 변동에 대한 시장 우려가 이어지고 있습니다.",
-    },
-    {
-      title: "하도급 대금 및 협력사 분쟁 이슈",
-      summary:
-        "협력사와의 대금 지급, 계약 조건 관련 분쟁 가능성이 언급되고 있습니다.",
-    },
-    {
-      title: "공사 현장 소음·환경 민원 증가",
-      summary:
-        "공사 과정에서 발생하는 소음과 환경 영향에 대한 지역 민원이 증가하고 있습니다.",
-    },
-  ],
-  통신: [
-    {
-      title: "통신 서비스 장애 관련 문의 증가",
-      summary:
-        "서비스 이용 불편과 복구 현황에 대한 고객 문의가 증가하고 있습니다.",
-    },
-    {
-      title: "개인정보 보호 이슈 관련 보도",
-      summary:
-        "개인정보 보호 체계와 고객 안내에 관한 관심이 높아지고 있습니다.",
-    },
-    {
-      title: "개인정보 유출 및 보안 우려",
-      summary:
-        "고객 정보 보호 체계와 보안 사고 대응에 대한 관심이 높아지고 있습니다.",
-    },
-    {
-      title: "통신 품질 및 고객 불편 민원",
-      summary:
-        "통화 품질과 인터넷 연결 문제에 대한 고객 불편 사례가 언급되고 있습니다.",
-    },
-    {
-      title: "유심 정보 보호 및 보이스피싱 우려",
-      summary:
-        "유심 정보 보호와 금융사기 예방 조치에 대한 문의가 증가하고 있습니다.",
-    },
-    {
-      title: "통신 요금 및 이용 약관 논란",
-      summary:
-        "통신 요금과 서비스 이용 조건의 공정성에 대한 관심이 이어지고 있습니다.",
-    },
-  ],
-  자동차: [
-    {
-      title: "차량 품질 및 리콜 관련 이슈",
-      summary: "차량 품질과 안전 점검 관련 보도가 이어지고 있습니다.",
-    },
-    {
-      title: "전기차 안전성 관련 우려 확산",
-      summary: "전기차 안전성과 사후 점검에 관한 문의가 증가하고 있습니다.",
-    },
-    {
-      title: "전기차 화재 및 배터리 안전성 우려",
-      summary:
-        "전기차 화재와 배터리 안전 점검에 대한 소비자 우려가 커지고 있습니다.",
-    },
-    {
-      title: "부품 수급 지연에 따른 출고 차질",
-      summary:
-        "핵심 부품 공급 변동으로 차량 생산과 출고 일정에 대한 문의가 늘어나고 있습니다.",
-    },
-    {
-      title: "완성차 노사 협상 및 생산 차질 가능성",
-      summary:
-        "노사 협상 진행 상황과 생산 일정 영향에 대한 관심이 높아지고 있습니다.",
-    },
-    {
-      title: "차량 소프트웨어 오류 및 업데이트 이슈",
-      summary:
-        "차량 소프트웨어 오류와 원격 업데이트 안정성 관련 보도가 이어지고 있습니다.",
-    },
-  ],
-  "조선·중공업": [
-    {
-      title: "협력사 현장 안전관리 이슈",
-      summary:
-        "협력사 작업 현장의 안전관리와 재발 방지 대책에 대한 보도가 증가하고 있습니다.",
-    },
-    {
-      title: "수주 및 납기 관련 공급망 이슈",
-      summary:
-        "공급망 변동이 생산 일정과 납기에 미칠 영향에 관심이 높아지고 있습니다.",
-    },
-    {
-      title: "수주 원가 상승 및 수익성 악화 우려",
-      summary:
-        "원자재 가격과 인건비 변동이 수주 수익성에 미칠 영향이 언급되고 있습니다.",
-    },
-    {
-      title: "선박 품질 및 납품 지연 관련 이슈",
-      summary:
-        "건조 품질과 납기 관리에 대한 우려 및 관련 문의가 이어지고 있습니다.",
-    },
-    {
-      title: "조선소 인력 수급 및 노사 이슈",
-      summary:
-        "현장 인력 확보와 근로 환경, 노사 관계에 대한 관심이 높아지고 있습니다.",
-    },
-    {
-      title: "친환경 선박 규제 대응 부담",
-      summary:
-        "환경 규제 변화에 따른 친환경 선박 기술과 대응 비용이 주요 이슈로 언급되고 있습니다.",
-    },
-  ],
-  "유통·플랫폼": [
-    {
-      title: "고객 정보 보호 및 서비스 안정성 이슈",
-      summary:
-        "고객 정보 보호와 서비스 안정성에 대한 이용자 문의가 늘어나고 있습니다.",
-    },
-    {
-      title: "판매자·소비자 분쟁 관련 이슈",
-      summary:
-        "거래 과정의 소비자 보호와 분쟁 대응에 대한 보도가 이어지고 있습니다.",
-    },
-    {
-      title: "판매자 정산 지연 및 거래 안정성 우려",
-      summary:
-        "판매자 정산 일정과 거래 안정성에 대한 우려가 확산되고 있습니다.",
-    },
-    {
-      title: "상품 품질 및 소비자 환불 분쟁",
-      summary:
-        "상품 품질, 환불 절차, 소비자 보호와 관련한 민원이 증가하고 있습니다.",
-    },
-    {
-      title: "플랫폼 공정거래 및 수수료 논란",
-      summary:
-        "입점업체 수수료와 플랫폼 거래 조건의 공정성에 대한 관심이 이어지고 있습니다.",
-    },
-    {
-      title: "서비스 장애 및 주문·결제 오류",
-      summary:
-        "주문, 결제, 배송 서비스의 오류와 복구 상황에 대한 고객 문의가 증가하고 있습니다.",
-    },
-  ],
-};
-
-// 화면 시연용 분석 요약입니다.
-// 실제 연결 시에는 산업 분석 API의 위험도·기사 수·키워드로 바꿉니다.
-const INDUSTRY_INSIGHTS = {
-  건설: {
-    riskLevels: ["경계", "주의", "주의", "경계", "주의", "관심"],
-    articles: "18건",
-    period: "최근 7일",
-    keywords: ["안전사고", "현장관리", "재발방지"],
-  },
-  통신: {
-    riskLevels: ["경계", "경계", "주의", "주의", "관심", "주의"],
-    articles: "14건",
-    period: "최근 7일",
-    keywords: ["서비스 장애", "복구", "고객 안내"],
-  },
-  자동차: {
-    riskLevels: ["주의", "경계", "주의", "주의", "관심", "경계"],
-    articles: "12건",
-    period: "최근 7일",
-    keywords: ["품질", "안전 점검", "리콜"],
-  },
-  "조선·중공업": {
-    riskLevels: ["경계", "주의", "경계", "주의", "주의", "관심"],
-    articles: "16건",
-    period: "최근 7일",
-    keywords: ["협력사", "현장 안전", "점검"],
-  },
-  "유통·플랫폼": {
-    riskLevels: ["주의", "경계", "주의", "경계", "주의", "관심"],
-    articles: "15건",
-    period: "최근 7일",
-    keywords: ["고객 정보", "서비스 안정성", "소비자 보호"],
-  },
-};
+// COMPANY.INDUSTRY에 실제 저장된 산업명입니다.
+const INDUSTRIES = [
+  "IT·통신·플랫폼",
+  "자동차·부품·타이어",
+  "유통·이커머스",
+  "조선",
+  "반도체",
+];
 
 const DOCUMENT_GUIDES = {
   보도자료: "언론과 외부 이해관계자에게 배포할 공식 초안을 작성합니다.",
@@ -391,7 +202,8 @@ function SimulatorContent({
               <span>리스크 유형</span>
               <strong>
                 {similarCase.riskType
-                  ? RISK_TYPE_LABELS[similarCase.riskType] || similarCase.riskType
+                  ? RISK_TYPE_LABELS[similarCase.riskType] ||
+                    similarCase.riskType
                   : "정보 준비 중"}
               </strong>
             </div>
@@ -463,9 +275,14 @@ function ResponseToolsPage({ mode }) {
   const [caseError, setCaseError] = useState("");
   const [document, setDocument] = useState(documents[0]);
 
-  // 기업명 직접 입력 대신 산업과 이슈를 선택하도록 구성합니다.
-  const [industry, setIndustry] = useState("건설");
+  // 실제 DB 산업명으로 시작합니다.
+  const [industry, setIndustry] = useState(INDUSTRIES[0]);
   const [selectedIssueIndex, setSelectedIssueIndex] = useState(0);
+
+  // 산업별 이슈 API 응답을 저장합니다.
+  const [issues, setIssues] = useState([]);
+  const [isIssueLoading, setIsIssueLoading] = useState(false);
+  const [issueLoadError, setIssueLoadError] = useState("");
 
   // 꼭 필요한 요청만 사용자가 선택적으로 작성합니다.
   const [additionalRequest, setAdditionalRequest] = useState("");
@@ -475,9 +292,47 @@ function ResponseToolsPage({ mode }) {
   const [generateError, setGenerateError] = useState("");
   const [draft, setDraft] = useState(null);
 
+  // 산업을 선택하면 실제 DB 기반 감지 이슈를 불러옵니다.
+  useEffect(() => {
+    if (activeMode === "simulator") return undefined;
+
+    let isMounted = true;
+
+    async function loadIndustryIssues() {
+      setIsIssueLoading(true);
+      setIssueLoadError("");
+      setSelectedIssueIndex(0);
+
+      try {
+        const response = await api.get("/api/news/industry-issues", {
+          params: { industry },
+        });
+
+        if (!isMounted) return;
+
+        setIssues(response.data.issues || []);
+      } catch (error) {
+        if (!isMounted) return;
+
+        setIssues([]);
+        setIssueLoadError(
+          error.response?.data?.message ||
+            "산업별 분석 이슈를 불러오지 못했습니다.",
+        );
+      } finally {
+        if (isMounted) setIsIssueLoading(false);
+      }
+    }
+
+    loadIndustryIssues();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeMode, industry]);
+
   const handleGenerate = async () => {
     // 현재 선택된 산업 이슈 정보를 가져옵니다.
-    const selectedIssue = INDUSTRY_ISSUES[industry][selectedIssueIndex];
 
     if (!selectedIssue) {
       setGenerateError("산업 이슈를 선택해주세요.");
@@ -491,17 +346,24 @@ function ResponseToolsPage({ mode }) {
     try {
       const response = await api.post("/api/response-drafts", {
         documentType: document,
-
-        // 사용자가 직접 작성하지 않아도 선택 이슈를 AI에 전달합니다.
-        issueName: selectedIssue.title,
+        issueName: selectedIssue.issueName,
         industry,
 
-        // 추가 요청은 선택값이며, 입력하지 않아도 생성됩니다.
-        analysisText: `${selectedIssue.summary}${
+        // 실제 기사 수와 위험도를 함께 AI에 전달합니다.
+        analysisText: [
+          selectedIssue.summary,
+          `관련 기사 수: ${selectedIssue.articleCount}건`,
+          `위험도: ${selectedIssue.risk}`,
+          selectedIssue.riskReason,
           additionalRequest.trim()
-            ? `\n추가 요청: ${additionalRequest.trim()}`
-            : ""
-        }`,
+            ? `추가 요청: ${additionalRequest.trim()}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+
+        // 나중에 생성 결과 아래 참고 기사로 표시할 실제 기사입니다.
+        referenceArticles: selectedIssue.referenceArticles || [],
       });
 
       setDraft(response.data.data);
@@ -555,23 +417,15 @@ function ResponseToolsPage({ mode }) {
     );
   };
 
-  // 선택된 이슈와 분석 요약을 화면 여러 영역에서 재사용합니다.
-  const selectedIssue = INDUSTRY_ISSUES[industry][selectedIssueIndex];
-  // 선택한 이슈 순서에 맞는 위험도를 가져옵니다.
-  const baseInsight = INDUSTRY_INSIGHTS[industry];
+  // API에서 받은 이슈 중 사용자가 선택한 항목입니다.
+  const selectedIssue = issues[selectedIssueIndex] || null;
 
-  const insight = {
-    ...baseInsight,
-    risk: baseInsight.riskLevels[selectedIssueIndex] || "관심",
-  };
-
-  // 위험도에 맞는 CSS 색상 클래스를 연결합니다.
   const riskClass = {
     관심: "interest",
     주의: "caution",
     경계: "warning",
     심각: "critical",
-  }[insight.risk];
+  }[selectedIssue?.risk];
 
   return (
     <div className="response-page">
@@ -618,7 +472,9 @@ function ResponseToolsPage({ mode }) {
                 setIsCaseDetailVisible(false);
               }}
               showDetails={isCaseDetailVisible}
-              onShowDetails={() => setIsCaseDetailVisible((visible) => !visible)}
+              onShowDetails={() =>
+                setIsCaseDetailVisible((visible) => !visible)
+              }
               errorMessage={caseError}
               displayValue={displayValue}
               displayIncidentDate={formatIncidentDate}
@@ -627,7 +483,7 @@ function ResponseToolsPage({ mode }) {
         ) : (
           <section className="tool-card generator-card">
             <div className="generator-card-header">
-              <span>AI DOCUMENT DRAFT</span>
+              <span>AI 초안 생성</span>
               <p>
                 분석된 산업 이슈를 바탕으로 실무용 대응자료 초안을 생성합니다.
               </p>
@@ -648,14 +504,12 @@ function ResponseToolsPage({ mode }) {
                   대상 산업
                   <select
                     value={industry}
-                    onChange={(event) => {
-                      // 산업 변경 시 해당 산업의 첫 번째 이슈를 자동 선택합니다.
-                      setIndustry(event.target.value);
-                      setSelectedIssueIndex(0);
-                    }}
+                    onChange={(event) => setIndustry(event.target.value)}
                   >
-                    {Object.keys(INDUSTRY_ISSUES).map((item) => (
-                      <option key={item}>{item}</option>
+                    {INDUSTRIES.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
                     ))}
                   </select>
                 </label>
@@ -664,55 +518,81 @@ function ResponseToolsPage({ mode }) {
                   감지된 이슈
                   <select
                     value={selectedIssueIndex}
+                    disabled={isIssueLoading || issues.length === 0}
                     onChange={(event) =>
                       setSelectedIssueIndex(Number(event.target.value))
                     }
                   >
-                    {INDUSTRY_ISSUES[industry].map((item, index) => (
-                      <option key={item.title} value={index}>
-                        {item.title}
+                    {isIssueLoading && (
+                      <option>이슈를 불러오는 중입니다.</option>
+                    )}
+
+                    {!isIssueLoading && issues.length === 0 && (
+                      <option>등록된 분석 이슈가 없습니다.</option>
+                    )}
+
+                    {issues.map((item, index) => (
+                      <option key={item.issueId} value={index}>
+                        {item.issueName}
                       </option>
                     ))}
                   </select>
                 </label>
               </div>
+
+              {issueLoadError && (
+                <p className="issue-load-error">{issueLoadError}</p>
+              )}
             </section>
 
             {/* 선택 이슈의 분석 결과를 보여주는 카드 */}
-            <section className="issue-insight-card">
-              <div className="issue-insight-header">
-                <div>
-                  <span>ISSUE ANALYSIS</span>
-                  <h3>{selectedIssue.title}</h3>
-                </div>
-                <strong className={`risk-badge risk-${riskClass}`}>
-                  위험도 {insight.risk}
-                </strong>{" "}
-              </div>
+            {selectedIssue && (
+              <section className="issue-insight-card">
+                <div className="issue-insight-header">
+                  <div>
+                    <span>이슈 분석</span>
+                    <h3>{selectedIssue.issueName}</h3>
+                  </div>
 
-              <p>{selectedIssue.summary}</p>
+                  <strong className={`risk-badge risk-${riskClass}`}>
+                    위험도 {selectedIssue.risk}
+                  </strong>
+                </div>
 
-              <div className="insight-metrics">
-                <div>
-                  <span>대상 산업</span>
-                  <strong>{industry}</strong>
-                </div>
-                <div>
-                  <span>관련 기사</span>
-                  <strong>{insight.articles}</strong>
-                </div>
-                <div>
-                  <span>분석 기간</span>
-                  <strong>{insight.period}</strong>
-                </div>
-              </div>
+                <p>{selectedIssue.summary}</p>
 
-              <div className="keyword-tags">
-                {insight.keywords.map((keyword) => (
-                  <span key={keyword}>#{keyword}</span>
-                ))}
-              </div>
-            </section>
+                {/* 위험도 라벨만 보여주지 않고 판단 기준도 함께 제공합니다. */}
+                <p className="risk-reason">
+                  <b>판단 근거</b>
+                  {selectedIssue.riskReason}
+                </p>
+
+                <div className="insight-metrics">
+                  <div>
+                    <span>대상 산업</span>
+                    <strong>{industry}</strong>
+                  </div>
+                  <div>
+                    <span>관련 기사</span>
+                    <strong>
+                      {selectedIssue.articleCount.toLocaleString()}건
+                    </strong>
+                  </div>
+                  <div>
+                    <span>분석 기간</span>
+                    <strong>
+                      {selectedIssue.startDate} ~ {selectedIssue.lastDate}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="keyword-tags">
+                  {selectedIssue.keywords.map((keyword) => (
+                    <span key={keyword}>#{keyword}</span>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* 02. 문서 유형 선택 */}
             <section className="generator-step document-setting-step">
@@ -766,11 +646,19 @@ function ResponseToolsPage({ mode }) {
 
             <button
               type="button"
-              className="primary-action"
+              className={`primary-action ${isGenerating ? "is-loading" : ""}`}
               onClick={handleGenerate}
-              disabled={isGenerating}
+              disabled={isGenerating || isIssueLoading || !selectedIssue}
             >
-              {isGenerating ? "AI 초안 생성 중..." : "AI 초안 생성하기"}
+              {isGenerating ? (
+                <>
+                  {/* 생성 중임을 보여주는 회전 표시 */}
+                  <span className="generate-spinner" aria-hidden="true" />
+                  AI 초안 생성 중...
+                </>
+              ) : (
+                "AI 초안 생성하기"
+              )}
             </button>
 
             {generateError && <p className="generate-error">{generateError}</p>}

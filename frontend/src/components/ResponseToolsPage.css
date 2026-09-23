@@ -524,3 +524,54 @@
   font-style: normal;
   font-weight: 500;
 }
+
+.issue-load-error {
+  margin: 10px 0 0;
+  color: #c2410c;
+  font-size: 12px;
+}
+
+.risk-reason {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 10px 0 0;
+  color: #718095;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.risk-reason b {
+  flex: 0 0 auto;
+  color: #4d6680;
+  font-size: 11px;
+}
+
+/* 버튼 안에서 로딩 표시와 문구를 한 줄로 정렬 */
+.primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 생성 중인 버튼임을 마우스 커서로도 전달 */
+.primary-action.is-loading {
+  cursor: wait;
+}
+
+/* 흰색 원형 로딩 표시 */
+.generate-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: generate-spin 0.7s linear infinite;
+}
+
+@keyframes generate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
