@@ -266,7 +266,6 @@ export default function CompanyAnalysisPage() {
   };
   const analyzedCount = newsAnalysis?.analyzed_count ?? 0;
   const fetchedCount = newsAnalysis?.fetched_count ?? 0;
-  const pagesFetched = newsAnalysis?.pages_fetched ?? 0;
   const relevantCount = newsAnalysis?.relevant_count ?? 0;
   const targetReached = newsAnalysis?.target_reached ?? false;
   const minimumKeywordMentions = newsAnalysis?.minimum_keyword_mentions ?? 3;
@@ -387,73 +386,8 @@ export default function CompanyAnalysisPage() {
             </button>
           </section>
 
-          <div aria-live="polite" role="status" style={styles.newsStatus}>
-            {isNewsLoading && "최신 뉴스와 감성 분석 결과를 불러오는 중입니다."}
-            {newsError && (
-              <>
-                <span>{newsError}</span>
-                <button
-                  onClick={retryNewsAnalysis}
-                  style={styles.retryButton}
-                  type="button"
-                >
-                  다시 시도
-                </button>
-              </>
-            )}
-            {newsAnalysis && !isNewsLoading && (
-              <>
-                <span>
-                  {relevantCount === 0
-                    ? `원본 기사 ${fetchedCount.toLocaleString()}건(${pagesFetched}페이지)에서 조건을 충족한 기사가 없습니다.`
-                    : `원본 기사 ${fetchedCount.toLocaleString()}건(${pagesFetched}페이지) 중 기업명 또는 별칭이 합계 ${minimumKeywordMentions}회 이상 언급된 ${relevantCount.toLocaleString()}건을 분석했습니다.`}
-                </span>
-                <button
-                  onClick={retryNewsAnalysis}
-                  style={styles.retryButton}
-                  type="button"
-                >
-                  최신 뉴스 새로고침
-                </button>
-              </>
-            )}
-          </div>
-
           {/* ===================================================
-          상단 요약 카드
-      =================================================== */}
-
-          <section className="analysis-summary-grid" style={styles.summaryGrid}>
-            <div style={styles.summaryCard}>
-              <div>
-                <div style={styles.cardTitle}>현재 위험도</div>
-                <div style={styles.summaryPending}>실시간 산정 준비 중</div>
-              </div>
-            </div>
-
-            <div style={styles.summaryCard}>
-              <div>
-                <div style={styles.cardTitle}>최신 뉴스 감성 현황</div>
-                <div style={styles.summaryPending}>
-                  {isNewsLoading
-                    ? "최신 뉴스 분석 중"
-                    : `기업명·별칭 합계 ${minimumKeywordMentions}회 이상 언급 ${analyzedCount.toLocaleString()}건 기준`}
-                </div>
-              </div>
-            </div>
-
-            <div style={styles.summaryCard}>
-              <div style={{ width: "100%" }}>
-                <div style={styles.cardTitle}>주요 리스크 유형</div>
-                <div style={styles.summaryPending}>
-                  이슈 분류 모델 연동 예정
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ===================================================
-          분석 카드 3개
+          분석 카드
       =================================================== */}
 
           <section
@@ -472,7 +406,57 @@ export default function CompanyAnalysisPage() {
             {/* 감성 분석 */}
             <div style={styles.panel}>
               <div style={styles.panelHeader}>
-                <h3>감성 분석 요약</h3>
+                <div style={styles.panelTitleWithInfo}>
+                  <h3>감성 분석 요약</h3>
+                  <div className="sentiment-info-trigger">
+                    <button
+                      aria-describedby="sentiment-news-tooltip"
+                      aria-label="최신 뉴스 감성 현황 보기"
+                      className="sentiment-info-button"
+                      type="button"
+                    >
+                      ?
+                    </button>
+                    <div
+                      className="sentiment-info-tooltip"
+                      id="sentiment-news-tooltip"
+                      role="tooltip"
+                    >
+                      <strong style={styles.tooltipTitle}>
+                        최신 뉴스 감성 현황
+                      </strong>
+                      <div style={styles.liveNewsDetails}>
+                        <div style={styles.liveNewsDetailRow}>
+                          <span style={styles.liveNewsDetailLabel}>분석 기준</span>
+                          <strong>
+                            기업명·별칭 합계 {minimumKeywordMentions}회 이상 언급된
+                            최신 뉴스 최대 100건
+                          </strong>
+                        </div>
+                        <div style={styles.liveNewsDetailRow}>
+                          <span style={styles.liveNewsDetailLabel}>수집 현황</span>
+                          <strong>
+                            원본 {fetchedCount.toLocaleString()}건 확인 · 관련 기사{" "}
+                            {relevantCount.toLocaleString()}건
+                          </strong>
+                        </div>
+                        <div style={styles.liveNewsDetailRow}>
+                          <span style={styles.liveNewsDetailLabel}>분석 시각</span>
+                          <strong>{analyzedAt}</strong>
+                        </div>
+                        <div style={styles.liveNewsDetailRow}>
+                          <span style={styles.liveNewsDetailLabel}>
+                            가장 최신 기사
+                          </span>
+                          <strong>{latestArticlePublishedAt}</strong>
+                        </div>
+                        <p style={styles.tooltipNotice}>
+                          {realtimeAnalysisNotice}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <span>전체 {analyzedCount.toLocaleString()}건</span>
               </div>
 
@@ -532,76 +516,52 @@ export default function CompanyAnalysisPage() {
               </div>
             </div>
 
-            <div style={styles.panel}>
-              <div style={styles.panelHeader}>
-                <h3>최신 뉴스 감성 현황</h3>
-                <span>실시간 분석</span>
-              </div>
-              <div style={styles.liveNewsDetails}>
-                <div>
-                  <span>분석 기준</span>
-                  <strong>
-                    기업명·별칭 합계 {minimumKeywordMentions}회 이상 언급된 최신
-                    뉴스 최대 100건
-                  </strong>
-                </div>
-                <div>
-                  <span>수집 현황</span>
-                  <strong>
-                    원본 {fetchedCount.toLocaleString()}건 확인 · 관련 기사{" "}
-                    {relevantCount.toLocaleString()}건
-                  </strong>
-                </div>
-                <div>
-                  <span>분석 시각</span>
-                  <strong>{analyzedAt}</strong>
-                </div>
-                <div>
-                  <span>가장 최신 기사</span>
-                  <strong>{latestArticlePublishedAt}</strong>
-                </div>
-                <p>{realtimeAnalysisNotice}</p>
-              </div>
-            </div>
           </section>
 
           {/* ===================================================
-          하단 3컬럼
+          하단 이슈 및 관련 기사
       =================================================== */}
 
-          <section className="analysis-support-grid" style={styles.bottomGrid}>
-            {/* 주요 이슈 타임라인 */}
-            <div style={styles.largePanel}>
-              <div style={styles.panelHeader}>
-                <h3>주요 이슈 타임라인</h3>
-              </div>
-              <AnalysisUnavailable description="유사 기사를 묶어 주요 이슈와 발생 시점을 만드는 기능을 준비하고 있습니다." />
-            </div>
-
-            {/* 핵심 키워드 */}
-            <div style={styles.mediumPanel}>
-              <div style={styles.panelHeader}>
-                <h3>핵심 키워드</h3>
-              </div>
-              <AnalysisUnavailable description="기사 본문에서 기업별 핵심 키워드를 추출하는 기능을 준비하고 있습니다." />
-            </div>
-
+          <section
+            className="analysis-support-grid analysis-support-grid--articles"
+            style={styles.bottomGrid}
+          >
             {/* 관련 기사 */}
             <div style={styles.mediumPanel}>
               <div style={styles.panelHeader}>
                 <h3>관련 기사</h3>
-                <span>최신 10건</span>
+                <div style={styles.articleHeaderActions}>
+                  <span>최신 10건</span>
+                  <button
+                    disabled={isNewsLoading}
+                    onClick={retryNewsAnalysis}
+                    style={{
+                      ...styles.articleRefreshButton,
+                      ...(isNewsLoading
+                        ? styles.articleRefreshButtonDisabled
+                        : {}),
+                    }}
+                    type="button"
+                  >
+                    {isNewsLoading ? "분석 중" : "새로고침"}
+                  </button>
+                </div>
               </div>
 
-              <div style={styles.articleList}>
+              <div className="analysis-article-grid" style={styles.articleList}>
                 {visibleArticles.map((article, index) => {
                   const source = getArticleSource(article);
                   const articleUrl = article.original_link || article.link;
 
                   return (
                     <div
+                      className="analysis-article-item"
                       key={`${articleUrl}-${index}`}
-                      style={styles.articleItem}
+                      style={{
+                        ...styles.articleItem,
+                        gridColumn: index < 5 ? 1 : 2,
+                        gridRow: (index % 5) + 1,
+                      }}
                     >
                       <div style={styles.articleSourceIcon}>
                         {source.slice(0, 1).toUpperCase()}
@@ -650,6 +610,14 @@ export default function CompanyAnalysisPage() {
                     </p>
                   )}
               </div>
+            </div>
+
+            {/* 주요 이슈 타임라인 */}
+            <div style={styles.largePanel}>
+              <div style={styles.panelHeader}>
+                <h3>주요 이슈 타임라인</h3>
+              </div>
+              <AnalysisUnavailable description="유사 기사를 묶어 주요 이슈와 발생 시점을 만드는 기능을 준비하고 있습니다." />
             </div>
           </section>
         </div>
@@ -754,27 +722,6 @@ const styles = {
     boxShadow: "0 2px 10px rgba(31, 61, 96, 0.03)",
   },
 
-  newsStatus: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    minHeight: "22px",
-    margin: "-4px 0 18px",
-    color: "#66768A",
-    fontSize: "13px",
-  },
-
-  retryButton: {
-    padding: "5px 9px",
-    border: "1px solid #BFD6ED",
-    borderRadius: "6px",
-    color: "#176FC5",
-    background: "#FFFFFF",
-    cursor: "pointer",
-    fontSize: "12px",
-    fontWeight: 700,
-  },
-
   companyLogo: {
     width: "72px",
     height: "72px",
@@ -836,44 +783,37 @@ const styles = {
     cursor: "pointer",
   },
 
-  summaryGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1.4fr",
-    gap: "14px",
-    marginBottom: "14px",
-  },
-
-  summaryCard: {
-    minHeight: "85px",
-    background: "#FFFFFF",
-    border: "1px solid #E5EBF3",
-    borderRadius: "12px",
-    padding: "16px 18px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    boxSizing: "border-box",
-  },
-
-  cardTitle: {
-    fontSize: "12px",
-    color: "#718198",
-    fontWeight: 700,
-    marginBottom: "8px",
-  },
-
-  summaryPending: {
-    color: "#9AA6B5",
-    fontSize: "12px",
-    fontWeight: 600,
-  },
-
   liveNewsDetails: {
     display: "grid",
-    gap: "12px",
-    paddingTop: "8px",
+    gap: "10px",
+    paddingTop: "12px",
     color: "#718198",
-    fontSize: "12px",
+    fontSize: "11px",
+  },
+
+  liveNewsDetailRow: {
+    display: "grid",
+    gap: "3px",
+  },
+
+  liveNewsDetailLabel: {
+    color: "#8A9AAF",
+    fontSize: "10px",
+  },
+
+  tooltipTitle: {
+    display: "block",
+    color: "#1E3554",
+    fontSize: "13px",
+  },
+
+  tooltipNotice: {
+    margin: "2px 0 0",
+    paddingTop: "9px",
+    borderTop: "1px solid #E8EEF5",
+    color: "#718198",
+    fontWeight: 500,
+    lineHeight: 1.55,
   },
 
   analysisUnavailable: {
@@ -961,7 +901,7 @@ const styles = {
 
   threeColumnGrid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr 1.25fr",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: "14px",
     marginBottom: "14px",
   },
@@ -970,7 +910,7 @@ const styles = {
 
   bottomGrid: {
     display: "grid",
-    gridTemplateColumns: "1.3fr 1fr 1.15fr",
+    gridTemplateColumns: "2.15fr 1.3fr",
     gap: "14px",
   },
 
@@ -995,6 +935,35 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: "15px",
+  },
+
+  panelTitleWithInfo: {
+    display: "flex",
+    alignItems: "center",
+    gap: "7px",
+  },
+
+  articleHeaderActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: "9px",
+  },
+
+  articleRefreshButton: {
+    padding: "4px 8px",
+    border: "1px solid #C9DCEF",
+    borderRadius: "5px",
+    background: "#FFFFFF",
+    color: "#2473BE",
+    fontSize: "10px",
+    fontWeight: 700,
+    cursor: "pointer",
+  },
+
+  articleRefreshButtonDisabled: {
+    color: "#91A1B3",
+    cursor: "not-allowed",
+    opacity: 0.7,
   },
 
   panelHeaderTitle: {
@@ -1214,21 +1183,6 @@ const styles = {
 
   timelineContentP: {},
 
-  keywordContainer: {
-    display: "flex",
-    gap: "8px",
-    flexWrap: "wrap",
-    padding: "5px 0 20px",
-  },
-
-  keyword: {
-    display: "inline-flex",
-    padding: "8px 11px",
-    borderRadius: "7px",
-    fontSize: "11px",
-    fontWeight: 700,
-  },
-
   analysisBox: {
     display: "flex",
     gap: "10px",
@@ -1252,8 +1206,9 @@ const styles = {
   },
 
   articleList: {
-    display: "flex",
-    flexDirection: "column",
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    columnGap: "24px",
   },
 
   articleItem: {
@@ -1311,6 +1266,7 @@ const styles = {
   },
 
   articleEmpty: {
+    gridColumn: "1 / -1",
     margin: 0,
     padding: "16px 0",
     color: "#8090A5",
