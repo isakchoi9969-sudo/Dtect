@@ -97,10 +97,67 @@ function WorkflowSection() {
           --wf-doc-line: #2b394b;
         }
 
+        .dtect-workflow {
+          position: relative;
+          isolation: isolate;
+          overflow: hidden;
+        }
+
+        .dtect-workflow::before {
+          position: absolute;
+          top: 8%;
+          left: 50%;
+          z-index: -1;
+          width: min(62vw, 760px);
+          height: 420px;
+          border-radius: 50%;
+          background: radial-gradient(circle, color-mix(in srgb, var(--wf-primary) 8%, transparent), transparent 68%);
+          content: "";
+          pointer-events: none;
+          transform: translateX(-50%);
+          animation: wf-glow-breathe 8s ease-in-out infinite;
+        }
+
+        @keyframes wf-glow-breathe {
+          0%, 100% { opacity: .55; transform: translateX(-50%) scale(.94); }
+          50% { opacity: 1; transform: translateX(-50%) scale(1.06); }
+        }
+
+        @keyframes wf-rise-in {
+          from { opacity: 0; transform: translateY(18px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes wf-flow-dot {
+          0%, 100% { opacity: .28; transform: translateY(-2px); }
+          45% { opacity: 1; transform: translateY(2px); }
+        }
+
+        @keyframes wf-dot-pulse {
+          0%, 100% { opacity: .72; transform: scale(.86); }
+          50% { opacity: 1; transform: scale(1.18); }
+        }
+
+        @keyframes wf-fill-bar {
+          from { transform: scaleX(0); transform-origin: left; }
+          to { transform: scaleX(1); transform-origin: left; }
+        }
+
+        @keyframes wf-line-draw {
+          from { opacity: 0; transform: scaleX(0); transform-origin: left; }
+          to { opacity: 1; transform: scaleX(1); transform-origin: left; }
+        }
+
+        @keyframes wf-result-glint {
+          from { transform: translateX(-130%); }
+          to { transform: translateX(150%); }
+        }
+
         .dtect-workflow .wf-heading {
           margin: 0 auto 42px;
           max-width: 1180px;
           padding: 0 24px;
+          animation: wf-rise-in .75s cubic-bezier(.22, 1, .36, 1) both;
         }
 
         .dtect-workflow .wf-label,
@@ -150,6 +207,18 @@ function WorkflowSection() {
           border-radius: 18px;
           background: var(--wf-card-bg);
           box-sizing: border-box;
+          opacity: 0;
+          animation: wf-rise-in .8s cubic-bezier(.22, 1, .36, 1) forwards;
+          transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+        }
+
+        .dtect-workflow .wf-card:nth-child(1) { animation-delay: .16s; }
+        .dtect-workflow .wf-card:nth-child(2) { animation-delay: .3s; }
+        .dtect-workflow .wf-card:nth-child(3) { animation-delay: .44s; }
+        .dtect-workflow .wf-card:hover {
+          border-color: color-mix(in srgb, var(--wf-primary) 36%, var(--wf-border));
+          box-shadow: 0 16px 34px color-mix(in srgb, var(--wf-primary) 10%, transparent);
+          transform: translateY(-5px);
         }
 
         .dtect-workflow .wf-card-main {
@@ -169,7 +238,10 @@ function WorkflowSection() {
           font-size: 11px;
           font-weight: 800;
           letter-spacing: .06em;
+          transition: color .3s ease, transform .3s ease;
         }
+
+        .dtect-workflow .wf-card:hover .wf-number { color: var(--wf-primary); transform: translateY(-2px); }
 
         .dtect-workflow .wf-category { margin-bottom: 13px; color: var(--wf-label); font-size: 9px; }
 
@@ -209,23 +281,41 @@ function WorkflowSection() {
           border: 1px solid var(--wf-news-border);
           border-radius: 9px;
           background: var(--wf-news-bg);
+          transition: transform .25s ease, border-color .25s ease;
         }
 
+        .dtect-workflow .wf-news:hover { border-color: color-mix(in srgb, var(--wf-primary) 35%, var(--wf-news-border)); transform: translateX(4px); }
+
         .dtect-workflow .wf-news-main { display: flex; align-items: center; gap: 9px; min-width: 0; }
-        .dtect-workflow .wf-dot { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: #cbd5e1; }
+        .dtect-workflow .wf-dot { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: #cbd5e1; animation: wf-dot-pulse 2.4s ease-in-out infinite; }
         .dtect-workflow .wf-dot-strong { background: var(--wf-primary); }
         .dtect-workflow .wf-dot-mid { background: #93c5fd; }
         .dtect-workflow .wf-news-category { margin-bottom: 3px; color: var(--wf-label); font-size: 7px; font-weight: 800; letter-spacing: .1em; }
         .dtect-workflow .wf-news-title { overflow: hidden; color: var(--wf-news-text); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
         .dtect-workflow .wf-news-time { flex: 0 0 auto; color: var(--wf-news-time); font-size: 8px; }
         .dtect-workflow .wf-connect { display: flex; justify-content: center; gap: 4px; padding: 5px 0 1px; }
-        .dtect-workflow .wf-connect span { width: 3px; height: 3px; border-radius: 50%; background: #cbd5e1; }
+        .dtect-workflow .wf-connect span { width: 3px; height: 3px; border-radius: 50%; background: #cbd5e1; animation: wf-flow-dot 1.4s ease-in-out infinite; }
+        .dtect-workflow .wf-connect span:nth-child(2) { animation-delay: .18s; }
+        .dtect-workflow .wf-connect span:nth-child(3) { animation-delay: .36s; }
 
         .dtect-workflow .wf-result {
+          position: relative;
+          overflow: hidden;
           margin-top: 1px;
           padding: 16px;
           border-radius: 10px;
           background: var(--wf-result-bg);
+        }
+
+        .dtect-workflow .wf-result::after {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          width: 28%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+          content: "";
+          animation: wf-result-glint 3.8s ease-in-out 1.2s infinite;
         }
 
         .dtect-workflow .wf-result-label { margin-bottom: 7px; color: var(--wf-result-label); font-size: 7px; font-weight: 800; letter-spacing: .13em; }
@@ -236,7 +326,7 @@ function WorkflowSection() {
         .dtect-workflow .wf-score { color: var(--wf-score); font-size: 45px; font-weight: 750; letter-spacing: -.07em; line-height: 1; }
         .dtect-workflow .wf-score-unit { margin-left: 4px; color: var(--wf-score-unit); font-size: 11px; }
         .dtect-workflow .wf-bar { height: 4px; margin-top: 12px; overflow: hidden; border-radius: 99px; background: var(--wf-bar-bg); }
-        .dtect-workflow .wf-bar-fill { width: 84%; height: 100%; border-radius: inherit; background: var(--wf-bar-fill); }
+        .dtect-workflow .wf-bar-fill { width: 84%; height: 100%; border-radius: inherit; background: var(--wf-bar-fill); animation: wf-fill-bar 1.3s cubic-bezier(.22, 1, .36, 1) .75s both; }
         .dtect-workflow .wf-scale { display: flex; justify-content: space-between; margin-top: 6px; color: var(--wf-scale); font-size: 7px; }
         .dtect-workflow .wf-scale strong { color: var(--wf-primary); }
 
@@ -246,7 +336,11 @@ function WorkflowSection() {
         .dtect-workflow .wf-document-body { padding: 12px 13px; border: 1px solid var(--wf-doc-border); border-radius: 10px; background: var(--wf-doc-bg); }
         .dtect-workflow .wf-document-title { margin-bottom: 9px; color: var(--wf-doc-title); font-size: 12px; font-weight: 750; }
         .dtect-workflow .wf-lines { display: grid; gap: 5px; }
-        .dtect-workflow .wf-line { height: 3px; border-radius: 99px; background: var(--wf-doc-line); }
+        .dtect-workflow .wf-line { height: 3px; border-radius: 99px; background: var(--wf-doc-line); animation: wf-line-draw .55s cubic-bezier(.22, 1, .36, 1) both; }
+        .dtect-workflow .wf-line:nth-child(1) { animation-delay: .78s; }
+        .dtect-workflow .wf-line:nth-child(2) { animation-delay: .9s; }
+        .dtect-workflow .wf-line:nth-child(3) { animation-delay: 1.02s; }
+        .dtect-workflow .wf-line:nth-child(4) { animation-delay: 1.14s; }
         .dtect-workflow .wf-document-status { margin-top: 9px; color: var(--wf-ready); font-size: 8px; }
 
         .dtect-workflow .wf-footer { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--wf-border); color: var(--wf-footer); font-size: 7px; font-weight: 800; letter-spacing: .1em; }
@@ -265,6 +359,15 @@ function WorkflowSection() {
           .dtect-workflow .wf-card-main { grid-row: auto; }
           .dtect-workflow .wf-number { top: 21px; right: 21px; }
           .dtect-workflow .wf-score-wrap { margin-top: 22px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .dtect-workflow *, .dtect-workflow::before {
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
+            scroll-behavior: auto !important;
+            transition-duration: .01ms !important;
+          }
         }
       `}</style>
 
