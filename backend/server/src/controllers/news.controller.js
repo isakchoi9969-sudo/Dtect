@@ -1,6 +1,6 @@
-const {
-  NewsServiceError,
-} = require("../services/naverNews.service");
+const { getIndustryIssues } = require("../services/industryIssue.service");
+
+const { NewsServiceError } = require("../services/naverNews.service");
 const { analyzeCompanyNews } = require("../services/newsAnalysis.service");
 
 /**
@@ -33,4 +33,40 @@ async function getCompanyNews(req, res) {
   }
 }
 
-module.exports = { getCompanyNews };
+// GET /api/news/industry-issues?industry=IT·통신·플랫폼
+async function getIndustryIssueList(req, res) {
+  const industry = (req.query.industry || "").trim();
+
+  if (!industry) {
+    return res.status(422).json({
+      success: false,
+      message: "산업을 선택해 주세요.",
+    });
+  }
+
+  try {
+    const issues = await getIndustryIssues(industry);
+
+    return res.json({
+      success: true,
+      industry,
+      issues,
+    });
+  } catch (error) {
+    console.error("산업별 이슈 조회 오류:", {
+      message: error.message,
+      code: error.code,
+      sqlMessage: error.sqlMessage,
+    });
+
+    return res.status(500).json({
+      success: false,
+      message: "산업별 분석 이슈를 불러오지 못했습니다.",
+    });
+  }
+}
+
+module.exports = {
+  getCompanyNews,
+  getIndustryIssueList,
+};
