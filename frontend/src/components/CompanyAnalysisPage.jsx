@@ -3,9 +3,67 @@ import Header from "./Header";
 import { useWatchlist } from "../hooks/useWatchlist";
 import AnalysisLoader from "./AnalysisLoader";
 import { api } from "../config/api";
+import { ROUTES } from "../config/routes";
 
-const LOGO_DEV_TOKEN = "pk_LmDNVeHjR3Sh2eSen5P1yA";
+const LOGO_DEV_TOKEN =
+  import.meta.env.VITE_LOGO_DEV_TOKEN || "pk_LmDNVeHjR3Sh2eSen5P1yA";
 const companyDomains = {
+  BGF리테일: "bgfretail.com",
+  CJ: "cj.net",
+  CJ대한통운: "cjlogistics.com",
+  CJ제일제당: "cj.co.kr",
+  DL이앤씨: "dlenc.co.kr",
+  GS: "gs.co.kr",
+  GS건설: "gsenc.com",
+  GS리테일: "gsretail.com",
+  HD한국조선해양: "hd-ksoe.com",
+  HD현대중공업: "hd-hhi.com",
+  HLB: "hlbbio.co.kr",
+  HL만도: "hlmando.com",
+  HMM: "hmm21.com",
+  "JYP Ent.": "jype.com",
+  KB금융: "kbfg.com",
+  KT: "kt.com",
+  "KT&G": "ktng.com",
+  LG디스플레이: "lgdisplay.com",
+  LG생활건강: "lghnh.com",
+  LG에너지솔루션: "lgensol.com",
+  LG유플러스: "lguplus.com",
+  LG이노텍: "lginnotek.com",
+  LG전자: "lge.co.kr",
+  LG화학: "lgchem.com",
+  "LS ELECTRIC": "ls-electric.com",
+  NAVER: "naver.com",
+  OCI홀딩스: "oci-holdings.co.kr",
+  POSCO홀딩스: "posco-inc.com",
+  "S-OIL": "s-oil.com",
+  SKC: "skc.kr",
+  SK바이오팜: "skbp.com",
+  SK스퀘어: "sksquare.com",
+  SK온: "sk-on.com",
+  SK이노베이션: "skinnovation.com",
+  SK텔레콤: "sktelecom.com",
+  SK하이닉스: "skhynix.com",
+  SM: "smentertainment.com",
+  SPC: "spc.co.kr",
+  "YG PLUS": "ygplus.com",
+  고려아연: "koreazinc.co.kr",
+  금호석유화학: "kkpc.com",
+  금호타이어: "kumhotire.com",
+  기아: "kia.com",
+  넷마블: "netmarble.com",
+  농심: "nongshim.com",
+  대웅제약: "daewoong.co.kr",
+  대한항공: "koreanair.com",
+  두산로보틱스: "doosanrobotics.com",
+  두산밥캣: "doosanbobcat.com",
+  두산에너빌리티: "doosanenerbility.com",
+  롯데쇼핑: "lotteshoppingir.com",
+  롯데에너지머티리얼즈: "lotteenergymaterials.com",
+  롯데칠성음료: "lottechilsung.co.kr",
+  롯데케미칼: "lottechem.com",
+  메리츠금융지주: "meritzgroup.com",
+  미래에셋증권: "securities.miraeasset.com",
   삼성SDI: "samsungsdi.co.kr",
   삼성물산: "samsungcnt.com",
   삼성바이오로직스: "samsungbiologics.com",
@@ -13,9 +71,46 @@ const companyDomains = {
   삼성엔지니어링: "samsungena.com",
   삼성전기: "samsungsem.com",
   삼성전자: "samsung.com",
-  삼성중공업: "samsungcareers.com",
+  삼성중공업: "samsungshi.com",
   삼성화재: "samsungfire.com",
-  HD현대중공업: "hd-hhi.com",
+  삼양식품: "samyangfoods.com",
+  셀트리온: "celltrion.com",
+  신세계: "shinsegae.com",
+  신한지주: "shinhangroup.com",
+  아모레퍼시픽: "amorepacific.com",
+  아시아나항공: "flyasiana.com",
+  에코프로: "ecopro.co.kr",
+  에코프로비엠: "ecoprobm.co.kr",
+  엔씨소프트: "ncsoft.com",
+  엘앤에프: "landf.co.kr",
+  오뚜기: "ottogi.co.kr",
+  오리온: "orionworld.com",
+  우리금융: "woorifg.com",
+  우리금융지주: "woorifg.com",
+  유한양행: "yuhan.co.kr",
+  이마트: "emart.com",
+  제주항공: "jejuair.net",
+  종근당: "ckdhc.com",
+  카카오: "kakao.com",
+  카카오게임즈: "kakaogames.com",
+  코스맥스: "cosmax.com",
+  쿠팡: "coupang.com",
+  크래프톤: "krafton.com",
+  펄어비스: "pearlabyss.com",
+  포스코퓨처엠: "poscofuturem.com",
+  하나금융: "hanafn.com",
+  하나금융지주: "hanafn.com",
+  하이브: "hybecorp.com",
+  하이트진로: "hitejinro.com",
+  한국가스공사: "kogas.or.kr",
+  한국전력: "kepco.co.kr",
+  한국콜마: "kolmar.co.kr",
+  한국타이어앤테크놀로지: "hankooktire.com",
+  한미약품: "hanmi.co.kr",
+  한진칼: "hanjinkal.co.kr",
+  한화솔루션: "hanwhasolutions.com",
+  한화에어로스페이스: "hanwhaaerospace.com",
+  한화오션: "hanwhaocean.com",
   현대건설: "hdec.kr",
   현대글로비스: "glovis.net",
   현대모비스: "mobis.com",
@@ -23,69 +118,7 @@ const companyDomains = {
   현대위아: "hyundai-wia.com",
   현대자동차: "hyundai.com",
   현대제철: "hyundai-steel.com",
-  카카오: "kakao.com",
-  카카오게임즈: "kakaogames.com",
-  SK바이오팜: "skbp.com",
-  고려아연: "koreazinc.co.kr",
-  하이브: "hybecorp.com",
-  "JYP Ent.": "jype.com",
-  "YG PLUS": "ygplus.com",
-  SM: "smentertainment.com",
-  하이트진로: "hitejinro.com",
-  NAVER: "naver.com",
-  이마트: "emart.com",
-  금호석유화학: "recruit.kkpc.com",
-  금호타이어: "kumhotire.com",
-  미래에셋증권: "securities.miraeasset.com",
-  LG디스플레이: "lgdisplay.com",
-  LG생활건강: "lghnh.com",
-  LG에너지솔루션: "lgensol.com",
-  LG유플러스: "uplusumobile.com",
-  LG이노텍: "lginnotek.com",
-  LG전자: "lge.co.kr",
-  LG화학: "lgchem.com",
-  HMM: "www.hmm21.com",
-  HD한국조선해양: "hd-ksoe.com",
-  한국가스공사: "kogas.or.kr",
-  한국전력: "kepco.co.kr",
-  한국콜마: "kolmar.co.kr",
-  한국타이어앤테크놀로지: "hankooktire.com",
-  코스맥스: "cosmax.com",
-  두산에너빌리티: "doosanenerbility.com",
-  두산로보틱스: "doosanrobotics.com",
-  두산밥캣: "doosanbobcat.com",
-  롯데쇼핑: "lotteshoppingir.com",
-  롯데에너지머티리얼즈: "lotteenergymaterials.com",
-  롯데칠성음료: "company.lottechilsung.co.kr",
-  롯데케미칼: "lottechem.com",
-  CJ대한통운: "cjlogistics.com",
-  대웅제약: "daewoong.co.kr",
-  대한항공: "koreanair.com",
-  아시아나항공: "flyasiana.com",
-  제주항공: "jejuair.net",
-  OCI홀딩스: "oci-holdings.co.kr",
-  POSCO홀딩스: "posco-inc.com",
-  SK스퀘어: "sksquare.com",
-  SK하이닉스: "skhynix.com",
-  펄어비스: "pearlabyss.com",
-  BGF리테일: "bgfretail.com",
-  CJ제일제당: "www.cj.co.kr",
-  GS리테일: "gsretail.com",
-  CJ: "cj.net",
-  HLB: "hlbbio.co.kr",
-  HL만도: "hlmando.com",
-  에코프로비엠: "ecoprobm.com",
-  포스코퓨처엠: "poscofuturem.com",
-  하나금융: "hanafn.com",
-  하나금융지주: "hanafn.com",
-  KB금융: "kbfg.com",
-  메리츠금융지주: "meritzgroup.com",
-  우리금융: "woorifg.com",
-  우리금융지주: "www.woorifg.com",
-  농심: "nongshim.com",
-  오뚜기: "otoki.com",
-  신세계: "shinsegae.com",
-  GS건설: "gsenc.com",
+  호텔신라: "hotelshilla.net",
 };
 /* =========================================================
    유틸
@@ -157,12 +190,553 @@ function AnalysisUnavailable({ description, label = "준비 중" }) {
   );
 }
 
+function formatQuoteTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "시각 확인 중";
+
+  return date.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getExchangeLabel(exchange) {
+  if (exchange === "코스피" || exchange === "KOSPI") return "KOSPI";
+  if (exchange === "코스닥" || exchange === "KOSDAQ") return "KOSDAQ";
+  return exchange || "KRX";
+}
+
+function getMarketClock(timeZone) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    hourCycle: "h23",
+    minute: "2-digit",
+    timeZone,
+    weekday: "short",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+
+  return {
+    isWeekday: !["Sat", "Sun"].includes(values.weekday),
+    minutes: Number(values.hour) * 60 + Number(values.minute),
+  };
+}
+
+function getMarketSession(marketStatus, market) {
+  const isUnitedStates = market === "US";
+  const clock = getMarketClock(
+    isUnitedStates ? "America/New_York" : "Asia/Seoul",
+  );
+  const openAt = isUnitedStates ? 9 * 60 + 30 : 9 * 60;
+  const closeAt = isUnitedStates ? 16 * 60 : 15 * 60 + 30;
+  const country = isUnitedStates ? "US" : "KR";
+
+  if (!clock.isWeekday) {
+    return { country, label: "휴장", state: "closed" };
+  }
+  if (clock.minutes < openAt) {
+    return { country, label: "개장 전", state: "upcoming" };
+  }
+  if (clock.minutes >= closeAt) {
+    return { country, label: "장 마감", state: "closed" };
+  }
+  if (marketStatus === "OPEN") {
+    return { country, label: "장중", state: "open" };
+  }
+  return { country, label: "휴장", state: "closed" };
+}
+
+function CompanyLogo({ companyName, size = 34 }) {
+  const domain = companyDomains[companyName];
+  const [imageFailed, setImageFailed] = useState(false);
+
+  if (!domain || imageFailed) {
+    return (
+      <span aria-label={`${companyName} 글자 로고`} title={companyName}>
+        {companyName.slice(0, 2)}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      alt={`${companyName} 로고`}
+      onError={() => setImageFailed(true)}
+      src={`https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=96&format=png`}
+      style={{
+        display: "block",
+        width: `${size}px`,
+        height: `${size}px`,
+        objectFit: "contain",
+      }}
+    />
+  );
+}
+
+function StockQuote({ error, loading, quote }) {
+  if (loading) {
+    return (
+      <div className="company-stock-quote company-stock-quote--loading">
+        <span>현재가</span>
+        <strong>시세 확인 중…</strong>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="company-stock-quote company-stock-quote--error">
+        <span>현재가</span>
+        <strong>시세 조회 불가</strong>
+      </div>
+    );
+  }
+
+  if (!quote) return null;
+
+  const change = Number(quote.change) || 0;
+  const changeRate = Number(quote.changeRate) || 0;
+  const direction = change > 0 ? "up" : change < 0 ? "down" : "flat";
+  const sign = change > 0 ? "+" : "";
+  const directionMark = change > 0 ? "▲" : change < 0 ? "▼" : "-";
+  const marketSession = getMarketSession(quote.marketStatus, "KR");
+  const status = marketSession.state === "open"
+    ? "정규장 · 15초 갱신"
+    : marketSession.label.includes("개장 전")
+      ? "정규장 개장 전"
+      : marketSession.label.includes("장 마감")
+        ? "정규장 마감"
+        : "정규장 휴장";
+
+  return (
+    <div
+      aria-live="polite"
+      className={`company-stock-quote company-stock-quote--${direction}`}
+      title={`네이버 금융 시세 · ${formatQuoteTime(quote.tradedAt)} 기준`}
+    >
+      <div className="company-stock-quote-meta">
+        <span
+          className={`company-stock-status${
+            marketSession.state === "open" ? " company-stock-status--open" : ""
+          }`}
+        >
+          <i />
+          {status}
+          <span className="company-stock-info-trigger">
+            <button
+              aria-describedby="company-stock-info-tooltip"
+              aria-label="실시간 주가 갱신 기준 보기"
+              type="button"
+            >
+              ?
+            </button>
+            <span
+              className="company-stock-info-tooltip"
+              id="company-stock-info-tooltip"
+              role="tooltip"
+            >
+              화면은 15초마다 최신 시세를 확인합니다. 한국 정규장은
+              09:00~15:30이며, 종료 후에도 시간외·NXT 거래로 가격이 갱신될 수
+              있습니다. 상태 문구는 정규장 기준입니다.
+            </span>
+          </span>
+        </span>
+        <small className="company-stock-exchange">
+          {getExchangeLabel(quote.exchange)}
+        </small>
+      </div>
+      <strong className="company-stock-price">
+        {Number(quote.price).toLocaleString("ko-KR")}원
+      </strong>
+      <div className="company-stock-change">
+        <span>
+          <i aria-hidden="true">{directionMark}</i>
+          {change === 0 ? "변동 없음" : `${sign}${change.toLocaleString("ko-KR")}원`}
+        </span>
+        <span>
+          {change === 0 ? "0.00%" : `${sign}${changeRate.toFixed(2)}%`}
+        </span>
+        <small>{formatQuoteTime(quote.tradedAt)}</small>
+      </div>
+    </div>
+  );
+}
+
+function buildSparkline(history, width = 184, height = 64) {
+  const values = (history || []).map((point) => Number(point.value));
+  if (values.length < 2 || values.some((value) => !Number.isFinite(value))) {
+    return null;
+  }
+
+  const padding = 4;
+  const minimum = Math.min(...values);
+  const maximum = Math.max(...values);
+  const range = maximum - minimum || 1;
+  const line = values.map((value, index) => {
+    const x = padding + (index / (values.length - 1)) * (width - padding * 2);
+    const y = height - padding - ((value - minimum) / range) * (height - padding * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+
+  return {
+    area: `${padding},${height - padding} ${line.join(" ")} ${width - padding},${height - padding}`,
+    end: line[line.length - 1].split(","),
+    line: line.join(" "),
+  };
+}
+
+function StockPriceChart({
+  error,
+  loading,
+  onPeriodChange,
+  period,
+  points,
+  quoteChange,
+}) {
+  const chartPoints = points || [];
+  const sparkline = buildSparkline(chartPoints, 218, 70);
+  const firstValue = Number(chartPoints[0]?.value);
+  const lastValue = Number(chartPoints[chartPoints.length - 1]?.value);
+  const changeRate = Number.isFinite(firstValue) && firstValue !== 0 &&
+    Number.isFinite(lastValue)
+    ? ((lastValue - firstValue) / firstValue) * 100
+    : null;
+  const directionValue = period === "1d" && Number.isFinite(Number(quoteChange))
+    ? Number(quoteChange)
+    : changeRate;
+  const direction = directionValue > 0
+    ? "up"
+    : directionValue < 0
+      ? "down"
+      : "flat";
+
+  return (
+    <div className={`company-stock-chart company-stock-chart--${direction}`}>
+      <div className="company-stock-chart-header">
+        <span>주가 추이</span>
+        <div className="company-stock-chart-periods" aria-label="주가 그래프 기간">
+          {[
+            ["1d", "1일"],
+            ["7d", "7일"],
+            ["1m", "1개월"],
+          ].map(([value, label]) => (
+            <button
+              className={period === value ? "active" : ""}
+              key={value}
+              onClick={() => onPeriodChange(value)}
+              type="button"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="company-stock-chart-body">
+        {sparkline && !loading && !error ? (
+          <svg
+            aria-label={`현재 주가 ${period} 추이`}
+            preserveAspectRatio="none"
+            role="img"
+            viewBox="0 0 218 70"
+          >
+            <polygon className="company-stock-chart-area" points={sparkline.area} />
+            <polyline className="company-stock-chart-line" points={sparkline.line} />
+            <circle
+              className="company-stock-chart-point"
+              cx={sparkline.end[0]}
+              cy={sparkline.end[1]}
+              r="3"
+            />
+          </svg>
+        ) : (
+          <span>{loading ? "그래프 조회 중" : error ? "그래프 조회 불가" : "데이터 없음"}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MarketIndexSidebar({ error, exchangeRate, indices, loading }) {
+  const indexMap = new Map((indices || []).map((index) => [index.code, index]));
+
+  return (
+    <aside className="market-index-sidebar" aria-label="주요 시장 지수">
+      <div className="market-index-panel">
+        <div className="market-index-heading">
+          <div>
+            <span>MARKET</span>
+            <h2>시장 지수</h2>
+          </div>
+          <span className="market-index-live market-index-live--guide">
+            <i /> 시장별 상태
+          </span>
+        </div>
+
+        <div className="market-index-list" aria-live="polite">
+          {["KOSPI", "KOSDAQ", "NASDAQ", "SP500"].map((code) => {
+            const marketIndex = indexMap.get(code);
+            const marketSession = loading || !marketIndex
+              ? {
+                  country: ["NASDAQ", "SP500"].includes(code) ? "US" : "KR",
+                  label: "확인 중",
+                  state: "loading",
+                }
+              : getMarketSession(
+                  marketIndex.marketStatus,
+                  ["NASDAQ", "SP500"].includes(code) ? "US" : "KR",
+                );
+            const dailyChange = Number(marketIndex?.change) || 0;
+            const changeRate = Number(marketIndex?.changeRate) || 0;
+            const direction = dailyChange > 0
+              ? "up"
+              : dailyChange < 0
+                ? "down"
+                : "flat";
+            const sign = dailyChange > 0 ? "+" : "";
+            const directionMark = dailyChange > 0 ? "▲" : dailyChange < 0 ? "▼" : "-";
+            const history = marketIndex?.history || [];
+            const sparkline = buildSparkline(history);
+            const firstValue = Number(history[0]?.value);
+            const lastValue = Number(history[history.length - 1]?.value);
+            const periodRate = Number.isFinite(firstValue) && firstValue !== 0 &&
+              Number.isFinite(lastValue)
+              ? ((lastValue - firstValue) / firstValue) * 100
+              : null;
+
+            return (
+              <article
+                className={`market-index-card market-index-card--${direction} market-index-card--${code.toLowerCase()}`}
+                key={code}
+                title={marketIndex
+                  ? `네이버 금융 시세 · ${formatQuoteTime(marketIndex.tradedAt)} 기준`
+                  : undefined}
+              >
+                <div className="market-index-card-heading">
+                  <strong>{marketIndex?.name || (code === "SP500" ? "S&P 500" : code)}</strong>
+                  <div className="market-index-card-meta">
+                    <span className={`market-session-badge market-session-badge--${marketSession.state}`}>
+                      <span className="market-session-flag" aria-hidden="true">
+                        <img
+                          alt=""
+                          src={`/flags/${marketSession.country.toLowerCase()}.svg`}
+                        />
+                      </span>
+                      {marketSession.label}
+                    </span>
+                    <small>{formatQuoteTime(marketIndex?.tradedAt)}</small>
+                  </div>
+                </div>
+                <div className="market-index-quote">
+                  <strong>
+                    {loading || error || !marketIndex
+                      ? "—"
+                      : Number(marketIndex.value).toLocaleString("ko-KR", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                  </strong>
+                  <span>
+                    {loading
+                      ? "조회 중"
+                      : error || !marketIndex
+                        ? "조회 불가"
+                        : `${directionMark} ${sign}${changeRate.toFixed(2)}%`}
+                  </span>
+                </div>
+
+                <div className="market-index-chart">
+                  {sparkline ? (
+                    <svg
+                      aria-label={`${code} 최근 3개월 추이`}
+                      preserveAspectRatio="none"
+                      role="img"
+                      viewBox="0 0 184 64"
+                    >
+                      <polygon className="market-index-chart-area" points={sparkline.area} />
+                      <polyline className="market-index-chart-line" points={sparkline.line} />
+                      <circle
+                        className="market-index-chart-point"
+                        cx={sparkline.end[0]}
+                        cy={sparkline.end[1]}
+                        r="3"
+                      />
+                    </svg>
+                  ) : (
+                    <span>{loading ? "그래프를 불러오는 중입니다." : "그래프 데이터 없음"}</span>
+                  )}
+                </div>
+
+                <div className="market-index-period">
+                  <span>최근 3개월</span>
+                  <strong className={periodRate > 0 ? "up" : periodRate < 0 ? "down" : "flat"}>
+                    {periodRate === null
+                      ? "—"
+                      : `${periodRate > 0 ? "+" : ""}${periodRate.toFixed(2)}%`}
+                  </strong>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        <ExchangeRateCard error={error} loading={loading} rate={exchangeRate} />
+      </div>
+    </aside>
+  );
+}
+
+function ExchangeRateCard({ error, loading, rate }) {
+  const change = Number(rate?.change) || 0;
+  const changeRate = Number(rate?.changeRate) || 0;
+  const direction = change > 0 ? "up" : change < 0 ? "down" : "flat";
+  const sign = change > 0 ? "+" : "";
+  const mark = change > 0 ? "▲" : change < 0 ? "▼" : "-";
+
+  return (
+    <div className={`exchange-rate-card exchange-rate-card--${direction}`}>
+      <div>
+        <span>EXCHANGE</span>
+        <strong>USD/KRW</strong>
+      </div>
+      <div>
+        <strong>
+          {loading || error || !rate
+            ? "—"
+            : `${Number(rate.value).toLocaleString("ko-KR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}원`}
+        </strong>
+        <small>
+          {loading
+            ? "조회 중"
+            : error || !rate
+              ? "조회 불가"
+              : `${mark} ${sign}${change.toFixed(2)} (${sign}${changeRate.toFixed(2)}%)`}
+        </small>
+      </div>
+    </div>
+  );
+}
+
+function RelatedCompanySidebar({ companies, companyName, error, loading, mode }) {
+  const openCompany = (companyId) => {
+    window.location.assign(`${ROUTES.COMPANY_DETAIL}?companyId=${companyId}`);
+  };
+
+  return (
+    <aside className="related-company-sidebar" aria-label="연관기업">
+      <div className="related-company-panel">
+        <div className="related-company-heading">
+          <div>
+            <span>RELATED</span>
+            <div className="related-company-title-row">
+              <h2>연관기업</h2>
+              <div className="related-company-info-trigger">
+                <button
+                  aria-describedby="related-company-tooltip"
+                  aria-label="연관기업 표출 기준 보기"
+                  className="related-company-info-button"
+                  type="button"
+                >
+                  ?
+                </button>
+                <div
+                  className="related-company-info-tooltip"
+                  id="related-company-tooltip"
+                  role="tooltip"
+                >
+                  <strong>연관기업 표출 기준</strong>
+                  <p className="related-company-tooltip-context">
+                    {companyName} 기준 · {mode === "news"
+                      ? "뉴스 기반"
+                      : mode === "hybrid"
+                        ? "뉴스·동일 업종 혼합"
+                        : "동일 업종 기반"}
+                  </p>
+                  <ul>
+                    <li>최근 90일 기사에서 함께 언급된 기업을 분석합니다.</li>
+                    <li>기본 기준은 서로 다른 기사 3건, 언론사 2곳 이상입니다.</li>
+                    <li>제목 동시 언급과 최신 기사에 더 높은 점수를 부여합니다.</li>
+                    <li>결과가 부족하면 뉴스 기준을 단계적으로 완화합니다.</li>
+                    <li>최소 2개가 안 되면 동일 업종 기업으로 보완합니다.</li>
+                    <li>현재 조회 중인 기업은 제외하며 최대 5개를 표시합니다.</li>
+                  </ul>
+                  {companies.length > 0 && (
+                    <div className="related-company-tooltip-results">
+                      <span>현재 표출 근거</span>
+                      {companies.map((company) => (
+                        <div key={company.companyId}>
+                          <strong>{company.companyName}</strong>
+                          <small>
+                            {company.relationType === "news"
+                              ? `기사 ${company.articleCount}건 · 언론사 ${company.pressCount}곳`
+                              : "동일 업종"}
+                          </small>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <span className="related-company-symbol" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+        </div>
+
+        {loading && (
+          <div className="related-company-state" role="status">
+            연관기업을 찾고 있습니다…
+          </div>
+        )}
+        {!loading && error && (
+          <div className="related-company-state related-company-state--error">
+            {error}
+          </div>
+        )}
+        {!loading && !error && companies.length === 0 && (
+          <div className="related-company-state">
+            표시할 연관기업이 없습니다.
+          </div>
+        )}
+
+        {!loading && !error && companies.length > 0 && (
+          <div className="related-company-list">
+            {companies.map((company) => (
+              <button
+                className="related-company-item"
+                key={company.companyId}
+                onClick={() => openCompany(company.companyId)}
+                type="button"
+              >
+                <span className="related-company-logo">
+                  <CompanyLogo companyName={company.companyName} />
+                </span>
+                <span className="related-company-copy">
+                  <strong>{company.companyName}</strong>
+                </span>
+                <span className="related-company-arrow" aria-hidden="true">
+                  ›
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}
+
 /* =========================================================
    메인 페이지
 ========================================================= */
 
 export default function CompanyAnalysisPage() {
-  const { isWatched, toggleCompany, count, limit } = useWatchlist();
+  const { isWatched, toggleCompany } = useWatchlist();
 
   // DB 기업 목록
   const [companies, setCompanies] = useState([]);
@@ -174,6 +748,25 @@ export default function CompanyAnalysisPage() {
   const [newsError, setNewsError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
   const newsRequestIdRef = useRef(0);
+
+  // 연관기업 상태
+  const [relatedCompanies, setRelatedCompanies] = useState([]);
+  const [relatedCompanyMode, setRelatedCompanyMode] = useState("news");
+  const [isRelatedCompanyLoading, setIsRelatedCompanyLoading] = useState(true);
+  const [relatedCompanyError, setRelatedCompanyError] = useState("");
+
+  // 실시간 주가 상태
+  const [stockQuote, setStockQuote] = useState(null);
+  const [isStockQuoteLoading, setIsStockQuoteLoading] = useState(true);
+  const [stockQuoteError, setStockQuoteError] = useState("");
+  const [stockChartPeriod, setStockChartPeriod] = useState("1d");
+  const [stockChartPoints, setStockChartPoints] = useState([]);
+  const [isStockChartLoading, setIsStockChartLoading] = useState(true);
+  const [stockChartError, setStockChartError] = useState("");
+  const [marketIndices, setMarketIndices] = useState([]);
+  const [exchangeRate, setExchangeRate] = useState(null);
+  const [isMarketIndicesLoading, setIsMarketIndicesLoading] = useState(true);
+  const [marketIndicesError, setMarketIndicesError] = useState("");
 
   // DB에서 기업 목록 가져오기
   useEffect(() => {
@@ -215,6 +808,172 @@ export default function CompanyAnalysisPage() {
   const selectedCompany = useMemo(() => {
     return companies.find((company) => company.id === selectedCompanyId);
   }, [companies, selectedCompanyId]);
+
+  useEffect(() => {
+    if (!selectedCompanyId || !/^\d{6}$/.test(selectedCompany?.ticker || "")) {
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    let requestInFlight = false;
+
+    const fetchStockQuote = async () => {
+      if (requestInFlight) return;
+      requestInFlight = true;
+
+      try {
+        const response = await api.get(
+          `/api/company/${selectedCompanyId}/quote`,
+          { signal: controller.signal },
+        );
+        setStockQuote(response.data.data || null);
+        setStockQuoteError("");
+      } catch (error) {
+        if (error.code !== "ERR_CANCELED") {
+          setStockQuoteError(
+            getApiErrorMessage(error, "현재 주가를 불러오지 못했습니다."),
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsStockQuoteLoading(false);
+        requestInFlight = false;
+      }
+    };
+
+    fetchStockQuote();
+    const refreshTimer = window.setInterval(fetchStockQuote, 15_000);
+
+    return () => {
+      controller.abort();
+      window.clearInterval(refreshTimer);
+    };
+  }, [selectedCompany?.ticker, selectedCompanyId]);
+
+  useEffect(() => {
+    if (!selectedCompanyId || !/^\d{6}$/.test(selectedCompany?.ticker || "")) {
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    let requestInFlight = false;
+
+    const fetchStockChart = async () => {
+      if (requestInFlight) return;
+      requestInFlight = true;
+
+      try {
+        const response = await api.get(
+          `/api/company/${selectedCompanyId}/quote-history`,
+          {
+            params: { period: stockChartPeriod },
+            signal: controller.signal,
+          },
+        );
+        setStockChartPoints(response.data.data || []);
+        setStockChartError("");
+      } catch (error) {
+        if (error.code !== "ERR_CANCELED") {
+          setStockChartError(
+            getApiErrorMessage(error, "주가 그래프를 불러오지 못했습니다."),
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsStockChartLoading(false);
+        requestInFlight = false;
+      }
+    };
+
+    fetchStockChart();
+    const refreshTimer = window.setInterval(
+      fetchStockChart,
+      stockChartPeriod === "1d" ? 15_000 : 5 * 60_000,
+    );
+
+    return () => {
+      controller.abort();
+      window.clearInterval(refreshTimer);
+    };
+  }, [selectedCompany?.ticker, selectedCompanyId, stockChartPeriod]);
+
+  const changeStockChartPeriod = (period) => {
+    if (period === stockChartPeriod) return;
+    setStockChartPeriod(period);
+    setStockChartPoints([]);
+    setStockChartError("");
+    setIsStockChartLoading(true);
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let requestInFlight = false;
+
+    const fetchMarketIndices = async () => {
+      if (requestInFlight) return;
+      requestInFlight = true;
+
+      try {
+        const response = await api.get("/api/company/market-indices", {
+          signal: controller.signal,
+        });
+        setMarketIndices(response.data.data || []);
+        setExchangeRate(response.data.exchangeRate || null);
+        setMarketIndicesError("");
+      } catch (error) {
+        if (error.code !== "ERR_CANCELED") {
+          setMarketIndicesError(
+            getApiErrorMessage(error, "시장 지수를 불러오지 못했습니다."),
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsMarketIndicesLoading(false);
+        requestInFlight = false;
+      }
+    };
+
+    fetchMarketIndices();
+    const refreshTimer = window.setInterval(fetchMarketIndices, 15_000);
+
+    return () => {
+      controller.abort();
+      window.clearInterval(refreshTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCompanyId || !newsAnalysis) return undefined;
+
+    const controller = new AbortController();
+
+    api
+      .post(
+        `/api/company/${selectedCompanyId}/related`,
+        {
+          articles: (newsAnalysis.news_list || []).map((article) => ({
+            title: article.title,
+            description: article.description,
+            pub_date: article.pub_date,
+            source: article.source,
+          })),
+        },
+        { signal: controller.signal },
+      )
+      .then((response) => {
+        setRelatedCompanies(response.data.data || []);
+        setRelatedCompanyMode(response.data.mode || "news");
+      })
+      .catch((error) => {
+        if (error.code === "ERR_CANCELED") return;
+        setRelatedCompanies([]);
+        setRelatedCompanyError(
+          getApiErrorMessage(error, "연관기업을 불러오지 못했습니다."),
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsRelatedCompanyLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [newsAnalysis, selectedCompanyId]);
 
   // 선택된 기업의 뉴스 조회
   useEffect(() => {
@@ -337,6 +1096,19 @@ export default function CompanyAnalysisPage() {
     <>
       <Header />
       <main className="company-analysis-detail">
+        <RelatedCompanySidebar
+          companies={relatedCompanies}
+          companyName={selectedCompany.name}
+          error={relatedCompanyError}
+          loading={isRelatedCompanyLoading}
+          mode={relatedCompanyMode}
+        />
+        <MarketIndexSidebar
+          error={marketIndicesError}
+          exchangeRate={exchangeRate}
+          indices={marketIndices}
+          loading={isMarketIndicesLoading}
+        />
         <div className="company-analysis-canvas" style={styles.page}>
           {/* ===================================================
           기업 기본정보
@@ -347,27 +1119,7 @@ export default function CompanyAnalysisPage() {
             style={styles.companyHeader}
           >
             <div style={styles.companyLogo}>
-              {companyDomains[selectedCompany.name] ? (
-                <img
-                  src={`https://img.logo.dev/${
-                    companyDomains[selectedCompany.name]
-                  }?token=${LOGO_DEV_TOKEN}&size=128&format=png`}
-                  alt={`${selectedCompany.name} 로고`}
-                  style={{
-                    width: "46px",
-                    height: "46px",
-                    maxWidth: "46px",
-                    maxHeight: "46px",
-                    objectFit: "contain",
-                    objectPosition: "center",
-                    display: "block",
-                    margin: 0,
-                    padding: 0,
-                  }}
-                />
-              ) : (
-                <span>{selectedCompany.name.slice(0, 2)}</span>
-              )}
+              <CompanyLogo companyName={selectedCompany.name} size={46} />
             </div>
 
             <div style={styles.companyInfo}>
@@ -375,27 +1127,58 @@ export default function CompanyAnalysisPage() {
                 <h2 style={styles.companyName}>{selectedCompany.name}</h2>
 
                 <span style={styles.ticker}>({selectedCompany.ticker})</span>
+
+                <button
+                  aria-label={isWatched(selectedCompany.id)
+                    ? `${selectedCompany.name} 관심기업 해제`
+                    : `${selectedCompany.name} 관심기업 등록`}
+                  className={`company-watch-star${
+                    isWatched(selectedCompany.id) ? " active" : ""
+                  }`}
+                  onClick={() => toggleCompany(selectedCompany.id)}
+                  title={isWatched(selectedCompany.id)
+                    ? "관심기업 해제"
+                    : "관심기업 등록"}
+                  type="button"
+                >
+                  {isWatched(selectedCompany.id) ? "★" : "☆"}
+                </button>
               </div>
 
               <p style={styles.companyDescription}>
                 {selectedCompany.description}
               </p>
 
-              <div style={styles.companyTags}>
-                <span>{selectedCompany.category}</span>
-                <span>{selectedCompany.market}</span>
-              </div>
+              {(selectedCompany.category || stockQuote?.exchange) && (
+                <div style={styles.companyTags}>
+                  {selectedCompany.category && (
+                    <span>{selectedCompany.category}</span>
+                  )}
+                  {stockQuote?.exchange && (
+                    <span>{getExchangeLabel(stockQuote.exchange)}</span>
+                  )}
+                </div>
+              )}
             </div>
 
-            <button
-              style={styles.watchButton}
-              onClick={() => {
-                toggleCompany(selectedCompany.id);
-              }}
-            >
-              {isWatched(selectedCompany.id) ? "★ 관심기업" : "☆ 관심기업"} (
-              {count}/{limit})
-            </button>
+            {/^\d{6}$/.test(selectedCompany.ticker || "") && (
+              <div className="company-market-overview">
+                <StockQuote
+                  error={stockQuoteError}
+                  loading={isStockQuoteLoading}
+                  quote={stockQuote}
+                />
+                <StockPriceChart
+                  error={stockChartError}
+                  loading={isStockChartLoading}
+                  onPeriodChange={changeStockChartPeriod}
+                  period={stockChartPeriod}
+                  points={stockChartPoints}
+                  quoteChange={stockQuote?.change}
+                />
+              </div>
+            )}
+
           </section>
 
           {/* ===================================================
@@ -787,17 +1570,6 @@ const styles = {
     display: "flex",
     gap: "7px",
     flexWrap: "wrap",
-  },
-
-  watchButton: {
-    border: "1px solid #D9E7F8",
-    background: "#F5F9FF",
-    color: "#337ACD",
-    borderRadius: "8px",
-    padding: "10px 15px",
-    fontWeight: 700,
-    fontSize: "12px",
-    cursor: "pointer",
   },
 
   liveNewsDetails: {

@@ -12,6 +12,7 @@ function toSimilarCaseResponse(group) {
     caseId: Number.isInteger(group.caseId) ? group.caseId : null,
     issueId: Number.isInteger(group.issueId) ? group.issueId : null,
     source: Number.isInteger(group.caseId) ? "stored" : "dynamic",
+    matchMethod: group.matchMethod || "semantic",
     issueName: group.issueName || group.caseName,
     companyName: group.companyName,
     industry: group.industry,
@@ -22,8 +23,10 @@ function toSimilarCaseResponse(group) {
       ? getDurationDays(group.storedStartDate, group.storedLastDate)
       : group.durationDays,
     articleCount: group.storedArticleCount ?? group.articleCount,
-    semanticSimilarity: group.semanticSimilarity,
-    finalScore: group.finalScore,
+    semanticSimilarity: group.matchMethod === "category"
+      ? null
+      : group.semanticSimilarity,
+    finalScore: group.matchMethod === "category" ? null : group.finalScore,
     representativeNewsId: group.representativeNewsId,
     representativeTitle: group.representativeTitle,
     description: group.description,
