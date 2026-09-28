@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Header from "./Header";
 import Footer from "./Footer";
+
+const PRIMARY = "#2563EB";
 
 const topics = [
   "전체",
@@ -112,73 +114,135 @@ const quickTopics = [
 export default function CommunityPage() {
   const [activeTopic, setActiveTopic] = useState("전체");
   const [search, setSearch] = useState("");
+  const [isDark, setIsDark] = useState(
+    document.documentElement.getAttribute("data-theme") === "dark",
+  );
+
+  /*
+   * ThemeToggle에서 data-theme이 바뀌는 것을 감지합니다.
+   * 별도의 CSS 파일 없이 CommunityPage 자체가 다크모드에 대응합니다.
+   */
+  useEffect(() => {
+    const target = document.documentElement;
+
+    const updateTheme = () => {
+      setIsDark(target.getAttribute("data-theme") === "dark");
+    };
+
+    updateTheme();
+
+    const observer = new MutationObserver(updateTheme);
+
+    observer.observe(target, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const filteredStories = stories.filter((story) => {
     const topicMatch = activeTopic === "전체" || story.category === activeTopic;
 
+    const searchText = search.trim().toLowerCase();
+
     const searchMatch =
-      !search ||
-      story.title.toLowerCase().includes(search.toLowerCase()) ||
-      story.description.toLowerCase().includes(search.toLowerCase());
+      !searchText ||
+      story.title.toLowerCase().includes(searchText) ||
+      story.description.toLowerCase().includes(searchText) ||
+      story.category.toLowerCase().includes(searchText);
 
     return topicMatch && searchMatch;
   });
 
   const featuredStory = stories.find((story) => story.featured);
 
+  const colors = {
+    page: isDark ? "#0B1220" : "#F7F9FC",
+    surface: isDark ? "#111827" : "#FFFFFF",
+    surfaceSoft: isDark ? "#172033" : "#F8FAFC",
+    surfaceHover: isDark ? "#1A263A" : "#F8FAFF",
+    border: isDark ? "#263247" : "#E5EAF1",
+    borderSoft: isDark ? "#202C3E" : "#EEF1F5",
+    text: isDark ? "#F8FAFC" : "#111827",
+    textSecondary: isDark ? "#CBD5E1" : "#4B5563",
+    textMuted: isDark ? "#94A3B8" : "#9CA3AF",
+    textFaint: isDark ? "#64748B" : "#B0B7C3",
+    input: isDark ? "#0F172A" : "#FFFFFF",
+    blueSoft: isDark ? "rgba(37,99,235,0.16)" : "#EFF6FF",
+    blueBorder: isDark ? "rgba(59,130,246,0.35)" : "#DBEAFE",
+  };
+
   return (
     <div
       style={{
         minHeight: "100vh",
-        background: "#f7f8fa",
-        color: "#111827",
+        background: colors.page,
+        color: colors.text,
+        transition: "background 0.25s ease, color 0.25s ease",
       }}
     >
       <Header />
 
       <main
         style={{
-          maxWidth: "1180px",
+          maxWidth: "1160px",
           margin: "0 auto",
-          padding: "58px 28px 100px",
+          padding: "48px 24px 80px",
+          boxSizing: "border-box",
         }}
       >
-        {/* =========================
-            페이지 헤더
-        ========================= */}
+        {/* =====================================================
+            PAGE HEADER
+        ====================================================== */}
         <section
           style={{
-            marginBottom: "34px",
+            marginBottom: "28px",
           }}
         >
-          <p
-            style={{
-              margin: "0 0 10px",
-              fontSize: "12px",
-              fontWeight: 700,
-              letterSpacing: "0.14em",
-              color: "#6b7280",
-            }}
-          >
-            D:TECT COMMUNITY
-          </p>
-
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "flex-end",
-              gap: "30px",
+              gap: "24px",
             }}
           >
             <div>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  marginBottom: "9px",
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  letterSpacing: "0.12em",
+                  color: PRIMARY,
+                }}
+              >
+                <span
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: PRIMARY,
+                    boxShadow: `0 0 0 4px ${
+                      isDark ? "rgba(37,99,235,0.14)" : "rgba(37,99,235,0.10)"
+                    }`,
+                  }}
+                />
+                D:TECT COMMUNITY
+              </div>
+
               <h1
                 style={{
                   margin: 0,
-                  fontSize: "34px",
-                  lineHeight: 1.25,
-                  fontWeight: 800,
+                  fontSize: "32px",
+                  lineHeight: 1.2,
+                  fontWeight: 850,
                   letterSpacing: "-0.045em",
+                  color: colors.text,
                 }}
               >
                 이모저모
@@ -186,15 +250,13 @@ export default function CommunityPage() {
 
               <p
                 style={{
-                  margin: "12px 0 0",
-                  fontSize: "15px",
-                  lineHeight: 1.7,
-                  color: "#6b7280",
+                  margin: "10px 0 0",
+                  fontSize: "14px",
+                  lineHeight: 1.65,
+                  color: colors.textSecondary,
                 }}
               >
                 기업과 산업에 관한 다양한 이야기를 가볍게 둘러보세요.
-                <br />
-                지금 주목받고 있는 이슈와 트렌드를 한곳에서 확인할 수 있습니다.
               </p>
             </div>
 
@@ -203,20 +265,24 @@ export default function CommunityPage() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                width: "300px",
-                height: "44px",
-                background: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "10px",
-                padding: "0 14px",
+                width: "290px",
+                height: "42px",
+                background: colors.input,
+                border: `1px solid ${colors.border}`,
+                borderRadius: "11px",
+                padding: "0 13px",
                 boxSizing: "border-box",
+                boxShadow: isDark ? "none" : "0 3px 12px rgba(15,23,42,0.03)",
+                transition:
+                  "border-color 0.2s ease, box-shadow 0.2s ease, background 0.25s ease",
               }}
             >
               <span
                 style={{
-                  marginRight: "9px",
-                  fontSize: "16px",
-                  color: "#9ca3af",
+                  marginRight: "8px",
+                  fontSize: "17px",
+                  lineHeight: 1,
+                  color: PRIMARY,
                 }}
               >
                 ⌕
@@ -226,39 +292,84 @@ export default function CommunityPage() {
                 type="text"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="이슈나 키워드를 검색해보세요"
+                placeholder="이슈나 키워드 검색"
                 style={{
                   width: "100%",
                   height: "100%",
                   border: "none",
                   outline: "none",
                   background: "transparent",
-                  fontSize: "13px",
-                  color: "#111827",
+                  fontSize: "12px",
+                  color: colors.text,
+                  boxSizing: "border-box",
                 }}
               />
             </div>
           </div>
         </section>
 
-        {/* =========================
-            오늘의 핵심 이슈
-        ========================= */}
+        {/* =====================================================
+            TODAY FEATURE
+        ====================================================== */}
         {featuredStory && (
           <section
             style={{
-              marginBottom: "24px",
-              borderRadius: "18px",
-              overflow: "hidden",
-              background: "#111827",
-              color: "#ffffff",
               position: "relative",
+              marginBottom: "20px",
+              minHeight: "196px",
+              borderRadius: "17px",
+              overflow: "hidden",
+              background: isDark
+                ? "linear-gradient(135deg, #172554 0%, #101827 62%, #0B1220 100%)"
+                : "linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 68%)",
+              border: `1px solid ${
+                isDark ? "rgba(59,130,246,0.24)" : "#DBEAFE"
+              }`,
+              boxSizing: "border-box",
+              transition: "transform 0.25s ease, box-shadow 0.25s ease",
+              boxShadow: isDark
+                ? "0 12px 30px rgba(0,0,0,0.18)"
+                : "0 10px 28px rgba(37,99,235,0.07)",
+            }}
+            onMouseEnter={(event) => {
+              event.currentTarget.style.transform = "translateY(-2px)";
+              event.currentTarget.style.boxShadow = isDark
+                ? "0 16px 36px rgba(0,0,0,0.25)"
+                : "0 15px 34px rgba(37,99,235,0.11)";
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.style.transform = "translateY(0)";
+              event.currentTarget.style.boxShadow = isDark
+                ? "0 12px 30px rgba(0,0,0,0.18)"
+                : "0 10px 28px rgba(37,99,235,0.07)";
             }}
           >
+            {/* 배경 장식 */}
             <div
               style={{
-                padding: "32px 34px",
-                minHeight: "190px",
+                position: "absolute",
+                right: "-35px",
+                top: "-65px",
+                width: "220px",
+                height: "220px",
+                borderRadius: "50%",
+                border: `1px solid ${
+                  isDark ? "rgba(96,165,250,0.13)" : "rgba(37,99,235,0.09)"
+                }`,
+                boxShadow: `0 0 0 28px ${
+                  isDark ? "rgba(59,130,246,0.035)" : "rgba(37,99,235,0.025)"
+                }, 0 0 0 56px ${
+                  isDark ? "rgba(59,130,246,0.02)" : "rgba(37,99,235,0.015)"
+                }`,
+                pointerEvents: "none",
+              }}
+            />
+
+            <div
+              style={{
+                position: "relative",
+                zIndex: 1,
+                padding: "26px 30px",
                 boxSizing: "border-box",
               }}
             >
@@ -266,19 +377,19 @@ export default function CommunityPage() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "9px",
-                  marginBottom: "18px",
+                  gap: "8px",
+                  marginBottom: "14px",
                 }}
               >
                 <span
                   style={{
-                    padding: "5px 9px",
+                    padding: "4px 8px",
                     borderRadius: "5px",
-                    background: "#ffffff",
-                    color: "#111827",
-                    fontSize: "10px",
+                    background: PRIMARY,
+                    color: "#FFFFFF",
+                    fontSize: "9px",
                     fontWeight: 800,
-                    letterSpacing: "0.04em",
+                    letterSpacing: "0.06em",
                   }}
                 >
                   TODAY
@@ -286,8 +397,9 @@ export default function CommunityPage() {
 
                 <span
                   style={{
-                    fontSize: "12px",
-                    color: "#d1d5db",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: colors.textSecondary,
                   }}
                 >
                   오늘의 핵심 이슈
@@ -298,10 +410,11 @@ export default function CommunityPage() {
                 style={{
                   margin: 0,
                   maxWidth: "680px",
-                  fontSize: "25px",
+                  fontSize: "23px",
                   lineHeight: 1.4,
                   fontWeight: 800,
                   letterSpacing: "-0.035em",
+                  color: colors.text,
                 }}
               >
                 {featuredStory.title}
@@ -309,11 +422,11 @@ export default function CommunityPage() {
 
               <p
                 style={{
-                  margin: "12px 0 0",
+                  margin: "9px 0 0",
                   maxWidth: "650px",
-                  color: "#d1d5db",
-                  fontSize: "13px",
-                  lineHeight: 1.7,
+                  color: colors.textSecondary,
+                  fontSize: "12px",
+                  lineHeight: 1.65,
                 }}
               >
                 {featuredStory.description}
@@ -323,10 +436,10 @@ export default function CommunityPage() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "14px",
-                  marginTop: "18px",
-                  color: "#9ca3af",
-                  fontSize: "11px",
+                  gap: "11px",
+                  marginTop: "14px",
+                  color: colors.textMuted,
+                  fontSize: "10px",
                 }}
               >
                 <span>{featuredStory.time}</span>
@@ -336,34 +449,20 @@ export default function CommunityPage() {
                 <span>댓글 {featuredStory.comments}</span>
               </div>
             </div>
-
-            <div
-              style={{
-                position: "absolute",
-                right: "42px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: "150px",
-                height: "150px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow:
-                  "0 0 0 25px rgba(255,255,255,0.025), 0 0 0 50px rgba(255,255,255,0.015)",
-              }}
-            />
           </section>
         )}
 
-        {/* =========================
-            주제 필터
-        ========================= */}
+        {/* =====================================================
+            TOPIC FILTER
+        ====================================================== */}
         <section
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "9px",
-            marginBottom: "22px",
+            gap: "7px",
+            marginBottom: "18px",
             overflowX: "auto",
+            paddingBottom: "2px",
           }}
         >
           {topics.map((topic) => {
@@ -376,14 +475,32 @@ export default function CommunityPage() {
                 onClick={() => setActiveTopic(topic)}
                 style={{
                   flexShrink: 0,
-                  padding: "9px 16px",
+                  padding: "8px 14px",
                   borderRadius: "999px",
-                  border: isActive ? "1px solid #111827" : "1px solid #e5e7eb",
-                  background: isActive ? "#111827" : "#ffffff",
-                  color: isActive ? "#ffffff" : "#4b5563",
-                  fontSize: "13px",
+                  border: isActive
+                    ? `1px solid ${PRIMARY}`
+                    : `1px solid ${colors.border}`,
+                  background: isActive ? PRIMARY : colors.surface,
+                  color: isActive ? "#FFFFFF" : colors.textSecondary,
+                  fontSize: "12px",
                   fontWeight: isActive ? 700 : 500,
                   cursor: "pointer",
+                  transition:
+                    "transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease",
+                }}
+                onMouseEnter={(event) => {
+                  if (!isActive) {
+                    event.currentTarget.style.transform = "translateY(-1px)";
+                    event.currentTarget.style.borderColor = PRIMARY;
+                    event.currentTarget.style.color = PRIMARY;
+                  }
+                }}
+                onMouseLeave={(event) => {
+                  if (!isActive) {
+                    event.currentTarget.style.transform = "translateY(0)";
+                    event.currentTarget.style.borderColor = colors.border;
+                    event.currentTarget.style.color = colors.textSecondary;
+                  }
                 }}
               >
                 {topic}
@@ -392,64 +509,88 @@ export default function CommunityPage() {
           })}
         </section>
 
-        {/* =========================
-            본문 2단 영역
-        ========================= */}
+        {/* =====================================================
+            CONTENT
+        ====================================================== */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) 280px",
-            gap: "20px",
+            gridTemplateColumns: "minmax(0, 1fr) 270px",
+            gap: "18px",
             alignItems: "start",
           }}
         >
-          {/* =========================
-              이야기 피드
-          ========================= */}
+          {/* =====================================================
+              STORY FEED
+          ====================================================== */}
           <section
             style={{
-              background: "#ffffff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "16px",
+              background: colors.surface,
+              border: `1px solid ${colors.border}`,
+              borderRadius: "15px",
               overflow: "hidden",
+              boxShadow: isDark ? "none" : "0 5px 18px rgba(15,23,42,0.025)",
+              transition: "background 0.25s ease, border-color 0.25s ease",
             }}
           >
             <div
               style={{
-                padding: "22px 24px",
-                borderBottom: "1px solid #f0f1f3",
+                padding: "18px 20px",
+                borderBottom: `1px solid ${colors.borderSoft}`,
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
               <div>
-                <h2
+                <div
                   style={{
-                    margin: 0,
-                    fontSize: "17px",
-                    fontWeight: 800,
-                    letterSpacing: "-0.02em",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
                   }}
                 >
-                  오늘의 이야기
-                </h2>
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: "15px",
+                      fontWeight: 800,
+                      letterSpacing: "-0.02em",
+                      color: colors.text,
+                    }}
+                  >
+                    오늘의 이야기
+                  </h2>
+
+                  <span
+                    style={{
+                      padding: "3px 6px",
+                      borderRadius: "4px",
+                      background: colors.blueSoft,
+                      color: PRIMARY,
+                      fontSize: "9px",
+                      fontWeight: 800,
+                    }}
+                  >
+                    {filteredStories.length}
+                  </span>
+                </div>
 
                 <p
                   style={{
-                    margin: "5px 0 0",
-                    fontSize: "12px",
-                    color: "#9ca3af",
+                    margin: "4px 0 0",
+                    fontSize: "10px",
+                    color: colors.textMuted,
                   }}
                 >
-                  {filteredStories.length}개의 이야기
+                  지금 주목받고 있는 기업·산업 이야기
                 </p>
               </div>
 
               <span
                 style={{
-                  fontSize: "12px",
-                  color: "#9ca3af",
+                  fontSize: "10px",
+                  color: colors.textMuted,
                 }}
               >
                 최신순
@@ -464,23 +605,26 @@ export default function CommunityPage() {
                     alert(`"${story.title}" 콘텐츠는 준비 중입니다.`)
                   }
                   style={{
-                    padding: "22px 24px",
-                    borderBottom: "1px solid #f0f1f3",
+                    padding: "18px 20px",
+                    borderBottom: `1px solid ${colors.borderSoft}`,
                     cursor: "pointer",
-                    transition: "background 0.15s",
+                    transition:
+                      "background 0.18s ease, transform 0.18s ease, padding-left 0.18s ease",
                   }}
                   onMouseEnter={(event) => {
-                    event.currentTarget.style.background = "#fafafa";
+                    event.currentTarget.style.background = colors.surfaceHover;
+                    event.currentTarget.style.paddingLeft = "23px";
                   }}
                   onMouseLeave={(event) => {
-                    event.currentTarget.style.background = "#ffffff";
+                    event.currentTarget.style.background = colors.surface;
+                    event.currentTarget.style.paddingLeft = "20px";
                   }}
                 >
                   <div
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
-                      gap: "20px",
+                      gap: "18px",
                     }}
                   >
                     <div
@@ -494,17 +638,18 @@ export default function CommunityPage() {
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: "8px",
-                          marginBottom: "10px",
+                          gap: "7px",
+                          marginBottom: "8px",
                         }}
                       >
                         <span
                           style={{
-                            padding: "4px 8px",
+                            padding: "4px 7px",
                             borderRadius: "5px",
-                            background: "#f3f4f6",
-                            color: "#4b5563",
-                            fontSize: "10px",
+                            background: colors.blueSoft,
+                            border: `1px solid ${colors.blueBorder}`,
+                            color: PRIMARY,
+                            fontSize: "9px",
                             fontWeight: 700,
                           }}
                         >
@@ -513,9 +658,10 @@ export default function CommunityPage() {
 
                         <span
                           style={{
-                            color: "#d1d5db",
-                            fontSize: "10px",
+                            fontSize: "9px",
+                            color: colors.textFaint,
                             fontWeight: 700,
+                            letterSpacing: "0.04em",
                           }}
                         >
                           {story.tag}
@@ -525,11 +671,11 @@ export default function CommunityPage() {
                       <h3
                         style={{
                           margin: 0,
-                          fontSize: "15px",
+                          fontSize: "14px",
                           lineHeight: 1.5,
                           fontWeight: 750,
-                          color: "#111827",
-                          letterSpacing: "-0.015em",
+                          color: colors.text,
+                          letterSpacing: "-0.018em",
                         }}
                       >
                         {story.title}
@@ -537,10 +683,10 @@ export default function CommunityPage() {
 
                       <p
                         style={{
-                          margin: "8px 0 0",
-                          color: "#6b7280",
-                          fontSize: "12px",
-                          lineHeight: 1.6,
+                          margin: "6px 0 0",
+                          color: colors.textSecondary,
+                          fontSize: "11px",
+                          lineHeight: 1.55,
                         }}
                       >
                         {story.description}
@@ -550,10 +696,10 @@ export default function CommunityPage() {
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: "9px",
-                          marginTop: "12px",
-                          color: "#9ca3af",
-                          fontSize: "11px",
+                          gap: "8px",
+                          marginTop: "10px",
+                          color: colors.textMuted,
+                          fontSize: "10px",
                         }}
                       >
                         <span>{story.time}</span>
@@ -564,12 +710,22 @@ export default function CommunityPage() {
                       </div>
                     </div>
 
+                    {/* 화살표 */}
                     <span
                       style={{
                         flexShrink: 0,
                         alignSelf: "center",
-                        fontSize: "20px",
-                        color: "#c7cbd1",
+                        width: "28px",
+                        height: "28px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "50%",
+                        background: colors.surfaceSoft,
+                        color: colors.textMuted,
+                        fontSize: "17px",
+                        transition:
+                          "transform 0.18s ease, background 0.18s ease, color 0.18s ease",
                       }}
                     >
                       ›
@@ -584,11 +740,28 @@ export default function CommunityPage() {
                   textAlign: "center",
                 }}
               >
+                <div
+                  style={{
+                    width: "38px",
+                    height: "38px",
+                    margin: "0 auto 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "50%",
+                    background: colors.blueSoft,
+                    color: PRIMARY,
+                    fontSize: "18px",
+                  }}
+                >
+                  ⌕
+                </div>
+
                 <strong
                   style={{
                     display: "block",
-                    fontSize: "15px",
-                    color: "#374151",
+                    fontSize: "14px",
+                    color: colors.text,
                   }}
                 >
                   검색 결과가 없습니다.
@@ -596,9 +769,9 @@ export default function CommunityPage() {
 
                 <p
                   style={{
-                    margin: "8px 0 0",
-                    fontSize: "13px",
-                    color: "#9ca3af",
+                    margin: "7px 0 0",
+                    fontSize: "11px",
+                    color: colors.textMuted,
                   }}
                 >
                   다른 키워드로 검색해보세요.
@@ -607,39 +780,60 @@ export default function CommunityPage() {
             )}
           </section>
 
-          {/* =========================
-              오른쪽 인기 키워드
-          ========================= */}
+          {/* =====================================================
+              RIGHT SIDEBAR
+          ====================================================== */}
           <aside>
+            {/* 트렌딩 키워드 */}
             <section
               style={{
-                background: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "16px",
+                background: colors.surface,
+                border: `1px solid ${colors.border}`,
+                borderRadius: "15px",
                 overflow: "hidden",
+                boxShadow: isDark ? "none" : "0 5px 18px rgba(15,23,42,0.025)",
+                transition: "background 0.25s ease, border-color 0.25s ease",
               }}
             >
               <div
                 style={{
-                  padding: "20px",
-                  borderBottom: "1px solid #f0f1f3",
+                  padding: "18px 18px 15px",
+                  borderBottom: `1px solid ${colors.borderSoft}`,
                 }}
               >
-                <h2
+                <div
                   style={{
-                    margin: 0,
-                    fontSize: "15px",
-                    fontWeight: 800,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "7px",
                   }}
                 >
-                  지금 많이 보는 키워드
-                </h2>
+                  <span
+                    style={{
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      background: PRIMARY,
+                    }}
+                  />
+
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: "14px",
+                      fontWeight: 800,
+                      color: colors.text,
+                    }}
+                  >
+                    트렌딩 키워드
+                  </h2>
+                </div>
 
                 <p
                   style={{
-                    margin: "5px 0 0",
-                    fontSize: "11px",
-                    color: "#9ca3af",
+                    margin: "5px 0 0 13px",
+                    fontSize: "10px",
+                    color: colors.textMuted,
                   }}
                 >
                   최근 24시간 기준
@@ -651,26 +845,35 @@ export default function CommunityPage() {
                   <div
                     key={topic.title}
                     style={{
-                      padding: "17px 20px",
+                      padding: "14px 18px",
                       borderBottom:
                         index === quickTopics.length - 1
                           ? "none"
-                          : "1px solid #f3f4f6",
+                          : `1px solid ${colors.borderSoft}`,
+                      cursor: "pointer",
+                      transition: "background 0.18s ease",
+                    }}
+                    onMouseEnter={(event) => {
+                      event.currentTarget.style.background =
+                        colors.surfaceHover;
+                    }}
+                    onMouseLeave={(event) => {
+                      event.currentTarget.style.background = colors.surface;
                     }}
                   >
                     <div
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: "10px",
+                        gap: "9px",
                       }}
                     >
                       <span
                         style={{
-                          width: "20px",
-                          fontSize: "11px",
-                          color: "#9ca3af",
-                          fontWeight: 700,
+                          width: "18px",
+                          fontSize: "9px",
+                          color: index === 0 ? PRIMARY : colors.textFaint,
+                          fontWeight: 800,
                         }}
                       >
                         {String(index + 1).padStart(2, "0")}
@@ -678,8 +881,8 @@ export default function CommunityPage() {
 
                       <strong
                         style={{
-                          fontSize: "14px",
-                          color: "#111827",
+                          fontSize: "13px",
+                          color: colors.text,
                         }}
                       >
                         {topic.title}
@@ -688,8 +891,9 @@ export default function CommunityPage() {
                       <span
                         style={{
                           marginLeft: "auto",
-                          fontSize: "11px",
-                          color: "#9ca3af",
+                          fontSize: "10px",
+                          color: PRIMARY,
+                          fontWeight: 700,
                         }}
                       >
                         {topic.count}
@@ -698,9 +902,9 @@ export default function CommunityPage() {
 
                     <p
                       style={{
-                        margin: "6px 0 0 30px",
-                        fontSize: "10px",
-                        color: "#b0b4ba",
+                        margin: "4px 0 0 27px",
+                        fontSize: "9px",
+                        color: colors.textMuted,
                       }}
                     >
                       {topic.description}
@@ -710,40 +914,73 @@ export default function CommunityPage() {
               </div>
             </section>
 
-            {/* 커뮤니티 안내 */}
+            {/* D:TECT 안내 카드 */}
             <section
               style={{
-                marginTop: "16px",
-                padding: "18px",
+                marginTop: "14px",
+                padding: "17px",
                 borderRadius: "14px",
-                background: "#f1f3f5",
-                color: "#6b7280",
-                fontSize: "11px",
-                lineHeight: 1.7,
+                background: isDark
+                  ? "linear-gradient(135deg, rgba(37,99,235,0.15), rgba(37,99,235,0.05))"
+                  : "linear-gradient(135deg, #EFF6FF, #F8FAFC)",
+                border: `1px solid ${
+                  isDark ? "rgba(59,130,246,0.18)" : "#DBEAFE"
+                }`,
+                color: colors.textSecondary,
+                fontSize: "10px",
+                lineHeight: 1.65,
+                transition: "background 0.25s ease, border-color 0.25s ease",
               }}
             >
-              <strong
+              <div
                 style={{
-                  color: "#4b5563",
-                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  marginBottom: "6px",
                 }}
               >
-                D:TECT 이모저모
-              </strong>
+                <span
+                  style={{
+                    width: "22px",
+                    height: "22px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "7px",
+                    background: PRIMARY,
+                    color: "#FFFFFF",
+                    fontSize: "10px",
+                    fontWeight: 800,
+                  }}
+                >
+                  D
+                </span>
+
+                <strong
+                  style={{
+                    color: colors.text,
+                    fontSize: "11px",
+                  }}
+                >
+                  D:TECT 이모저모
+                </strong>
+              </div>
 
               <p
                 style={{
-                  margin: "7px 0 0",
+                  margin: 0,
                 }}
               >
                 기업과 산업에 관한 다양한 소식과
                 <br />
-                이야기를 가볍게 확인해보세요.
+                이야기를 한곳에서 확인해보세요.
               </p>
             </section>
           </aside>
         </div>
       </main>
+
       <Footer />
     </div>
   );
