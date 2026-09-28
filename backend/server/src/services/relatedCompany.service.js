@@ -85,6 +85,56 @@ const COMPANY_INDUSTRY_FALLBACKS = Object.freeze({
   현대제철: "철강·소재",
 });
 
+const INDUSTRY_AFFINITY_GROUPS = Object.freeze({
+  "2차전지": ["battery"],
+  이차전지: ["battery"],
+  배터리: ["battery"],
+  전자: ["electronics"],
+  디스플레이: ["electronics"],
+  // '부품'은 전자·자동차 등 여러 산업에 공통으로 쓰여 단독 관계 근거에서 제외한다.
+  부품: [],
+  반도체: ["electronics"],
+  자동차: ["automotive"],
+  타이어: ["automotive"],
+  금융: ["finance"],
+  보험: ["finance"],
+  증권: ["finance"],
+  바이오: ["healthcare"],
+  제약: ["healthcare"],
+  식품: ["food"],
+  음료: ["food"],
+  외식: ["food"],
+  에너지: ["energy"],
+  화학: ["energy"],
+  정유: ["energy"],
+  유통: ["retail"],
+  이커머스: ["retail"],
+  콘텐츠: ["content"],
+  게임: ["content"],
+  엔터테인먼트: ["content"],
+  운송: ["transport"],
+  물류: ["transport"],
+  해운: ["transport"],
+  건설: ["construction"],
+  플랜트: ["construction"],
+  화장품: ["consumer"],
+  생활소비재: ["consumer"],
+  생활용품: ["consumer"],
+  IT: ["digital"],
+  통신: ["digital"],
+  플랫폼: ["digital"],
+  인터넷: ["digital"],
+  지주: ["holding"],
+  투자: ["holding"],
+  철강: ["materials"],
+  금속: ["materials"],
+  소재: ["materials"],
+  방산: ["industrial"],
+  기계: ["industrial"],
+  로봇: ["industrial"],
+  조선: ["shipbuilding"],
+});
+
 function getIndustryTokens(industry, companyName = "") {
   return new Set(
     String(industry || COMPANY_INDUSTRY_FALLBACKS[companyName] || "")
@@ -95,6 +145,21 @@ function getIndustryTokens(industry, companyName = "") {
         token,
         ...(INDUSTRY_TOKEN_FAMILIES[token] || []),
       ]),
+  );
+}
+
+function getIndustryAffinityGroups(industry, companyName = "") {
+  const rawTokens = String(
+    industry || COMPANY_INDUSTRY_FALLBACKS[companyName] || "",
+  )
+    .split(/[·,/&\s]+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  return new Set(
+    rawTokens.flatMap((token) =>
+      INDUSTRY_AFFINITY_GROUPS[token] || [`industry:${token}`],
+    ),
   );
 }
 
@@ -308,8 +373,8 @@ function buildLiveNewsRelationRows(articles, currentCompany, companies, now = ne
 }
 
 async function getIndustryRelations(companyId, industry, companyName) {
-  const currentIndustryTokens = getIndustryTokens(industry, companyName);
-  if (currentIndustryTokens.size === 0) return [];
+  const currentIndustryGroups = getIndustryAffinityGroups(industry, companyName);
+  if (currentIndustryGroups.size === 0) return [];
 
   const [rows] = await pool.query(
     `
@@ -343,8 +408,8 @@ async function getIndustryRelations(companyId, industry, companyName) {
   return rows
     .map((row) => {
       const matchingTokens = [
-        ...getIndustryTokens(row.industry, row.companyName),
-      ].filter((token) => currentIndustryTokens.has(token));
+        ...getIndustryAffinityGroups(row.industry, row.companyName),
+      ].filter((token) => currentIndustryGroups.has(token));
 
       return {
         companyId: Number(row.companyId),
@@ -387,7 +452,7 @@ async function getRelatedCompanies(companyId, liveArticles = []) {
   const newsRows = [...storedNewsRows, ...liveNewsRows];
   const newsRelations = rankNewsRelations(newsRows, company.companyName);
 
-  if (newsRelations.length >= ABSOLUTE_MIN_RESULTS) {
+  if (newsRelations.length >= MIN_TARGET_RESULTS) {
     return {
       mode: "news",
       companies: newsRelations,
@@ -405,7 +470,7 @@ async function getRelatedCompanies(companyId, liveArticles = []) {
     );
     const supplementalIndustryRelations = industryRelations
       .filter((relation) => !newsCompanyIds.has(relation.companyId))
-      .slice(0, ABSOLUTE_MIN_RESULTS - newsRelations.length);
+      .slice(0, MIN_TARGET_RESULTS - newsRelations.length);
 
     return {
       mode: "hybrid",

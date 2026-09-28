@@ -6,6 +6,7 @@ const {
 const { analyzeSentiments } = require("./aiClient.service");
 
 async function analyzeCompanyNews(query, page, perPage) {
+  const startedAt = performance.now();
   const {
     totalResults,
     articles,
@@ -16,7 +17,15 @@ async function analyzeCompanyNews(query, page, perPage) {
     mentionFilteredCount,
     duplicateCount,
   } = await fetchAndPrepareNews(query, page, perPage);
+  const fetchedAt = performance.now();
   const predictions = await analyzeSentiments(analysisTexts);
+  const analyzedAt = performance.now();
+  console.info("[news-analysis]", {
+    articles: articles.length,
+    newsFetchMs: Math.round(fetchedAt - startedAt),
+    sentimentMs: Math.round(analyzedAt - fetchedAt),
+    totalMs: Math.round(analyzedAt - startedAt),
+  });
   const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
 
   const analyzedNews = articles.map((article, index) => {
