@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
 import { api } from "../config/api";
@@ -40,7 +39,6 @@ const companyDomains = {
   삼성전자: "samsung.com",
   삼성중공업: "samsungcareers.com",
   삼성화재: "samsungfire.com",
-
   HD현대중공업: "hd-hhi.com",
   현대건설: "hdec.kr",
   현대글로비스: "glovis.net",
@@ -49,26 +47,20 @@ const companyDomains = {
   현대위아: "hyundai-wia.com",
   현대자동차: "hyundai.com",
   현대제철: "hyundai-steel.com",
-
   카카오: "kakao.com",
   카카오게임즈: "kakaogames.com",
-
   SK바이오팜: "skbp.com",
   고려아연: "koreazinc.co.kr",
-
   하이브: "hybecorp.com",
   "JYP Ent.": "jype.com",
   "YG PLUS": "ygplus.com",
   SM: "smentertainment.com",
-
   하이트진로: "hitejinro.com",
   NAVER: "naver.com",
   이마트: "emart.com",
-
   금호석유화학: "recruit.kkpc.com",
   금호타이어: "kumhotire.com",
   미래에셋증권: "securities.miraeasset.com",
-
   LG디스플레이: "lgdisplay.com",
   LG생활건강: "lghnh.com",
   LG에너지솔루션: "lgensol.com",
@@ -76,64 +68,48 @@ const companyDomains = {
   LG이노텍: "lginnotek.com",
   LG전자: "lge.co.kr",
   LG화학: "lgchem.com",
-
   HMM: "hmm21.com",
   HD한국조선해양: "hd-ksoe.com",
-
   한국가스공사: "kogas.or.kr",
   한국전력: "kepco.co.kr",
   한국콜마: "kolmar.co.kr",
   한국타이어앤테크놀로지: "hankooktire.com",
   코스맥스: "cosmax.com",
-
   두산에너빌리티: "doosanenerbility.com",
   두산로보틱스: "doosanrobotics.com",
   두산밥캣: "doosanbobcat.com",
-
   롯데쇼핑: "lotteshoppingir.com",
   롯데에너지머티리얼즈: "lotteenergymaterials.com",
   롯데칠성음료: "company.lottechilsung.co.kr",
   롯데케미칼: "lottechem.com",
-
   CJ대한통운: "cjlogistics.com",
   대웅제약: "daewoong.co.kr",
-
   대한항공: "koreanair.com",
   아시아나항공: "flyasiana.com",
   제주항공: "jejuair.net",
-
   OCI홀딩스: "oci-holdings.co.kr",
   POSCO홀딩스: "posco-inc.com",
-
   SK스퀘어: "sksquare.com",
   SK하이닉스: "skhynix.com",
-
   펄어비스: "pearlabyss.com",
-
   BGF리테일: "bgfretail.com",
-
   CJ제일제당: "cj.co.kr",
   GS리테일: "gsretail.com",
   CJ: "cj.net",
-
   HLB: "hlbbio.co.kr",
   HL만도: "hlmando.com",
-
   에코프로비엠: "ecoprobm.com",
   포스코퓨처엠: "poscofuturem.com",
-
   하나금융: "hanafn.com",
   하나금융지주: "hanafn.com",
   KB금융: "kbfg.com",
   메리츠금융지주: "meritzgroup.com",
   우리금융: "woorifg.com",
   우리금융지주: "woorifg.com",
-
   농심: "nongshim.com",
   오뚜기: "otoki.com",
   신세계: "shinsegae.com",
   GS건설: "gsenc.com",
-
   기아: "kia.com",
   DB하이텍: "dbhitek.com",
   유한양행: "yuhan.co.kr",
@@ -158,7 +134,6 @@ const keywordCompanies = {
     "삼성중공업",
     "삼성엔지니어링",
   ],
-
   현대: [
     "현대자동차",
     "현대모비스",
@@ -170,9 +145,7 @@ const keywordCompanies = {
     "HD현대중공업",
     "HD한국조선해양",
   ],
-
   카카오: ["카카오", "카카오게임즈"],
-
   식품: [
     "CJ제일제당",
     "농심",
@@ -185,7 +158,6 @@ const keywordCompanies = {
     "GS리테일",
     "삼양식품",
   ],
-
   IT: [
     "NAVER",
     "카카오",
@@ -198,9 +170,7 @@ const keywordCompanies = {
     "SK스퀘어",
     "두산로보틱스",
   ],
-
   반도체: ["삼성전자", "SK하이닉스", "삼성전기", "LG이노텍", "DB하이텍"],
-
   바이오: [
     "삼성바이오로직스",
     "SK바이오팜",
@@ -210,7 +180,6 @@ const keywordCompanies = {
     "코스맥스",
     "유한양행",
   ],
-
   "2차전지": [
     "삼성SDI",
     "LG에너지솔루션",
@@ -220,7 +189,6 @@ const keywordCompanies = {
     "롯데에너지머티리얼즈",
     "POSCO홀딩스",
   ],
-
   자동차: [
     "현대자동차",
     "현대모비스",
@@ -231,17 +199,11 @@ const keywordCompanies = {
     "금호타이어",
     "한국타이어앤테크놀로지",
   ],
-
   철강: ["POSCO홀딩스", "현대제철", "고려아연", "KG스틸"],
-
   조선: ["HD한국조선해양", "HD현대중공업", "삼성중공업"],
-
   해운: ["HMM", "현대글로비스"],
-
   항공: ["대한항공", "아시아나항공", "제주항공"],
-
   화학: ["LG화학", "롯데케미칼", "금호석유화학", "OCI홀딩스", "LG생활건강"],
-
   에너지: [
     "한국전력",
     "한국가스공사",
@@ -249,7 +211,6 @@ const keywordCompanies = {
     "OCI홀딩스",
     "POSCO홀딩스",
   ],
-
   금융: [
     "KB금융",
     "하나금융지주",
@@ -258,31 +219,23 @@ const keywordCompanies = {
     "미래에셋증권",
     "하나금융",
   ],
-
   건설: ["현대건설", "GS건설", "삼성엔지니어링", "두산에너빌리티"],
-
   유통: ["이마트", "신세계", "롯데쇼핑", "현대백화점", "BGF리테일", "GS리테일"],
-
   엔터: ["하이브", "JYP Ent.", "SM", "YG PLUS", "카카오"],
-
   게임: ["카카오게임즈", "펄어비스"],
 };
 
 const getCompanyLogo = (companyName) => {
   const domain = companyDomains[companyName];
-
   if (!domain) {
     return null;
   }
-
   return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=128`;
 };
 
 export default function StockSearchPage() {
   const [selectedKeyword, setSelectedKeyword] = useState("삼성");
-
   const { isWatched, toggleWatch } = useWatchlist();
-
   const companyNames = keywordCompanies[selectedKeyword] || [];
 
   /*
@@ -292,37 +245,30 @@ export default function StockSearchPage() {
    * 상세 페이지는 기존 companyId를 사용하므로
    * 클릭했을 때 백엔드에서 해당 기업의 ID만 가져옵니다.
    */
-
   const handleCompanyClick = async (companyName) => {
     try {
       const response = await api.get("/api/company/search", {
         params: { keyword: companyName },
       });
-
       const companies = response.data.data || [];
-
       const company = companies.find(
         (item) =>
           item.companyName?.trim().toLowerCase() ===
           companyName.trim().toLowerCase(),
       );
-
       if (!company?.companyId) {
         console.error("기업 정보를 찾을 수 없습니다.", {
           companyName,
           response: response.data,
           companies,
         });
-
         alert(`"${companyName}" 기업 정보를 찾을 수 없습니다.`);
         return;
       }
-
       console.log("기업 상세 페이지 이동:", {
         companyName: company.companyName,
         companyId: company.companyId,
       });
-
       window.location.assign(
         `${ROUTES.COMPANY_DETAIL}?companyId=${company.companyId}`,
       );
@@ -335,18 +281,14 @@ export default function StockSearchPage() {
   return (
     <div className="company-search-page">
       <Header />
-
       <main className="company-search-main">
         {/* 페이지 소개 */}
         <section className="company-search-intro">
           <p className="company-search-eyebrow">COMPANY INTELLIGENCE</p>
-
           <div className="company-search-logo">
             D<span>:</span>TECT
           </div>
-
           <h1>관심 있는 기업을 찾아보세요.</h1>
-
           <p>
             관심 있는 기업이나 산업 분야를 선택하면
             <br />
@@ -357,25 +299,23 @@ export default function StockSearchPage() {
         {/* 키워드 버튼 */}
         <section className="company-search-workspace">
           <p className="company-search-eyebrow">RECOMMENDED KEYWORDS</p>
-
           <div
             style={{
               display: "flex",
               flexWrap: "wrap",
-              gap: "10px",
-              marginTop: "20px",
+              gap: "8px",
+              marginTop: "16px",
             }}
           >
             {recommendedKeywords.map((keyword) => {
               const isSelected = selectedKeyword === keyword;
-
               return (
                 <button
                   key={keyword}
                   type="button"
                   onClick={() => setSelectedKeyword(keyword)}
                   style={{
-                    padding: "11px 18px",
+                    padding: "8px 14px",
                     borderRadius: "999px",
                     border: isSelected
                       ? "1px solid #111827"
@@ -383,7 +323,7 @@ export default function StockSearchPage() {
                     background: isSelected ? "#111827" : "#ffffff",
                     color: isSelected ? "#ffffff" : "#374151",
                     fontWeight: 600,
-                    fontSize: "14px",
+                    fontSize: "13px",
                     cursor: "pointer",
                     transition: "all 0.2s ease",
                   }}
@@ -402,18 +342,21 @@ export default function StockSearchPage() {
               <p>
                 <b>{selectedKeyword}</b> 관련 기업
               </p>
-
               <span>{companyNames.length}개 기업</span>
             </div>
           </div>
-
           <div className="company-result-list">
             {companyNames.map((companyName) => {
               const logoUrl = getCompanyLogo(companyName);
               const watched = isWatched(companyName);
-
               return (
-                <article className="company-result" key={companyName}>
+                <article
+                  className="company-result"
+                  key={companyName}
+                  style={{
+                    transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                  }}
+                >
                   <div
                     className="company-result-main"
                     role="button"
@@ -425,20 +368,23 @@ export default function StockSearchPage() {
                         handleCompanyClick(companyName);
                       }
                     }}
+                    style={{
+                      transition: "background 0.15s ease",
+                    }}
                   >
                     {/* 기업 로고 */}
                     <span
                       className="company-result-mark"
                       style={{
-                        width: "56px",
-                        height: "56px",
-                        minWidth: "56px",
-                        minHeight: "56px",
+                        width: "48px",
+                        height: "48px",
+                        minWidth: "48px",
+                        minHeight: "48px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         flexShrink: 0,
-                        borderRadius: "14px",
+                        borderRadius: "12px",
                         background: "#ffffff",
                         border: "1px solid #e5e7eb",
                         overflow: "hidden",
@@ -450,23 +396,20 @@ export default function StockSearchPage() {
                           src={logoUrl}
                           alt={`${companyName} 로고`}
                           style={{
-                            width: "40px",
-                            height: "40px",
+                            width: "34px",
+                            height: "34px",
                             objectFit: "contain",
                           }}
                           onError={(event) => {
                             event.currentTarget.style.display = "none";
-
                             const fallback =
                               event.currentTarget.nextElementSibling;
-
                             if (fallback) {
                               fallback.style.display = "flex";
                             }
                           }}
                         />
                       ) : null}
-
                       <span
                         style={{
                           display: logoUrl ? "none" : "flex",
@@ -474,14 +417,13 @@ export default function StockSearchPage() {
                           justifyContent: "center",
                           width: "100%",
                           height: "100%",
-                          fontSize: "17px",
+                          fontSize: "15px",
                           fontWeight: 700,
                           color: "#111827",
                         }}
                       >
                         {companyName.charAt(0)}
                       </span>
-
                       {logoUrl && (
                         <span
                           style={{
@@ -490,7 +432,7 @@ export default function StockSearchPage() {
                             justifyContent: "center",
                             width: "100%",
                             height: "100%",
-                            fontSize: "17px",
+                            fontSize: "15px",
                             fontWeight: 700,
                             color: "#111827",
                           }}
@@ -519,19 +461,25 @@ export default function StockSearchPage() {
                         border: "1px solid #e5e7eb",
                         background: watched ? "#111827" : "#ffffff",
                         color: watched ? "#ffffff" : "#6b7280",
-                        borderRadius: "10px",
-                        padding: "8px 12px",
+                        borderRadius: "8px",
+                        padding: "6px 10px",
                         fontSize: "12px",
                         fontWeight: 600,
                         cursor: "pointer",
                         whiteSpace: "nowrap",
+                        transition: "all 0.2s ease",
                       }}
                     >
                       {watched ? "관심기업" : "관심등록"}
                     </button>
 
                     {/* 이동 화살표 */}
-                    <span className="company-result-arrow">›</span>
+                    <span
+                      className="company-result-arrow"
+                      style={{ transition: "transform 0.15s ease" }}
+                    >
+                      ›
+                    </span>
                   </div>
                 </article>
               );
