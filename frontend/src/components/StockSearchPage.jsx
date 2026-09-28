@@ -140,6 +140,7 @@ const companyDomains = {
   DB하이텍: "dbhitek.com",
   유한양행: "yuhan.co.kr",
   삼양식품: "samyangfoods.com",
+  KG스틸: "kg-steel.co.kr",
 };
 
 /*
