@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Header from "./Header";
-import { useWatchlist } from "../hooks/useWatchlist";
 import AnalysisLoader from "./AnalysisLoader";
+import { useWatchlist } from "../hooks/useWatchlist";
+import { stripEvidenceMarkers } from "../utils/analysisText";
 import { api } from "../config/api";
 import { ROUTES } from "../config/routes";
+import { paginate } from "../utils/pagination";
 
 const LOGO_DEV_TOKEN =
   import.meta.env.VITE_LOGO_DEV_TOKEN || "pk_LmDNVeHjR3Sh2eSen5P1yA";
@@ -188,6 +190,95 @@ function AnalysisUnavailable({ description, label = "준비 중" }) {
       <p>{description}</p>
     </div>
   );
+}
+
+function hasPoliteAnalysisTone(text) {
+  if (typeof text !== "string" || !text.trim()) return false;
+  if (
+    /(?:하세요|하십시오|해야\s+합니다|하셔야\s+합니다|주의\s+바랍니다|착각하지)/u.test(
+      text,
+    )
+  )
+    return false;
+  return text
+    .trim()
+    .split(/(?<=[.!?。？！])\s+/u)
+    .every((sentence) => {
+      const withoutCitation = sentence.replace(
+        /\s*[[(]A\d+(?:\s*,\s*A\d+)*[\])](?=[.!?。？！…"'“”‘’」』）)]*\s*$)/u,
+        "",
+      );
+      const normalized = withoutCitation
+        .trim()
+        .replace(/[.!?。？！…"'“”‘’」』）)\]}\s]+$/u, "");
+      return normalized.endsWith("니다");
+    });
+}
+
+function getAnalysisParagraphs(text) {
+  const paragraphs = String(text || "")
+    .split(/\r?\n+/u)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (paragraphs.length > 1) return paragraphs;
+  // Older API responses contain one long paragraph; split at polite sentence endings,
+  // preserving decimal numbers, abbreviations and article references within sentences.
+  return paragraphs
+    .flatMap((part) => part.split(/(?<=니다[.!?。？！])\s*/u))
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function buildPoliteMetricSummary(assessment) {
+  const count = Number(assessment?.articleCount) || 0;
+  const negativePercent =
+    Number(assessment?.signals?.negativeArticlePercent) || 0;
+  const activeDays = Number(assessment?.signals?.negativeActiveDays) || 0;
+  const score = Number.isFinite(Number(assessment?.riskScore))
+    ? Number(assessment.riskScore)
+    : null;
+  const scoreSentence =
+    score === null
+      ? "현재는 종합 점수를 산출하지 않아 세부 지표만 안내해 드립니다."
+      : `현재 뉴스 기반 종합 점수는 ${score}점이며, 수집 기사에서 확인된 위험 신호를 기준으로 산출했습니다.`;
+  return [
+    `최근 수집된 기사 ${count.toLocaleString()}건과 지표를 기준으로 안내해 드립니다.`,
+    `관련 기사 중 부정 정서로 분류된 비율은 ${negativePercent}%이며, 최근 30일 동안 해당 기사가 확인된 날짜는 ${activeDays}일입니다.`,
+    scoreSentence,
+    "이 결과는 수집된 뉴스와 분류 결과에 한정된 참고 지표이며, 기업의 전반적인 재무 상태나 향후 주가를 단정하지 않습니다.",
+    "최근 공시와 실적도 함께 살펴보시면 더 균형 있게 판단하실 수 있습니다.",
+  ].join(" ");
+}
+
+function getRiskPresentation(assessment) {
+  if (!assessment) return { score: null, level: "unknown", label: "평가 중" };
+  if (assessment.status === "llm_unavailable") {
+    return { score: null, level: "unknown", label: "평가 대기" };
+  }
+  const score =
+    assessment.riskScore !== null &&
+    assessment.riskScore !== undefined &&
+    Number.isFinite(Number(assessment.riskScore))
+      ? Number(assessment.riskScore)
+      : null;
+  if (score === null)
+    return {
+      score: null,
+      level: assessment.riskLevel || "unknown",
+      label: assessment.riskLevelLabel || "평가 중",
+    };
+  const level =
+    score >= 75
+      ? "critical"
+      : score >= 50
+        ? "high"
+        : score >= 25
+          ? "watch"
+          : "low";
+  const label = { low: "낮음", watch: "주의", high: "높음", critical: "심각" }[
+    level
+  ];
+  return { score, level, label };
 }
 
 function formatQuoteTime(value) {
@@ -802,6 +893,7 @@ export default function CompanyAnalysisPage() {
   const [isNewsLoading, setIsNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
+  const [articlePage, setArticlePage] = useState(1);
   const newsRequestIdRef = useRef(0);
 
   // 연관기업 상태
@@ -822,6 +914,7 @@ export default function CompanyAnalysisPage() {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [isMarketIndicesLoading, setIsMarketIndicesLoading] = useState(true);
   const [marketIndicesError, setMarketIndicesError] = useState("");
+  const [riskAssessmentResult, setRiskAssessmentResult] = useState(null);
 
   // DB에서 기업 목록 가져오기
   useEffect(() => {
@@ -1030,6 +1123,50 @@ export default function CompanyAnalysisPage() {
     return () => controller.abort();
   }, [newsAnalysis, selectedCompanyId]);
 
+  useEffect(() => {
+    if (!selectedCompanyId || !newsAnalysis) return undefined;
+    const controller = new AbortController();
+
+    api
+      .post(
+        `/api/company/${selectedCompanyId}/risk-assessment`,
+        {
+          articles: (newsAnalysis.news_list || []).map((article) => ({
+            title: article.title,
+            description: article.description,
+            pub_date: article.pub_date,
+            source: article.source,
+            original_link: article.original_link,
+            sentiment: article.sentiment,
+            score: article.score,
+          })),
+        },
+        { signal: controller.signal },
+      )
+      .then((response) =>
+        setRiskAssessmentResult({
+          companyId: selectedCompanyId,
+          newsAnalysis,
+          assessment: response.data.data || null,
+          error: "",
+        }),
+      )
+      .catch((error) => {
+        if (error.code === "ERR_CANCELED") return;
+        setRiskAssessmentResult({
+          companyId: selectedCompanyId,
+          newsAnalysis,
+          assessment: null,
+          error: getApiErrorMessage(
+            error,
+            "종합 리스크 평가를 불러오지 못했습니다.",
+          ),
+        });
+      });
+
+    return () => controller.abort();
+  }, [newsAnalysis, selectedCompanyId]);
+
   // 선택된 기업의 뉴스 조회
   useEffect(() => {
     if (!selectedCompany?.name) return undefined;
@@ -1052,6 +1189,7 @@ export default function CompanyAnalysisPage() {
         const analysis = response.data;
 
         setNewsAnalysis(analysis);
+        setArticlePage(1);
         setNewsError("");
 
         // 관심기업일 때만 서버가 이력과 알림을 저장합니다.
@@ -1107,12 +1245,65 @@ export default function CompanyAnalysisPage() {
     neutral: 0,
     negative: 0,
   };
+  const sentimentEntries = [
+    {
+      key: "positive",
+      label: "긍정",
+      color: "#35C98A",
+      value: Number(sentiment.positive) || 0,
+    },
+    {
+      key: "neutral",
+      label: "중립",
+      color: "#4F8EF7",
+      value: Number(sentiment.neutral) || 0,
+    },
+    {
+      key: "negative",
+      label: "부정",
+      color: "#FF6B6B",
+      value: Number(sentiment.negative) || 0,
+    },
+  ];
+  const leadingSentiment = sentimentEntries.reduce(
+    (leading, entry) => (entry.value > leading.value ? entry : leading),
+    sentimentEntries[0],
+  );
+  const hasCurrentRiskAssessment =
+    riskAssessmentResult?.companyId === selectedCompanyId &&
+    riskAssessmentResult?.newsAnalysis === newsAnalysis;
+  const riskAssessment = hasCurrentRiskAssessment
+    ? riskAssessmentResult.assessment
+    : null;
+  const cleanedAnalysis = stripEvidenceMarkers(
+    riskAssessment?.analysisResult || "",
+  );
+  const analysisToneValid =
+    riskAssessment?.status === "ready" &&
+    hasPoliteAnalysisTone(cleanedAnalysis);
+  const analysisResultToDisplay = analysisToneValid
+    ? cleanedAnalysis
+    : buildPoliteMetricSummary(riskAssessment);
+  const riskAssessmentError = hasCurrentRiskAssessment
+    ? riskAssessmentResult.error
+    : "";
+  const isRiskAssessmentLoading = Boolean(
+    selectedCompanyId &&
+    (isNewsLoading || (newsAnalysis && !hasCurrentRiskAssessment)),
+  );
+  const riskPresentation = getRiskPresentation(riskAssessment);
   const analyzedCount = newsAnalysis?.analyzed_count ?? 0;
   const fetchedCount = newsAnalysis?.fetched_count ?? 0;
   const relevantCount = newsAnalysis?.relevant_count ?? 0;
   const targetReached = newsAnalysis?.target_reached ?? false;
-  const minimumKeywordMentions = newsAnalysis?.minimum_keyword_mentions ?? 3;
+  const minimumKeywordMentions = newsAnalysis?.minimum_keyword_mentions ?? 2;
   const articles = newsAnalysis?.news_list ?? [];
+  const articlesPerPage = 10;
+  const articlePageCount = Math.ceil(articles.length / articlesPerPage);
+  const currentArticlePage = Math.min(
+    articlePage,
+    Math.max(articlePageCount, 1),
+  );
   const analyzedAt = formatDateTime(
     newsAnalysis?.analyzed_at,
     "분석 시각 확인 중",
@@ -1121,14 +1312,18 @@ export default function CompanyAnalysisPage() {
     newsAnalysis?.latest_article_published_at,
     "최신 기사 발행 시각 확인 중",
   );
-  const visibleArticles = articles.slice(0, 10);
+  const visibleArticles = paginate(
+    articles,
+    currentArticlePage,
+    articlesPerPage,
+  );
   const realtimeAnalysisNotice = !newsAnalysis
     ? "최신 뉴스를 불러오면 기업 관련성 기준의 분석 현황이 표시됩니다."
     : relevantCount === 0
-      ? `원본 기사 ${fetchedCount.toLocaleString()}건을 확인했지만 기업명 또는 별칭이 합계 ${minimumKeywordMentions}회 이상 언급된 기사가 없습니다.`
+      ? `원본 기사 ${fetchedCount.toLocaleString()}건을 확인했지만 제목·본문 요약에서 기업명·별칭이 합산 ${minimumKeywordMentions}회 이상 언급된 기사가 없습니다.`
       : !targetReached
         ? `원본 기사 ${fetchedCount.toLocaleString()}건을 모두 확인해 관련 기사 ${relevantCount.toLocaleString()}건을 분석했습니다. 조건을 충족하는 기사가 100건보다 적을 수 있습니다.`
-        : "새로고침 또는 기업 변경 시 최신 기사 기준으로 다시 분석됩니다. 이전 분석 결과는 저장하지 않습니다.";
+        : "최신 뉴스를 확인하며, 내용이 같은 기사의 감성분석 결과는 재사용합니다.";
   if (isCompanyLoading) {
     return <div>기업 정보를 불러오는 중입니다...</div>;
   }
@@ -1261,134 +1456,383 @@ export default function CompanyAnalysisPage() {
       =================================================== */}
 
           <section
-            className="analysis-metrics-grid"
+            className="analysis-metrics-grid analysis-metrics-grid--combined"
             style={styles.threeColumnGrid}
           >
-            {/* 종합 리스크 */}
-            <div style={styles.panel}>
-              <div style={styles.panelHeader}>
-                <h3>종합 리스크 점수</h3>
-                <span>분석 모델 준비 중</span>
-              </div>
-              <AnalysisUnavailable description="뉴스 감성, 이슈 유형, 언급량을 결합한 리스크 점수를 준비하고 있습니다." />
-            </div>
-
-            {/* 감성 분석 */}
-            <div style={styles.panel}>
-              <div style={styles.panelHeader}>
-                <div style={styles.panelTitleWithInfo}>
-                  <h3>감성 분석 요약</h3>
-                  <div className="sentiment-info-trigger">
-                    <button
-                      aria-describedby="sentiment-news-tooltip"
-                      aria-label="최신 뉴스 감성 현황 보기"
-                      className="sentiment-info-button"
-                      type="button"
-                    >
-                      ?
-                    </button>
+            <div className="risk-sentiment-combined-card">
+              {/* 종합 리스크 */}
+              <div className="overall-risk-assessment">
+                <div style={styles.panelHeader}>
+                  <h3>종합 리스크 점수</h3>
+                  <span>
+                    {riskAssessment?.status === "llm_unavailable"
+                      ? "뉴스 지표"
+                      : riskAssessment?.status === "ready"
+                        ? "뉴스·정량 지표 통합 평가"
+                        : "근거 기반 평가"}
+                  </span>
+                </div>
+                {isRiskAssessmentLoading ? (
+                  <div className="risk-assessment-loading">
+                    <AnalysisUnavailable
+                      label="분석 중"
+                      description="최근 기사와 위험 지표를 살펴보고 있습니다. 잠시만 기다려 주세요."
+                    />
+                  </div>
+                ) : ["ready", "llm_unavailable", "insufficient_data"].includes(
+                    riskAssessment?.status,
+                  ) ? (
+                  <div className="risk-assessment-content">
                     <div
-                      className="sentiment-info-tooltip"
-                      id="sentiment-news-tooltip"
-                      role="tooltip"
+                      className={`risk-score-summary risk-level-${riskPresentation.level}`}
                     >
-                      <strong style={styles.tooltipTitle}>
-                        최신 뉴스 감성 현황
-                      </strong>
-                      <div style={styles.liveNewsDetails}>
-                        <div style={styles.liveNewsDetailRow}>
-                          <span style={styles.liveNewsDetailLabel}>
-                            분석 기준
-                          </span>
-                          <strong>
-                            기업명·별칭 합계 {minimumKeywordMentions}회 이상
-                            언급된 최신 뉴스 최대 100건
-                          </strong>
+                      <div className="risk-score-primary">
+                        <span className="risk-score-caption">
+                          종합 지표 점수
+                        </span>
+                        <div className="risk-score-number">
+                          <strong>{riskPresentation.score ?? "—"}</strong>
+                          <span>/100</span>
                         </div>
-                        <div style={styles.liveNewsDetailRow}>
-                          <span style={styles.liveNewsDetailLabel}>
-                            수집 현황
-                          </span>
-                          <strong>
-                            원본 {fetchedCount.toLocaleString()}건 확인 · 관련
-                            기사 {relevantCount.toLocaleString()}건
-                          </strong>
+                      </div>
+                      <div className="risk-score-status">
+                        <span className="risk-score-status-caption">
+                          현재 위험 수준
+                        </span>
+                        <span className="risk-level-pill">
+                          <i />
+                          {riskPresentation.label}
+                        </span>
+                      </div>
+                    </div>
+                    <section
+                      className={`risk-final-evaluation ${riskAssessment.status === "ready" ? "is-ready" : "is-pending"}`}
+                    >
+                      <div className="risk-final-evaluation-header">
+                        <span
+                          className="risk-final-evaluation-icon"
+                          aria-hidden="true"
+                        >
+                          ✦
+                        </span>
+                        <strong>분석 결과</strong>
+                        <span className="risk-final-evaluation-state">
+                          {riskAssessment.status === "ready"
+                            ? analysisToneValid &&
+                              riskAssessment.analysisMode !== "metric_fallback"
+                              ? "분석 완료"
+                              : "뉴스 지표 요약"
+                            : riskAssessment.status === "insufficient_data"
+                              ? "자료 부족"
+                              : "평가 대기"}
+                        </span>
+                      </div>
+                      {riskAssessment.status === "ready" ? (
+                        <div className="risk-analysis-narrative">
+                          {getAnalysisParagraphs(analysisResultToDisplay).map(
+                            (paragraph, index) => (
+                              <p key={index}>{paragraph}</p>
+                            ),
+                          )}
                         </div>
-                        <div style={styles.liveNewsDetailRow}>
-                          <span style={styles.liveNewsDetailLabel}>
-                            분석 시각
-                          </span>
-                          <strong>{analyzedAt}</strong>
-                        </div>
-                        <div style={styles.liveNewsDetailRow}>
-                          <span style={styles.liveNewsDetailLabel}>
-                            가장 최신 기사
-                          </span>
-                          <strong>{latestArticlePublishedAt}</strong>
-                        </div>
-                        <p style={styles.tooltipNotice}>
-                          {realtimeAnalysisNotice}
+                      ) : (
+                        <p>
+                          {riskAssessment.status === "insufficient_data"
+                            ? riskAssessment.evaluationMessage
+                            : "최근 뉴스와 지표가 준비되면 이슈 및 긍정·부정 전망을 함께 표시합니다."}
                         </p>
+                      )}
+                    </section>
+                    <div className="risk-signal-heading">
+                      <strong>산출 지표</strong>
+                      <span>각 항목의 강도 · 100점 기준</span>
+                    </div>
+                    <div className="risk-signal-list">
+                      {[
+                        [
+                          "이슈 영향도",
+                          riskAssessment.impactScore,
+                          "기사에서 확인된 이슈가 회사 사업에 미칠 수 있는 영향의 크기입니다. 긍정·부정 방향과는 별도로 평가합니다.",
+                        ],
+                        [
+                          "이슈 보도 확산도",
+                          riskAssessment.signals?.scores
+                            ?.negativeNewsAcceleration,
+                          "관련 보도량과 보도처가 이전 기간보다 늘어난 정도를 살피고, 관련 기사 중 부정으로 분류된 비중을 반영합니다.",
+                        ],
+                        [
+                          "보도 지속도",
+                          riskAssessment.signals?.scores?.negativePersistence,
+                          "부정으로 분류된 관련 기사가 나온 날짜 수를 기준으로 산출합니다. 여러 날에 걸쳐 보도될수록 점수가 높아집니다.",
+                        ],
+                        [
+                          "기사 정서 지표",
+                          riskAssessment.signals?.scores?.negativeSentiment,
+                          "부정으로 분류된 기사 비율과 감성 분류 신뢰도, 분석 기사 수를 함께 반영합니다. 기사 수가 적으면 표본 영향을 낮춰 계산합니다.",
+                        ],
+                      ].map(([label, score, explanation], index) => (
+                        <div className="risk-signal-row" key={label}>
+                          <div className="risk-signal-row-top">
+                            <span className="risk-signal-label">
+                              {label}
+                              <span className="risk-signal-info-trigger">
+                                <button
+                                  aria-describedby={`risk-signal-tooltip-${index}`}
+                                  aria-label={`${label} 점수 설명`}
+                                  className="risk-signal-info-button"
+                                  type="button"
+                                >
+                                  ?
+                                </button>
+                                <span
+                                  className="risk-signal-info-tooltip"
+                                  id={`risk-signal-tooltip-${index}`}
+                                  role="tooltip"
+                                >
+                                  <strong>{label}</strong>
+                                  <span>{explanation}</span>
+                                </span>
+                              </span>
+                            </span>
+                            <div className="risk-signal-value">
+                              <b>{score == null ? "—" : score}</b>
+                              <small>
+                                {score == null
+                                  ? label === "이슈 영향도"
+                                    ? "분석 대기"
+                                    : "자료 없음"
+                                  : "/100"}
+                              </small>
+                            </div>
+                          </div>
+                          <div
+                            aria-label={`${label}: ${score == null ? "자료 없음" : `${score}점 / 100점`}`}
+                            className={`risk-signal-track${score == null ? " is-empty" : ""}`}
+                            role="img"
+                          >
+                            {score != null && (
+                              <i
+                                style={{
+                                  width: `${Math.max(0, Math.min(100, Number(score) || 0))}%`,
+                                }}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {riskAssessment.keyDrivers?.length > 0 && (
+                      <div className="risk-driver-list">
+                        {riskAssessment.keyDrivers.map((driver, index) => (
+                          <div
+                            className="risk-driver"
+                            key={`${driver.factor}-${index}`}
+                          >
+                            <strong>{driver.factor}</strong>
+                            <div>
+                              <span>{driver.explanation}</span>
+                              {driver.evidenceIds?.length > 0 && (
+                                <div className="risk-driver-evidence">
+                                  {riskAssessment.evidence
+                                    ?.filter((item) =>
+                                      driver.evidenceIds.includes(item.id),
+                                    )
+                                    .map((item) => (
+                                      <a
+                                        href={item.url}
+                                        key={item.id}
+                                        rel="noreferrer"
+                                        target="_blank"
+                                      >
+                                        {item.press ? `${item.press} · ` : ""}
+                                        {item.title}
+                                      </a>
+                                    ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {(riskAssessment.dataLimitations?.length > 0 ||
+                      riskAssessment.watchItems?.length > 0) && (
+                      <details className="risk-assessment-details">
+                        <summary>관찰 항목 및 데이터 한계</summary>
+                        {[
+                          ...(riskAssessment.watchItems || []),
+                          ...(riskAssessment.dataLimitations || []),
+                        ].map((item, index) => (
+                          <p key={`${index}-${item}`}>{item}</p>
+                        ))}
+                      </details>
+                    )}
+                    <div className="risk-assessment-meta">
+                      기사 {riskAssessment.articleCount}건 · 신뢰도{" "}
+                      {{ low: "낮음", medium: "보통", high: "높음" }[
+                        riskAssessment.confidence
+                      ] || "낮음"}
+                      {riskAssessment.status === "ready" &&
+                        Number.isFinite(
+                          Number(riskAssessment.scoreCoverage),
+                        ) && (
+                          <span>
+                            {" "}
+                            · 산출 범위{" "}
+                            {Math.round(riskAssessment.scoreCoverage * 100)}%
+                          </span>
+                        )}
+                      {riskAssessment.evidence?.length > 0 && (
+                        <span>
+                          {" "}
+                          · 근거 기사 {riskAssessment.evidence.length}건
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <AnalysisUnavailable
+                    label={riskAssessmentError ? "연결 오류" : "평가 불가"}
+                    description={
+                      riskAssessmentError ||
+                      riskAssessment?.evaluationMessage ||
+                      "평가 결과를 불러오지 못했습니다."
+                    }
+                  />
+                )}
+              </div>
+
+              {/* 감성 분석 */}
+              <div className="sentiment-summary-pane">
+                <div style={styles.panelHeader}>
+                  <div style={styles.panelTitleWithInfo}>
+                    <h3>감성 분석 요약</h3>
+                    <div className="sentiment-info-trigger">
+                      <button
+                        aria-describedby="sentiment-news-tooltip"
+                        aria-label="최신 뉴스 감성 현황 보기"
+                        className="sentiment-info-button"
+                        type="button"
+                      >
+                        ?
+                      </button>
+                      <div
+                        className="sentiment-info-tooltip"
+                        id="sentiment-news-tooltip"
+                        role="tooltip"
+                      >
+                        <strong style={styles.tooltipTitle}>
+                          최신 뉴스 감성 현황
+                        </strong>
+                        <div style={styles.liveNewsDetails}>
+                          <div style={styles.liveNewsDetailRow}>
+                            <span style={styles.liveNewsDetailLabel}>
+                              분석 기준
+                            </span>
+                            <strong>
+                              제목·본문 요약에서 기업명·별칭을 합산해{" "}
+                              {minimumKeywordMentions}회 이상 언급한 최신 뉴스
+                              최대 100건
+                            </strong>
+                          </div>
+                          <div style={styles.liveNewsDetailRow}>
+                            <span style={styles.liveNewsDetailLabel}>
+                              수집 현황
+                            </span>
+                            <strong>
+                              원본 {fetchedCount.toLocaleString()}건 확인 · 관련
+                              기사 {relevantCount.toLocaleString()}건
+                            </strong>
+                          </div>
+                          <div style={styles.liveNewsDetailRow}>
+                            <span style={styles.liveNewsDetailLabel}>
+                              분석 시각
+                            </span>
+                            <strong>{analyzedAt}</strong>
+                          </div>
+                          <div style={styles.liveNewsDetailRow}>
+                            <span style={styles.liveNewsDetailLabel}>
+                              가장 최신 기사
+                            </span>
+                            <strong>{latestArticlePublishedAt}</strong>
+                          </div>
+                          <p style={styles.tooltipNotice}>
+                            {realtimeAnalysisNotice}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <span>전체 {analyzedCount.toLocaleString()}건</span>
-              </div>
-
-              <div style={styles.sentimentContent}>
-                <div
-                  style={{
-                    ...styles.donut,
-                    background: `conic-gradient(
-                   #35C98A 0 ${sentiment.positive}%,
-                   #4F8EF7 ${sentiment.positive}% ${
-                     sentiment.positive + sentiment.neutral
-                   }%,
-                   #FF6B6B ${sentiment.positive + sentiment.neutral}% 100%
-                )`,
-                  }}
-                >
-                  <div style={styles.donutInner}>
-                    <span>전체</span>
-                    <strong>{analyzedCount.toLocaleString()}건</strong>
-                  </div>
+                  <span>전체 {analyzedCount.toLocaleString()}건</span>
                 </div>
 
-                <div style={styles.sentimentLegend}>
-                  <div>
-                    <span
-                      style={{
-                        ...styles.legendDot,
-                        background: "#35C98A",
-                      }}
-                    />
-                    <span>긍정</span>
-                    <strong>{sentiment.positive}%</strong>
+                {!newsAnalysis ? (
+                  <AnalysisUnavailable
+                    label={isNewsLoading ? "분석 중" : "조회 오류"}
+                    description={
+                      isNewsLoading
+                        ? "최신 뉴스의 감성을 분석하고 있습니다. 기업 정보와 주가는 먼저 확인하실 수 있습니다."
+                        : newsError || "뉴스를 다시 불러와 주세요."
+                    }
+                  />
+                ) : (
+                  <div className="sentiment-breakdown">
+                    <div className="sentiment-breakdown-summary">
+                      <span className="sentiment-breakdown-kicker">
+                        기사 감성 분포
+                      </span>
+                      <strong>
+                        {analyzedCount > 0
+                          ? `${leadingSentiment.label} 기사 비중이 가장 높습니다`
+                          : "분석된 기사가 없습니다"}
+                      </strong>
+                    </div>
+                    <div
+                      aria-label={`긍정 ${sentiment.positive}%, 중립 ${sentiment.neutral}%, 부정 ${sentiment.negative}%`}
+                      className="sentiment-composition-bar"
+                      role="img"
+                    >
+                      {sentimentEntries.map((entry) => (
+                        <span
+                          key={entry.key}
+                          style={{
+                            backgroundColor: entry.color,
+                            width: `${Math.max(0, entry.value)}%`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div className="sentiment-breakdown-cards">
+                      {sentimentEntries.map((entry) => (
+                        <div
+                          className={`sentiment-breakdown-card sentiment-${entry.key}`}
+                          key={entry.key}
+                        >
+                          <span className="sentiment-breakdown-label">
+                            <i aria-hidden="true" />
+                            {entry.label}
+                          </span>
+                          <strong>
+                            {entry.value}
+                            <small>%</small>
+                          </strong>
+                          <span
+                            className="sentiment-breakdown-track"
+                            aria-hidden="true"
+                          >
+                            <i
+                              style={{ width: `${Math.max(0, entry.value)}%` }}
+                            />
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="sentiment-breakdown-note">
+                      기업명·별칭 언급 기준을 통과한 최신 기사{" "}
+                      {analyzedCount.toLocaleString()}건을 분류했습니다.
+                    </p>
                   </div>
-
-                  <div>
-                    <span
-                      style={{
-                        ...styles.legendDot,
-                        background: "#4F8EF7",
-                      }}
-                    />
-                    <span>중립</span>
-                    <strong>{sentiment.neutral}%</strong>
-                  </div>
-
-                  <div>
-                    <span
-                      style={{
-                        ...styles.legendDot,
-                        background: "#FF6B6B",
-                      }}
-                    />
-                    <span>부정</span>
-                    <strong>{sentiment.negative}%</strong>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </section>
@@ -1406,23 +1850,19 @@ export default function CompanyAnalysisPage() {
               <div style={styles.panelHeader}>
                 <h3>관련 기사</h3>
                 <div style={styles.articleHeaderActions}>
-                  <span>최신 10건</span>
-                  <button
-                    disabled={isNewsLoading}
-                    onClick={retryNewsAnalysis}
-                    style={{
-                      ...styles.articleRefreshButton,
-                      ...(isNewsLoading
-                        ? styles.articleRefreshButtonDisabled
-                        : {}),
-                    }}
-                    type="button"
-                  >
-                    {isNewsLoading ? "분석 중" : "새로고침"}
-                  </button>
+                  <span>
+                    전체 {articles.length.toLocaleString()}건 ·{" "}
+                    {currentArticlePage}/{Math.max(articlePageCount, 1)}페이지
+                  </span>
                 </div>
               </div>
 
+              {isNewsLoading && (
+                <p role="status">
+                  최신 뉴스와 감성분석 결과를 불러오고 있습니다.
+                </p>
+              )}
+              {newsError && <p role="alert">{newsError}</p>}
               <div className="analysis-article-grid" style={styles.articleList}>
                 {visibleArticles.map((article, index) => {
                   const source = getArticleSource(article);
@@ -1480,11 +1920,58 @@ export default function CompanyAnalysisPage() {
                   newsAnalysis &&
                   articles.length === 0 && (
                     <p style={styles.articleEmpty}>
-                      기업명 또는 별칭이 합계 {minimumKeywordMentions}회 이상
-                      언급된 최신 기사가 없습니다.
+                      제목·본문 요약에서 기업명 또는 별칭이 합산{" "}
+                      {minimumKeywordMentions}회 이상 언급된 최신 기사가
+                      없습니다.
                     </p>
                   )}
               </div>
+              {articlePageCount > 1 && (
+                <nav
+                  aria-label="관련 기사 페이지"
+                  className="article-pagination"
+                >
+                  <button
+                    aria-label="이전 기사 페이지"
+                    disabled={currentArticlePage === 1}
+                    onClick={() =>
+                      setArticlePage((page) => Math.max(1, page - 1))
+                    }
+                    type="button"
+                  >
+                    이전
+                  </button>
+                  {Array.from(
+                    { length: articlePageCount },
+                    (_, index) => index + 1,
+                  ).map((page) => (
+                    <button
+                      aria-current={
+                        page === currentArticlePage ? "page" : undefined
+                      }
+                      aria-label={`${page}페이지 기사`}
+                      className={page === currentArticlePage ? "is-active" : ""}
+                      key={page}
+                      onClick={() => setArticlePage(page)}
+                      type="button"
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    aria-label="다음 기사 페이지"
+                    disabled={currentArticlePage === articlePageCount}
+                    onClick={() =>
+                      setArticlePage((page) =>
+                        Math.min(articlePageCount, page + 1),
+                      )
+                    }
+                    type="button"
+                  >
+                    다음
+                  </button>
+                </nav>
+              )}
             </div>
 
             {/* 주요 이슈 타임라인 */}
@@ -1811,23 +2298,6 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "9px",
-  },
-
-  articleRefreshButton: {
-    padding: "4px 8px",
-    border: "1px solid #C9DCEF",
-    borderRadius: "5px",
-    background: "#FFFFFF",
-    color: "#2473BE",
-    fontSize: "10px",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-
-  articleRefreshButtonDisabled: {
-    color: "#91A1B3",
-    cursor: "not-allowed",
-    opacity: 0.7,
   },
 
   panelHeaderTitle: {

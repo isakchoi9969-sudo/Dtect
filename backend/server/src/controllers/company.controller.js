@@ -1,4 +1,5 @@
 const { pool } = require("../db/pool");
+const { assessCompanyRisk } = require("../services/companyRiskAssessment.service");
 
 const { calculateSearchScore } = require("../services/companySearch.service");
 const {
@@ -160,6 +161,26 @@ async function getCompanyRelations(req, res) {
       success: false,
       message: "연관기업을 불러오지 못했습니다.",
     });
+  }
+}
+
+/** POST /api/company/:companyId/risk-assessment */
+async function getCompanyRiskAssessment(req, res) {
+  const companyId = Number(req.params.companyId);
+  if (!Number.isInteger(companyId) || companyId < 1) {
+    return res.status(400).json({ success: false, message: "올바른 기업 ID가 필요합니다." });
+  }
+  try {
+    const result = await assessCompanyRisk({
+      companyId,
+      articles: req.body?.articles,
+    });
+    if (!result) return res.status(404).json({ success: false, message: "기업을 찾을 수 없습니다." });
+    res.set("Cache-Control", "no-store");
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    console.error("종합 리스크 평가 실패:", error.message);
+    return res.status(500).json({ success: false, message: "종합 리스크를 평가하지 못했습니다." });
   }
 }
 
@@ -434,6 +455,7 @@ function getMajorIssueAlerts(req, res) {
 
 module.exports = {
   getCompanyQuote,
+  getCompanyRiskAssessment,
   getCompanyQuoteHistory,
   getCompanyRelations,
   getCompanies,

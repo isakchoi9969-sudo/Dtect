@@ -15,7 +15,7 @@ const companyDomains = {
   삼성엔지니어링: "samsungena.com",
   삼성전기: "samsungsem.com",
   삼성전자: "samsung.com",
-  삼성중공업: "samsungcareers.com",
+  삼성중공업: "samsungshi.com",
   삼성화재: "samsungfire.com",
   HD현대중공업: "hd-hhi.com",
   현대건설: "hdec.kr",
@@ -25,6 +25,19 @@ const companyDomains = {
   현대위아: "hyundai-wia.com",
   현대자동차: "hyundai.com",
   현대제철: "hyundai-steel.com",
+  DL이앤씨: "dlenc.co.kr",
+  GS: "gs.co.kr",
+  GS건설: "gsenc.com",
+  KB금융: "kbfg.com",
+  KT: "kt.com",
+  "KT&G": "ktng.com",
+  "LS ELECTRIC": "ls-electric.com",
+  "S-OIL": "s-oil.com",
+  SKC: "skc.kr",
+  SK온: "sk-on.com",
+  SK이노베이션: "skinnovation.com",
+  SK텔레콤: "sktelecom.com",
+  SPC: "spc.co.kr",
   카카오: "kakao.com",
   카카오게임즈: "kakaogames.com",
   SK바이오팜: "skbp.com",
@@ -36,17 +49,18 @@ const companyDomains = {
   하이트진로: "hitejinro.com",
   NAVER: "naver.com",
   이마트: "emart.com",
-  금호석유화학: "recruit.kkpc.com",
+  금호석유화학: "kkpc.com",
   금호타이어: "kumhotire.com",
+  기아: "kia.com",
   미래에셋증권: "securities.miraeasset.com",
   LG디스플레이: "lgdisplay.com",
   LG생활건강: "lghnh.com",
   LG에너지솔루션: "lgensol.com",
-  LG유플러스: "uplusumobile.com",
+  LG유플러스: "lguplus.com",
   LG이노텍: "lginnotek.com",
   LG전자: "lge.co.kr",
   LG화학: "lgchem.com",
-  HMM: "www.hmm21.com",
+  HMM: "hmm21.com",
   HD한국조선해양: "hd-ksoe.com",
   한국가스공사: "kogas.or.kr",
   한국전력: "kepco.co.kr",
@@ -58,7 +72,7 @@ const companyDomains = {
   두산밥캣: "doosanbobcat.com",
   롯데쇼핑: "lotteshoppingir.com",
   롯데에너지머티리얼즈: "lotteenergymaterials.com",
-  롯데칠성음료: "company.lottechilsung.co.kr",
+  롯데칠성음료: "lottechilsung.co.kr",
   롯데케미칼: "lottechem.com",
   CJ대한통운: "cjlogistics.com",
   대웅제약: "daewoong.co.kr",
@@ -71,29 +85,33 @@ const companyDomains = {
   SK하이닉스: "skhynix.com",
   펄어비스: "pearlabyss.com",
   BGF리테일: "bgfretail.com",
-  CJ제일제당: "www.cj.co.kr",
+  CJ제일제당: "cj.co.kr",
   GS리테일: "gsretail.com",
   CJ: "cj.net",
   HLB: "hlbbio.co.kr",
   HL만도: "hlmando.com",
-  에코프로비엠: "ecoprobm.com",
-  포스코퓨처엠: "poscofuturem.com",
-  하나금융: "hanafn.com",
-  하나금융지주: "hanafn.com",
-  KB금융: "kbfg.com",
-  메리츠금융지주: "meritzgroup.com",
-  우리금융: "woorifg.com",
-  우리금융지주: "www.woorifg.com",
+  넷마블: "netmarble.com",
   농심: "nongshim.com",
-  오뚜기: "otoki.com",
-  신세계: "shinsegae.com",
-  GS건설: "gsenc.com",
-  기아: "kia.com",
-  DB하이텍: "dbhitek.com",
-  유한양행: "yuhan.co.kr",
+  메리츠금융지주: "meritzgroup.com",
   삼양식품: "samyangfoods.com",
-  KG스틸: "kg-steel.co.kr",
-  호텔신라: "hotelshilla.net",
+  셀트리온: "celltrion.com",
+  신세계: "shinsegae.com",
+  신한지주: "shinhangroup.com",
+  아모레퍼시픽: "amorepacific.com",
+  에코프로: "ecopro.co.kr",
+  에코프로비엠: "ecoprobm.co.kr",
+  엔씨소프트: "ncsoft.com",
+  엘앤에프: "landf.co.kr",
+  오뚜기: "ottogi.co.kr",
+  오리온: "orionworld.com",
+  우리금융: "woorifg.com",
+  우리금융지주: "woorifg.com",
+  유한양행: "yuhan.co.kr",
+  종근당: "ckdhc.com",
+  쿠팡: "coupang.com",
+  크래프톤: "krafton.com",
+  포스코퓨처엠: "poscofuturem.com",
+  하나금융지주: "hanafn.com",
   한미약품: "hanmi.co.kr",
   한진칼: "hanjinkal.co.kr",
   한화솔루션: "hanwhasolutions.com",
@@ -104,6 +122,30 @@ const companyDomains = {
   아모레퍼시픽: "amorepacific.com",
   넷마블: "netmarble.com",
 };
+
+function CompanySearchLogo({ companyName }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const domain = companyDomains[companyName];
+
+  if (!domain || imageFailed) {
+    return <span aria-label={`${companyName} 글자 로고`}>{companyName.slice(0, 2)}</span>;
+  }
+
+  return (
+    <img
+      alt={`${companyName} 로고`}
+      onError={() => setImageFailed(true)}
+      src={`https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=128&format=png`}
+      style={{
+        width: "34px",
+        height: "34px",
+        objectFit: "contain",
+        objectPosition: "center",
+        display: "block",
+      }}
+    />
+  );
+}
 
 export default function CompanySearchPage() {
   const [query, setQuery] = useState("");
@@ -310,25 +352,7 @@ export default function CompanySearchPage() {
                             boxSizing: "border-box",
                           }}
                         >
-                          {companyDomains[company.companyName] ? (
-                            <img
-                              src={`https://img.logo.dev/${companyDomains[company.companyName]}?token=${LOGO_DEV_TOKEN}&size=128&format=png`}
-                              alt={`${company.companyName} 로고`}
-                              style={{
-                                width: "34px",
-                                height: "34px",
-                                maxWidth: "34px",
-                                maxHeight: "34px",
-                                objectFit: "contain",
-                                objectPosition: "center",
-                                display: "block",
-                                margin: 0,
-                                padding: 0,
-                              }}
-                            />
-                          ) : (
-                            company.companyName.slice(0, 2)
-                          )}
+                          <CompanySearchLogo companyName={company.companyName} />
                         </span>
 
                         <span className="company-result-copy">

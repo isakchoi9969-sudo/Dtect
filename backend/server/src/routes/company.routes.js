@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   getCompanyQuote,
+  getCompanyRiskAssessment,
   getCompanyQuoteHistory,
   getCompanyRelations,
   getCompanies,
@@ -29,6 +30,7 @@ router.post(
   saveCompanyAnalysisSnapshot,
 );
 router.get("/:companyId/quote", getCompanyQuote);
+router.post("/:companyId/risk-assessment", getCompanyRiskAssessment);
 router.get("/:companyId/quote-history", getCompanyQuoteHistory);
 router.get("/:companyId/related", getCompanyRelations);
 router.post("/:companyId/related", getCompanyRelations);
