@@ -292,6 +292,9 @@ function ResponseToolsPage({ mode }) {
   const [generateError, setGenerateError] = useState("");
   const [draft, setDraft] = useState(null);
 
+  // 참고 기사 목록을 처음에는 접어 둠
+  const [isReferenceArticlesOpen, setIsReferenceArticlesOpen] = useState(false);
+
   // 산업을 선택하면 실제 DB 기반 감지 이슈를 불러옵니다.
   useEffect(() => {
     if (activeMode === "simulator") return undefined;
@@ -342,6 +345,8 @@ function ResponseToolsPage({ mode }) {
     setIsGenerating(true);
     setGenerateError("");
     setDraft(null);
+    // 새 초안을 생성할 때는 기사 목록을 다시 접은 상태로 시작
+    setIsReferenceArticlesOpen(false);
 
     try {
       const response = await api.post("/api/response-drafts", {
@@ -688,6 +693,57 @@ function ResponseToolsPage({ mode }) {
                     return <p key={index}>{text}</p>;
                   })}
                 </div>
+
+                {/* 참고 기사가 있을 때만 버튼 표시 */}
+                {draft.referenceArticles?.length > 0 && (
+                  <section className="reference-articles">
+                    <button
+                      type="button"
+                      className="reference-toggle-button"
+                      onClick={() =>
+                        setIsReferenceArticlesOpen((prev) => !prev)
+                      }
+                      aria-expanded={isReferenceArticlesOpen}
+                    >
+                      {/* 닫힌 상태: 참고 기사 3건 보기 / 열린 상태: 참고 기사 접기 */}
+                      참고 기사{" "}
+                      {isReferenceArticlesOpen
+                        ? "접기"
+                        : `${draft.referenceArticles.length}건 보기`}
+                      <span>{isReferenceArticlesOpen ? "⌃" : "⌄"}</span>
+                    </button>
+
+                    {/* 버튼을 눌렀을 때만 실제 기사 목록 표시 */}
+                    {isReferenceArticlesOpen && (
+                      <ul className="reference-article-list">
+                        {draft.referenceArticles.map((article, index) => (
+                          <li key={`${article.url || article.title}-${index}`}>
+                            <div>
+                              <strong>
+                                {article.title || "제목 정보 없음"}
+                              </strong>
+                              <span>
+                                {article.source || "출처 미상"} ·{" "}
+                                {formatDate(article.publishedAt)}
+                              </span>
+                            </div>
+
+                            {/* 기사 링크가 있는 경우에만 표시 */}
+                            {article.url && (
+                              <a
+                                href={article.url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                기사 보기
+                              </a>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                )}
               </div>
             )}
           </section>
