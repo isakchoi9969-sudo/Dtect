@@ -15,6 +15,7 @@
   COMPANY_SEARCH: "/company-analysis/search",
   STOCK_SEARCH: "/stock-search",
   COMUNITY: "/comunity",
+  COMMUNITY_STOCK: "/comunity/stock",
   LOGIN: "/login",
   SIGNUP: "/signup",
 };
