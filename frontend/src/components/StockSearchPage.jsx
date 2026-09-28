@@ -1,6 +1,8 @@
 import { useState } from "react";
+
 import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
+import { api } from "../config/api";
 import Header from "./Header";
 
 const recommendedKeywords = [
@@ -65,7 +67,6 @@ const companyDomains = {
 
   금호석유화학: "recruit.kkpc.com",
   금호타이어: "kumhotire.com",
-
   미래에셋증권: "securities.miraeasset.com",
 
   LG디스플레이: "lgdisplay.com",
@@ -83,7 +84,6 @@ const companyDomains = {
   한국전력: "kepco.co.kr",
   한국콜마: "kolmar.co.kr",
   한국타이어앤테크놀로지: "hankooktire.com",
-
   코스맥스: "cosmax.com",
 
   두산에너빌리티: "doosanenerbility.com",
@@ -124,18 +124,16 @@ const companyDomains = {
 
   하나금융: "hanafn.com",
   하나금융지주: "hanafn.com",
-
   KB금융: "kbfg.com",
   메리츠금융지주: "meritzgroup.com",
-
   우리금융: "woorifg.com",
   우리금융지주: "woorifg.com",
 
   농심: "nongshim.com",
   오뚜기: "otoki.com",
   신세계: "shinsegae.com",
-
   GS건설: "gsenc.com",
+
   기아: "kia.com",
   DB하이텍: "dbhitek.com",
   유한양행: "yuhan.co.kr",
@@ -147,7 +145,6 @@ const companyDomains = {
  * 키워드별 기업 분류
  *
  * 같은 기업이 여러 분야에 들어갈 수 있습니다.
- * 예: 삼성SDI → 삼성 + 2차전지
  */
 const keywordCompanies = {
   삼성: [
@@ -198,6 +195,8 @@ const keywordCompanies = {
     "LG유플러스",
     "LG이노텍",
     "LG디스플레이",
+    "SK스퀘어",
+    "두산로보틱스",
   ],
 
   반도체: ["삼성전자", "SK하이닉스", "삼성전기", "LG이노텍", "DB하이텍"],
@@ -229,19 +228,15 @@ const keywordCompanies = {
     "기아",
     "HL만도",
     "현대글로비스",
+    "금호타이어",
+    "한국타이어앤테크놀로지",
   ],
 
   철강: ["POSCO홀딩스", "현대제철", "고려아연", "KG스틸"],
 
-  조선: [
-    "HD한국조선해양",
-    "HD현대중공업",
-    "삼성중공업",
-    "한화오션",
-    "HD현대미포",
-  ],
+  조선: ["HD한국조선해양", "HD현대중공업", "삼성중공업"],
 
-  해운: ["HMM", "현대글로비스", "대한해운", "팬오션"],
+  해운: ["HMM", "현대글로비스"],
 
   항공: ["대한항공", "아시아나항공", "제주항공"],
 
@@ -270,7 +265,7 @@ const keywordCompanies = {
 
   엔터: ["하이브", "JYP Ent.", "SM", "YG PLUS", "카카오"],
 
-  게임: ["카카오게임즈", "펄어비스", "하이브"],
+  게임: ["카카오게임즈", "펄어비스"],
 };
 
 const getCompanyLogo = (companyName) => {
@@ -290,33 +285,49 @@ export default function StockSearchPage() {
 
   const companyNames = keywordCompanies[selectedKeyword] || [];
 
+  /*
+   * 기업명 → 실제 companyId 찾기
+   *
+   * StockSearchPage의 기업 목록은 프론트에서 관리하지만
+   * 상세 페이지는 기존 companyId를 사용하므로
+   * 클릭했을 때 백엔드에서 해당 기업의 ID만 가져옵니다.
+   */
+
   const handleCompanyClick = async (companyName) => {
     try {
-      // 기업명으로 실제 companyId 조회
       const response = await api.get("/api/company/search", {
-        params: {
-          keyword: companyName,
-        },
+        params: { keyword: companyName },
       });
 
-      const companies = response.data?.companies || response.data || [];
+      const companies = response.data.data || [];
 
-      // 검색 결과 중 기업명이 정확히 일치하는 기업 찾기
       const company = companies.find(
-        (item) => item.companyName === companyName,
+        (item) =>
+          item.companyName?.trim().toLowerCase() ===
+          companyName.trim().toLowerCase(),
       );
 
       if (!company?.companyId) {
+        console.error("기업 정보를 찾을 수 없습니다.", {
+          companyName,
+          response: response.data,
+          companies,
+        });
+
         alert(`"${companyName}" 기업 정보를 찾을 수 없습니다.`);
         return;
       }
 
-      // 실제 companyId를 가지고 상세 페이지로 이동
-      window.location.href = `${ROUTES.COMPANY_DETAIL}?companyId=${encodeURIComponent(
-        company.companyId,
-      )}`;
+      console.log("기업 상세 페이지 이동:", {
+        companyName: company.companyName,
+        companyId: company.companyId,
+      });
+
+      window.location.assign(
+        `${ROUTES.COMPANY_DETAIL}?companyId=${company.companyId}`,
+      );
     } catch (error) {
-      console.error("기업 정보 조회 실패:", error);
+      console.error("기업 검색 실패:", error);
       alert("기업 정보를 불러오지 못했습니다.");
     }
   };
@@ -326,9 +337,7 @@ export default function StockSearchPage() {
       <Header />
 
       <main className="company-search-main">
-        {/* =========================
-            페이지 소개
-        ========================== */}
+        {/* 페이지 소개 */}
         <section className="company-search-intro">
           <p className="company-search-eyebrow">COMPANY INTELLIGENCE</p>
 
@@ -345,9 +354,7 @@ export default function StockSearchPage() {
           </p>
         </section>
 
-        {/* =========================
-            키워드 버튼
-        ========================== */}
+        {/* 키워드 버튼 */}
         <section className="company-search-workspace">
           <p className="company-search-eyebrow">RECOMMENDED KEYWORDS</p>
 
@@ -388,9 +395,7 @@ export default function StockSearchPage() {
           </div>
         </section>
 
-        {/* =========================
-            기업 결과
-        ========================== */}
+        {/* 기업 결과 */}
         <section className="company-search-results">
           <div className="company-search-results-heading">
             <div>
@@ -405,7 +410,6 @@ export default function StockSearchPage() {
           <div className="company-result-list">
             {companyNames.map((companyName) => {
               const logoUrl = getCompanyLogo(companyName);
-
               const watched = isWatched(companyName);
 
               return (
@@ -418,14 +422,11 @@ export default function StockSearchPage() {
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
-
                         handleCompanyClick(companyName);
                       }
                     }}
                   >
-                    {/* =====================
-                        기업 로고
-                    ====================== */}
+                    {/* 기업 로고 */}
                     <span
                       className="company-result-mark"
                       style={{
@@ -466,7 +467,6 @@ export default function StockSearchPage() {
                         />
                       ) : null}
 
-                      {/* 로고가 없을 경우 첫 글자 */}
                       <span
                         style={{
                           display: logoUrl ? "none" : "flex",
@@ -482,7 +482,6 @@ export default function StockSearchPage() {
                         {companyName.charAt(0)}
                       </span>
 
-                      {/* 로고 로딩 실패 시 */}
                       {logoUrl && (
                         <span
                           style={{
@@ -501,23 +500,17 @@ export default function StockSearchPage() {
                       )}
                     </span>
 
-                    {/* =====================
-                        기업명
-                    ====================== */}
+                    {/* 기업명 */}
                     <span className="company-result-copy">
                       <strong>{companyName}</strong>
-
                       <em>기업 정보 및 주요 이슈</em>
                     </span>
 
-                    {/* =====================
-                        관심기업
-                    ====================== */}
+                    {/* 관심기업 */}
                     <button
                       type="button"
                       onClick={(event) => {
                         event.stopPropagation();
-
                         toggleWatch(companyName);
                       }}
                       style={{
@@ -537,9 +530,7 @@ export default function StockSearchPage() {
                       {watched ? "관심기업" : "관심등록"}
                     </button>
 
-                    {/* =====================
-                        이동 화살표
-                    ====================== */}
+                    {/* 이동 화살표 */}
                     <span className="company-result-arrow">›</span>
                   </div>
                 </article>
