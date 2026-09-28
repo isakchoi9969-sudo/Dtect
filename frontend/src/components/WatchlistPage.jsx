@@ -41,7 +41,25 @@ export default function WatchlistPage() {
         ) : companies.length > 0 ? (
           <div className="watchlist-grid">
             {companies.map((company) => (
-              <article className="watchlist-card" key={company.companyId}>
+              <article
+                className="watchlist-card"
+                key={company.companyId}
+                style={{
+                  transition:
+                    "transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-3px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 10px 24px rgba(0,0,0,0.07)";
+                  e.currentTarget.style.borderColor = "#d1d5db";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.borderColor = "";
+                }}
+              >
                 <button
                   className="watchlist-card-main"
                   onClick={() => openAnalysis(company)}
@@ -64,6 +82,9 @@ export default function WatchlistPage() {
                   {company.riskLevel && (
                     <span
                       className={`watchlist-risk risk-${company.riskLevel}`}
+                      style={{
+                        transition: "transform 0.2s ease",
+                      }}
                     >
                       <small>현재 위험도</small>
                       <b>{company.riskLevel}</b>
@@ -77,6 +98,15 @@ export default function WatchlistPage() {
                   className="watchlist-remove"
                   onClick={() => toggleCompany(company.companyId)}
                   type="button"
+                  style={{
+                    transition: "transform 0.18s ease, color 0.18s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "scale(1.18)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
                 >
                   ★
                 </button>
@@ -84,11 +114,38 @@ export default function WatchlistPage() {
             ))}
           </div>
         ) : (
-          <div className="watchlist-empty">
-            <span>☆</span>
+          <div
+            className="watchlist-empty"
+            style={{
+              transition: "transform 0.25s ease",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-block",
+                transition: "transform 0.3s ease",
+              }}
+            >
+              ☆
+            </span>
             <h2>등록한 관심기업이 없습니다.</h2>
             <p>기업 검색에서 별표를 눌러 관심기업을 추가해 보세요.</p>
-            <a href={ROUTES.COMPANY_SEARCH}>기업 검색하기</a>
+            <a
+              href={ROUTES.COMPANY_SEARCH}
+              style={{
+                transition: "transform 0.2s ease, opacity 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.opacity = "0.9";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.opacity = "1";
+              }}
+            >
+              기업 검색하기
+            </a>
           </div>
         )}
       </section>
