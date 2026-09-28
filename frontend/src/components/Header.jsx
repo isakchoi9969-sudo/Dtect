@@ -88,6 +88,13 @@ function Header() {
     if (item.href === ROUTES.ALERTS && childIndex === 1)
       return ROUTES.MAJOR_ISSUE_ALERT;
 
+    // 커뮤니티
+    if (item.href === ROUTES.COMUNITY && childIndex === 0)
+      return ROUTES.COMUNITY;
+
+    if (item.href === ROUTES.COMUNITY && childIndex === 1)
+      return ROUTES.COMMUNITY_STOCK;
+
     return item.href;
   };
 
