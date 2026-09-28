@@ -17,6 +17,8 @@ import CompanyAnalysisPage from "./components/CompanyAnalysisPage";
 import RiskAlert from "./components/RiskAlert";
 import MajorIssueAlert from "./components/MajorIssueAlert";
 import StockSearchPage from "./components/StockSearchPage";
+import CommunityPage from "./components/CommunityPage";
+import CommunityStockPage from "./components/CommunityStockPage";
 import { WatchlistDashboard, RiskDashboard } from "./components/DashboardPages";
 import { ROUTES } from "./config/routes";
 import { api } from "./config/api";
@@ -87,6 +89,14 @@ function App() {
 
   if (pathname === ROUTES.COMPANY_DETAIL) {
     return <CompanyAnalysisPage />;
+  }
+
+  if (pathname === ROUTES.COMUNITY) {
+    return <CommunityPage />;
+  }
+
+  if (pathname === ROUTES.COMMUNITY_STOCK) {
+    return <CommunityStockPage />;
   }
 
   if (pathname === ROUTES.CASE_SIMULATOR) {

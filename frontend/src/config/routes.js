@@ -14,6 +14,7 @@
   MAJOR_ISSUE_ALERT: "/alerts/major-issue",
   COMPANY_SEARCH: "/company-analysis/search",
   STOCK_SEARCH: "/stock-search",
+  COMUNITY: "/comunity",
   LOGIN: "/login",
   SIGNUP: "/signup",
 };
