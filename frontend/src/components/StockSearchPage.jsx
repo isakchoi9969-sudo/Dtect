@@ -239,8 +239,13 @@ export default function StockSearchPage() {
       const prefersDark = window.matchMedia(
         "(prefers-color-scheme: dark)",
       ).matches;
+
       const hasDarkClass = document.documentElement.classList.contains("dark");
-      setIsDark(prefersDark || hasDarkClass);
+
+      const hasDarkDataTheme =
+        document.documentElement.getAttribute("data-theme") === "dark";
+
+      setIsDark(prefersDark || hasDarkClass || hasDarkDataTheme);
     };
 
     checkDark();
@@ -252,7 +257,7 @@ export default function StockSearchPage() {
     const observer = new MutationObserver(checkDark);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["class"],
+      attributeFilter: ["class", "data-theme"],
     });
 
     return () => {
