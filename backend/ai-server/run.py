@@ -3,8 +3,8 @@ import os
 import uvicorn
 
 if __name__ == "__main__":
-    # Node 서버가 3000번을 쓰므로 겹치지 않게 6000번을 기본값으로 사용
-    port = int(os.getenv("PORT", "6000"))
+    # Node 서버가 3000번을 쓰므로 겹치지 않게 8000번을 기본값으로 사용
+    port = int(os.getenv("PORT", "8000"))
     reload_enabled = os.getenv("AI_RELOAD", "false").lower() in {
         "1",
         "true",
