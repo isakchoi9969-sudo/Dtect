@@ -4,12 +4,19 @@
 import pandas as pd
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+from typing import List
 
 # 현재 넣으신 모델 파일의 실제 함수명은 create_drafts 입니다.
 from app.dtect_response_generator import create_drafts
 
 router = APIRouter(prefix="/api/ai", tags=["response-draft"])
 
+# 참고 기사 1건의 데이터 형식
+class ReferenceArticle(BaseModel):
+    title: str = ""
+    source: str = "출처 미상"
+    publishedAt: str = ""
+    url: str = ""
 
 class ResponseDraftRequest(BaseModel):
     # 프론트에서 선택한 문서 유형
@@ -22,6 +29,9 @@ class ResponseDraftRequest(BaseModel):
     # 현재 화면에는 없어도 비워 둔 채 전송 가능합니다.
     company: str = ""
     industry: str = ""
+
+    # Node 서버에서 전달받은 실제 참고 기사
+    reference_articles: List[ReferenceArticle] = Field(default_factory=list)
 
 
 @router.post("/response-draft")
@@ -60,6 +70,12 @@ def create_response_draft(payload: ResponseDraftRequest):
                 "draftResponse": draft["draft_response"],
                 "riskType": draft["risk_type"],
                 "generationStatus": draft["generation_status"],
+
+                # 초안 생성 근거 기사
+                "referenceArticles": [
+                    article.model_dump()
+                    for article in payload.reference_articles[:3]
+                ],
             },
         }
 
