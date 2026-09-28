@@ -9,7 +9,7 @@ const NEWS_PAGE_SIZE = 100;
 const MAX_NEWS_PAGES = 10;
 const MAX_RAW_NEWS = NEWS_PAGE_SIZE * MAX_NEWS_PAGES;
 const TARGET_RELEVANT_NEWS = 100;
-const MIN_COMPANY_MENTIONS = 3;
+const MIN_COMPANY_MENTIONS = 2;
 
 class NewsServiceError extends Error {}
 
@@ -65,6 +65,17 @@ function hasAsciiWordBoundary(text, startIndex, term) {
   return !/[a-z0-9]/i.test(previousCharacter) && !/[a-z0-9]/i.test(nextCharacter);
 }
 
+const BLOCKED_COMPANY_TERM_SUFFIXES = Object.freeze({
+  // 삼성화재의 언론 별칭이지만 별도 상장사인 삼화콘덴서와는 구분한다.
+  삼화: ["콘덴서"],
+});
+
+function hasBlockedCompanyTermSuffix(text, startIndex, term) {
+  const suffixes = BLOCKED_COMPANY_TERM_SUFFIXES[term] || [];
+  const followingText = text.slice(startIndex + term.length);
+  return suffixes.some((suffix) => followingText.startsWith(suffix));
+}
+
 /**
  * 정식 회사명과 별칭의 등장 횟수를 합산한다.
  * 긴 표기를 먼저 확인해 `삼성바이오로직스` 한 번을 `삼성바이오`까지
@@ -82,7 +93,8 @@ function countCompanyMentions(text, companyName) {
     const matchedTerm = searchTerms.find(
       (term) =>
         normalizedText.startsWith(term, currentIndex) &&
-        hasAsciiWordBoundary(normalizedText, currentIndex, term),
+        hasAsciiWordBoundary(normalizedText, currentIndex, term) &&
+        !hasBlockedCompanyTermSuffix(normalizedText, currentIndex, term),
     );
 
     if (matchedTerm) {

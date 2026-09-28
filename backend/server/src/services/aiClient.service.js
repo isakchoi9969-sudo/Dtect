@@ -121,6 +121,21 @@ async function generateResponseDraft(payload) {
   return response.data;
 }
 
+/** FastAPI AI 서버에 기사 근거 기반 종합 리스크 판단을 요청한다. */
+async function generateRiskAssessment(payload) {
+  try {
+    const response = await axios.post(
+      `${aiServerUrl}/api/ai/risk-assessment`,
+      payload,
+      { timeout: 90000 },
+    );
+    return response.data;
+  } catch (error) {
+    const detail = error.response?.data?.detail;
+    throw new Error(`LLM 리스크 평가 처리 오류: ${detail || error.message}`, { cause: error });
+  }
+}
+
 module.exports = {
   analyzeSentiments,
   mergeSimilarNewsMatches,
@@ -129,4 +144,5 @@ module.exports = {
   getNewsEmbeddings,
   getIssueEmbedding,
   generateResponseDraft, // 대응자료 생성 함수 내보내기
+  generateRiskAssessment,
 };
