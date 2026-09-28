@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+// import axios from "axios";
+import { api } from "../config/api";
 import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
 import Header from "./Header";
@@ -30,14 +31,9 @@ export default function MajorIssueAlert() {
     setLoading(true);
     setNotice("");
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/company/major-issue",
-        {
-          params: {
-            hours: 24,
-          },
-        },
-      );
+      const response = await api.get("/api/company/major-issue", {
+        params: { hours: 24 },
+      });
       setAlerts(response.data.data || []);
     } catch (error) {
       console.error("주요 이슈 발생 알림 조회 실패:", error);
@@ -53,10 +49,9 @@ export default function MajorIssueAlert() {
 
     const loadInitialAlerts = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3000/api/company/major-issue",
-          { params: { hours: 24 } },
-        );
+        const response = await api.get("/api/company/major-issue", {
+          params: { hours: 24 },
+        });
         if (isActive) setAlerts(response.data.data || []);
       } catch (error) {
         console.error("주요 이슈 발생 알림 조회 실패:", error);
@@ -193,21 +188,20 @@ export default function MajorIssueAlert() {
                       </span>
                       <span className="company-result-copy">
                         <strong>{item.companyName}</strong>
-                        <em
-                          className={`risk-badge ${severityClass(item.severity)}`}
-                        >
-                          {item.severity}
-                          {item.issueCategory && <> · {item.issueCategory}</>}
-                        </em>
+                        <em className="risk-badge danger">주요 이슈 발생</em>
+
                         <span className="risk-meta">
-                          {item.issueTitle && (
+                          위험 신호 비율{" "}
+                          {Number(item.currentRate || 0).toFixed(1)}%
+                          <br />
+                          감지 시각 {formatTime(item.detectedAt)}
+                          {item.previousRate != null && (
                             <>
-                              {item.issueTitle}
                               <br />
+                              직전 분석 {Number(item.previousRate).toFixed(1)}%
+                              → 현재 {Number(item.currentRate).toFixed(1)}%
                             </>
                           )}
-                          감지 시각 {formatTime(item.detectedAt)}
-                          {item.source && ` · ${item.source}`}
                         </span>
                       </span>
                       <span className="company-result-arrow">›</span>

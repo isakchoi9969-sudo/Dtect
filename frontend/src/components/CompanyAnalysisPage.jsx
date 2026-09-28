@@ -214,7 +214,9 @@ function getMarketClock(timeZone) {
     timeZone,
     weekday: "short",
   }).formatToParts(new Date());
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const values = Object.fromEntries(
+    parts.map((part) => [part.type, part.value]),
+  );
 
   return {
     isWeekday: !["Sat", "Sun"].includes(values.weekday),
@@ -300,13 +302,14 @@ function StockQuote({ error, loading, quote }) {
   const sign = change > 0 ? "+" : "";
   const directionMark = change > 0 ? "▲" : change < 0 ? "▼" : "-";
   const marketSession = getMarketSession(quote.marketStatus, "KR");
-  const status = marketSession.state === "open"
-    ? "정규장 · 15초 갱신"
-    : marketSession.label.includes("개장 전")
-      ? "정규장 개장 전"
-      : marketSession.label.includes("장 마감")
-        ? "정규장 마감"
-        : "정규장 휴장";
+  const status =
+    marketSession.state === "open"
+      ? "정규장 · 15초 갱신"
+      : marketSession.label.includes("개장 전")
+        ? "정규장 개장 전"
+        : marketSession.label.includes("장 마감")
+          ? "정규장 마감"
+          : "정규장 휴장";
 
   return (
     <div
@@ -351,7 +354,9 @@ function StockQuote({ error, loading, quote }) {
       <div className="company-stock-change">
         <span>
           <i aria-hidden="true">{directionMark}</i>
-          {change === 0 ? "변동 없음" : `${sign}${change.toLocaleString("ko-KR")}원`}
+          {change === 0
+            ? "변동 없음"
+            : `${sign}${change.toLocaleString("ko-KR")}원`}
         </span>
         <span>
           {change === 0 ? "0.00%" : `${sign}${changeRate.toFixed(2)}%`}
@@ -374,7 +379,8 @@ function buildSparkline(history, width = 184, height = 64) {
   const range = maximum - minimum || 1;
   const line = values.map((value, index) => {
     const x = padding + (index / (values.length - 1)) * (width - padding * 2);
-    const y = height - padding - ((value - minimum) / range) * (height - padding * 2);
+    const y =
+      height - padding - ((value - minimum) / range) * (height - padding * 2);
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   });
 
@@ -397,24 +403,27 @@ function StockPriceChart({
   const sparkline = buildSparkline(chartPoints, 218, 70);
   const firstValue = Number(chartPoints[0]?.value);
   const lastValue = Number(chartPoints[chartPoints.length - 1]?.value);
-  const changeRate = Number.isFinite(firstValue) && firstValue !== 0 &&
+  const changeRate =
+    Number.isFinite(firstValue) &&
+    firstValue !== 0 &&
     Number.isFinite(lastValue)
-    ? ((lastValue - firstValue) / firstValue) * 100
-    : null;
-  const directionValue = period === "1d" && Number.isFinite(Number(quoteChange))
-    ? Number(quoteChange)
-    : changeRate;
-  const direction = directionValue > 0
-    ? "up"
-    : directionValue < 0
-      ? "down"
-      : "flat";
+      ? ((lastValue - firstValue) / firstValue) * 100
+      : null;
+  const directionValue =
+    period === "1d" && Number.isFinite(Number(quoteChange))
+      ? Number(quoteChange)
+      : changeRate;
+  const direction =
+    directionValue > 0 ? "up" : directionValue < 0 ? "down" : "flat";
 
   return (
     <div className={`company-stock-chart company-stock-chart--${direction}`}>
       <div className="company-stock-chart-header">
         <span>주가 추이</span>
-        <div className="company-stock-chart-periods" aria-label="주가 그래프 기간">
+        <div
+          className="company-stock-chart-periods"
+          aria-label="주가 그래프 기간"
+        >
           {[
             ["1d", "1일"],
             ["7d", "7일"],
@@ -439,8 +448,14 @@ function StockPriceChart({
             role="img"
             viewBox="0 0 218 70"
           >
-            <polygon className="company-stock-chart-area" points={sparkline.area} />
-            <polyline className="company-stock-chart-line" points={sparkline.line} />
+            <polygon
+              className="company-stock-chart-area"
+              points={sparkline.area}
+            />
+            <polyline
+              className="company-stock-chart-line"
+              points={sparkline.line}
+            />
             <circle
               className="company-stock-chart-point"
               cx={sparkline.end[0]}
@@ -449,7 +464,13 @@ function StockPriceChart({
             />
           </svg>
         ) : (
-          <span>{loading ? "그래프 조회 중" : error ? "그래프 조회 불가" : "데이터 없음"}</span>
+          <span>
+            {loading
+              ? "그래프 조회 중"
+              : error
+                ? "그래프 조회 불가"
+                : "데이터 없음"}
+          </span>
         )}
       </div>
     </div>
@@ -475,46 +496,53 @@ function MarketIndexSidebar({ error, exchangeRate, indices, loading }) {
         <div className="market-index-list" aria-live="polite">
           {["KOSPI", "KOSDAQ", "NASDAQ", "SP500"].map((code) => {
             const marketIndex = indexMap.get(code);
-            const marketSession = loading || !marketIndex
-              ? {
-                  country: ["NASDAQ", "SP500"].includes(code) ? "US" : "KR",
-                  label: "확인 중",
-                  state: "loading",
-                }
-              : getMarketSession(
-                  marketIndex.marketStatus,
-                  ["NASDAQ", "SP500"].includes(code) ? "US" : "KR",
-                );
+            const marketSession =
+              loading || !marketIndex
+                ? {
+                    country: ["NASDAQ", "SP500"].includes(code) ? "US" : "KR",
+                    label: "확인 중",
+                    state: "loading",
+                  }
+                : getMarketSession(
+                    marketIndex.marketStatus,
+                    ["NASDAQ", "SP500"].includes(code) ? "US" : "KR",
+                  );
             const dailyChange = Number(marketIndex?.change) || 0;
             const changeRate = Number(marketIndex?.changeRate) || 0;
-            const direction = dailyChange > 0
-              ? "up"
-              : dailyChange < 0
-                ? "down"
-                : "flat";
+            const direction =
+              dailyChange > 0 ? "up" : dailyChange < 0 ? "down" : "flat";
             const sign = dailyChange > 0 ? "+" : "";
-            const directionMark = dailyChange > 0 ? "▲" : dailyChange < 0 ? "▼" : "-";
+            const directionMark =
+              dailyChange > 0 ? "▲" : dailyChange < 0 ? "▼" : "-";
             const history = marketIndex?.history || [];
             const sparkline = buildSparkline(history);
             const firstValue = Number(history[0]?.value);
             const lastValue = Number(history[history.length - 1]?.value);
-            const periodRate = Number.isFinite(firstValue) && firstValue !== 0 &&
+            const periodRate =
+              Number.isFinite(firstValue) &&
+              firstValue !== 0 &&
               Number.isFinite(lastValue)
-              ? ((lastValue - firstValue) / firstValue) * 100
-              : null;
+                ? ((lastValue - firstValue) / firstValue) * 100
+                : null;
 
             return (
               <article
                 className={`market-index-card market-index-card--${direction} market-index-card--${code.toLowerCase()}`}
                 key={code}
-                title={marketIndex
-                  ? `네이버 금융 시세 · ${formatQuoteTime(marketIndex.tradedAt)} 기준`
-                  : undefined}
+                title={
+                  marketIndex
+                    ? `네이버 금융 시세 · ${formatQuoteTime(marketIndex.tradedAt)} 기준`
+                    : undefined
+                }
               >
                 <div className="market-index-card-heading">
-                  <strong>{marketIndex?.name || (code === "SP500" ? "S&P 500" : code)}</strong>
+                  <strong>
+                    {marketIndex?.name || (code === "SP500" ? "S&P 500" : code)}
+                  </strong>
                   <div className="market-index-card-meta">
-                    <span className={`market-session-badge market-session-badge--${marketSession.state}`}>
+                    <span
+                      className={`market-session-badge market-session-badge--${marketSession.state}`}
+                    >
                       <span className="market-session-flag" aria-hidden="true">
                         <img
                           alt=""
@@ -552,8 +580,14 @@ function MarketIndexSidebar({ error, exchangeRate, indices, loading }) {
                       role="img"
                       viewBox="0 0 184 64"
                     >
-                      <polygon className="market-index-chart-area" points={sparkline.area} />
-                      <polyline className="market-index-chart-line" points={sparkline.line} />
+                      <polygon
+                        className="market-index-chart-area"
+                        points={sparkline.area}
+                      />
+                      <polyline
+                        className="market-index-chart-line"
+                        points={sparkline.line}
+                      />
                       <circle
                         className="market-index-chart-point"
                         cx={sparkline.end[0]}
@@ -562,13 +596,21 @@ function MarketIndexSidebar({ error, exchangeRate, indices, loading }) {
                       />
                     </svg>
                   ) : (
-                    <span>{loading ? "그래프를 불러오는 중입니다." : "그래프 데이터 없음"}</span>
+                    <span>
+                      {loading
+                        ? "그래프를 불러오는 중입니다."
+                        : "그래프 데이터 없음"}
+                    </span>
                   )}
                 </div>
 
                 <div className="market-index-period">
                   <span>최근 3개월</span>
-                  <strong className={periodRate > 0 ? "up" : periodRate < 0 ? "down" : "flat"}>
+                  <strong
+                    className={
+                      periodRate > 0 ? "up" : periodRate < 0 ? "down" : "flat"
+                    }
+                  >
                     {periodRate === null
                       ? "—"
                       : `${periodRate > 0 ? "+" : ""}${periodRate.toFixed(2)}%`}
@@ -619,7 +661,13 @@ function ExchangeRateCard({ error, loading, rate }) {
   );
 }
 
-function RelatedCompanySidebar({ companies, companyName, error, loading, mode }) {
+function RelatedCompanySidebar({
+  companies,
+  companyName,
+  error,
+  loading,
+  mode,
+}) {
   const openCompany = (companyId) => {
     window.location.assign(`${ROUTES.COMPANY_DETAIL}?companyId=${companyId}`);
   };
@@ -648,7 +696,8 @@ function RelatedCompanySidebar({ companies, companyName, error, loading, mode })
                 >
                   <strong>연관기업 표출 기준</strong>
                   <p className="related-company-tooltip-context">
-                    {companyName} 기준 · {mode === "news"
+                    {companyName} 기준 ·{" "}
+                    {mode === "news"
                       ? "뉴스 기반"
                       : mode === "hybrid"
                         ? "뉴스·동일 업종 혼합"
@@ -656,11 +705,17 @@ function RelatedCompanySidebar({ companies, companyName, error, loading, mode })
                   </p>
                   <ul>
                     <li>최근 90일 기사에서 함께 언급된 기업을 분석합니다.</li>
-                    <li>기본 기준은 서로 다른 기사 3건, 언론사 2곳 이상입니다.</li>
-                    <li>제목 동시 언급과 최신 기사에 더 높은 점수를 부여합니다.</li>
+                    <li>
+                      기본 기준은 서로 다른 기사 3건, 언론사 2곳 이상입니다.
+                    </li>
+                    <li>
+                      제목 동시 언급과 최신 기사에 더 높은 점수를 부여합니다.
+                    </li>
                     <li>결과가 부족하면 뉴스 기준을 단계적으로 완화합니다.</li>
                     <li>최소 2개가 안 되면 동일 업종 기업으로 보완합니다.</li>
-                    <li>현재 조회 중인 기업은 제외하며 최대 5개를 표시합니다.</li>
+                    <li>
+                      현재 조회 중인 기업은 제외하며 최대 5개를 표시합니다.
+                    </li>
                   </ul>
                   {companies.length > 0 && (
                     <div className="related-company-tooltip-results">
@@ -994,8 +1049,25 @@ export default function CompanyAnalysisPage() {
       .then((response) => {
         if (newsRequestIdRef.current !== requestId) return;
 
-        setNewsAnalysis(response.data);
+        const analysis = response.data;
+
+        setNewsAnalysis(analysis);
         setNewsError("");
+
+        // 관심기업일 때만 서버가 이력과 알림을 저장합니다.
+        // 로그인하지 않은 경우는 화면 오류로 표시하지 않습니다.
+        void api
+          .post(`/api/company/${selectedCompanyId}/analysis-snapshots`, {
+            // 모델 내부 결과값을 위험 신호 비율로 전달
+            riskSignalRate: analysis.sentiment_percentages?.negative ?? 0,
+            analyzedCount: analysis.analyzed_count ?? 0,
+            analyzedAt: analysis.analyzed_at,
+          })
+          .catch((saveError) => {
+            if (saveError.response?.status !== 401) {
+              console.error("분석 이력 저장 실패:", saveError);
+            }
+          });
       })
       .catch((error) => {
         if (
@@ -1129,16 +1201,20 @@ export default function CompanyAnalysisPage() {
                 <span style={styles.ticker}>({selectedCompany.ticker})</span>
 
                 <button
-                  aria-label={isWatched(selectedCompany.id)
-                    ? `${selectedCompany.name} 관심기업 해제`
-                    : `${selectedCompany.name} 관심기업 등록`}
+                  aria-label={
+                    isWatched(selectedCompany.id)
+                      ? `${selectedCompany.name} 관심기업 해제`
+                      : `${selectedCompany.name} 관심기업 등록`
+                  }
                   className={`company-watch-star${
                     isWatched(selectedCompany.id) ? " active" : ""
                   }`}
                   onClick={() => toggleCompany(selectedCompany.id)}
-                  title={isWatched(selectedCompany.id)
-                    ? "관심기업 해제"
-                    : "관심기업 등록"}
+                  title={
+                    isWatched(selectedCompany.id)
+                      ? "관심기업 해제"
+                      : "관심기업 등록"
+                  }
                   type="button"
                 >
                   {isWatched(selectedCompany.id) ? "★" : "☆"}
@@ -1178,7 +1254,6 @@ export default function CompanyAnalysisPage() {
                 />
               </div>
             )}
-
           </section>
 
           {/* ===================================================

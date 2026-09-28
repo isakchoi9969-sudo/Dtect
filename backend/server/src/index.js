@@ -11,6 +11,10 @@ const healthRoutes = require("./routes/health.routes");
 const simulatorRoutes = require("./routes/simulator.routes");
 const responseDraftRoutes = require("./routes/responseDraft.routes");
 
+const {
+  startWatchlistAnalysisScheduler,
+} = require("./services/watchlistAnalysis.scheduler");
+
 const app = express();
 
 // 프론트엔드에서 오는 요청만 허용 (쿠키/인증 헤더를 주고받으려면 origin을 정확히 명시)
@@ -39,6 +43,8 @@ app.use("/api/response-drafts", responseDraftRoutes);
 
 const server = app.listen(port, () => {
   console.log(`서버가 http://localhost:${port} 에서 실행 중입니다.`);
+  // 관심기업 뉴스 분석을 매시간 정각에 자동 실행합니다.
+  startWatchlistAnalysisScheduler();
 });
 
 let isShuttingDown = false;
