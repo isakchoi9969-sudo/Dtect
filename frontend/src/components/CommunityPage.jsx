@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import Header from "./Header";
+import Footer from "./Footer";
 
 const topics = [
   "전체",
@@ -743,6 +744,7 @@ export default function CommunityPage() {
           </aside>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

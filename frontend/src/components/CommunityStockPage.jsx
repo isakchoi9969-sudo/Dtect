@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import Header from "./Header";
+import Footer from "./Footer";
 
 const samplePosts = [
   {
@@ -553,6 +554,7 @@ export default function CommunityStockPage() {
           본인의 책임이며 게시글의 내용은 D:TECT의 공식 의견이 아닙니다.
         </section>
       </main>
+      <Footer />
     </div>
   );
 }
