@@ -181,6 +181,7 @@ const keywordCompanies = {
     "이마트",
     "BGF리테일",
     "GS리테일",
+    "삼양식품",
   ],
 
   IT: [
@@ -203,6 +204,7 @@ const keywordCompanies = {
     "대웅제약",
     "한국콜마",
     "코스맥스",
+    "유한양행",
   ],
 
   "2차전지": [
