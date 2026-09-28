@@ -290,17 +290,35 @@ export default function StockSearchPage() {
 
   const companyNames = keywordCompanies[selectedKeyword] || [];
 
-  const handleCompanyClick = (companyName) => {
-    /*
-     * 현재 StockSearchPage에는 companyId가 없기 때문에
-     * 기존 상세 페이지로 이동할 수 있는 ID가 없습니다.
-     *
-     * 일단 기업명을 URL에 전달합니다.
-     * 백엔드 상세 검색 구조에 맞춰 나중에 companyId로 변경할 수 있습니다.
-     */
-    window.location.href = `${ROUTES.COMPANY_DETAIL}?companyName=${encodeURIComponent(
-      companyName,
-    )}`;
+  const handleCompanyClick = async (companyName) => {
+    try {
+      // 기업명으로 실제 companyId 조회
+      const response = await api.get("/api/company/search", {
+        params: {
+          keyword: companyName,
+        },
+      });
+
+      const companies = response.data?.companies || response.data || [];
+
+      // 검색 결과 중 기업명이 정확히 일치하는 기업 찾기
+      const company = companies.find(
+        (item) => item.companyName === companyName,
+      );
+
+      if (!company?.companyId) {
+        alert(`"${companyName}" 기업 정보를 찾을 수 없습니다.`);
+        return;
+      }
+
+      // 실제 companyId를 가지고 상세 페이지로 이동
+      window.location.href = `${ROUTES.COMPANY_DETAIL}?companyId=${encodeURIComponent(
+        company.companyId,
+      )}`;
+    } catch (error) {
+      console.error("기업 정보 조회 실패:", error);
+      alert("기업 정보를 불러오지 못했습니다.");
+    }
   };
 
   return (
