@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
 import { api } from "../config/api";
@@ -231,6 +231,36 @@ export default function StockSearchPage() {
   const { isWatched, toggleWatch } = useWatchlist();
   const companyNames = keywordCompanies[selectedKeyword] || [];
 
+  // 다크모드 감지 (prefers-color-scheme + html.dark 클래스 모두 지원)
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkDark = () => {
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
+      const hasDarkClass = document.documentElement.classList.contains("dark");
+      setIsDark(prefersDark || hasDarkClass);
+    };
+
+    checkDark();
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    media.addEventListener("change", checkDark);
+
+    // class 변경도 감지 (next-themes 등 토글용)
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => {
+      media.removeEventListener("change", checkDark);
+      observer.disconnect();
+    };
+  }, []);
+
   const handleCompanyClick = async (companyName) => {
     try {
       const response = await api.get("/api/company/search", {
@@ -254,6 +284,29 @@ export default function StockSearchPage() {
       alert("기업 정보를 불러오지 못했습니다.");
     }
   };
+
+  // 다크모드 전용 색상 팔레트 (이미지와 유사하게)
+  const cardBg = isDark ? "#0f172a" : "#ffffff";
+  const cardBorder = isDark ? "#1e293b" : "#e5e7eb";
+  const cardBorderHover = isDark ? "#334155" : "#d1d5db";
+  const cardShadowHover = isDark
+    ? "0 4px 12px rgba(0,0,0,0.3)"
+    : "0 4px 12px rgba(0,0,0,0.04)";
+
+  const logoBg = isDark ? "#1e293b" : "#f9fafb";
+  const logoBorder = isDark ? "#334155" : "#f3f4f6";
+  const textPrimary = isDark ? "#f1f5f9" : "#111827";
+  const textSecondary = isDark ? "#94a3b8" : "#9ca3af";
+  const fallbackText = isDark ? "#f1f5f9" : "#111827";
+
+  const watchBtnBorder = (watched) =>
+    watched ? (isDark ? "#e2e8f0" : "#111827") : isDark ? "#334155" : "#e5e7eb";
+  const watchBtnBg = (watched) =>
+    watched ? (isDark ? "#e2e8f0" : "#111827") : isDark ? "#0f172a" : "#ffffff";
+  const watchBtnColor = (watched) =>
+    watched ? (isDark ? "#0f172a" : "#ffffff") : isDark ? "#94a3b8" : "#6b7280";
+  const watchBtnHoverBg = isDark ? "#1e293b" : "#f9fafb";
+  const watchBtnHoverBorder = isDark ? "#475569" : "#d1d5db";
 
   return (
     <div className="company-search-page">
@@ -374,21 +427,20 @@ export default function StockSearchPage() {
                   key={companyName}
                   style={{
                     borderRadius: "10px",
-                    border: "1px solid #e5e7eb",
-                    background: "#ffffff",
+                    border: `1px solid ${cardBorder}`,
+                    background: cardBg,
                     transition:
                       "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "translateY(-1px)";
-                    e.currentTarget.style.boxShadow =
-                      "0 4px 12px rgba(0,0,0,0.04)";
-                    e.currentTarget.style.borderColor = "#d1d5db";
+                    e.currentTarget.style.boxShadow = cardShadowHover;
+                    e.currentTarget.style.borderColor = cardBorderHover;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = "translateY(0)";
                     e.currentTarget.style.boxShadow = "none";
-                    e.currentTarget.style.borderColor = "#e5e7eb";
+                    e.currentTarget.style.borderColor = cardBorder;
                   }}
                 >
                   <div
@@ -421,8 +473,8 @@ export default function StockSearchPage() {
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: "10px",
-                        background: "#f9fafb",
-                        border: "1px solid #f3f4f6",
+                        background: logoBg,
+                        border: `1px solid ${logoBorder}`,
                         overflow: "hidden",
                         flexShrink: 0,
                       }}
@@ -453,7 +505,7 @@ export default function StockSearchPage() {
                           height: "100%",
                           fontSize: "14px",
                           fontWeight: 700,
-                          color: "#111827",
+                          color: fallbackText,
                         }}
                       >
                         {companyName.charAt(0)}
@@ -468,7 +520,7 @@ export default function StockSearchPage() {
                             height: "100%",
                             fontSize: "14px",
                             fontWeight: 700,
-                            color: "#111827",
+                            color: fallbackText,
                           }}
                         >
                           {companyName.charAt(0)}
@@ -486,7 +538,7 @@ export default function StockSearchPage() {
                           display: "block",
                           fontSize: "14px",
                           fontWeight: 600,
-                          color: "#111827",
+                          color: textPrimary,
                         }}
                       >
                         {companyName}
@@ -494,7 +546,7 @@ export default function StockSearchPage() {
                       <em
                         style={{
                           fontSize: "12px",
-                          color: "#9ca3af",
+                          color: textSecondary,
                           fontStyle: "normal",
                         }}
                       >
@@ -510,11 +562,9 @@ export default function StockSearchPage() {
                         toggleWatch(companyName);
                       }}
                       style={{
-                        border: watched
-                          ? "1px solid #111827"
-                          : "1px solid #e5e7eb",
-                        background: watched ? "#111827" : "#ffffff",
-                        color: watched ? "#ffffff" : "#6b7280",
+                        border: `1px solid ${watchBtnBorder(watched)}`,
+                        background: watchBtnBg(watched),
+                        color: watchBtnColor(watched),
                         borderRadius: "7px",
                         padding: "5px 9px",
                         fontSize: "11.5px",
@@ -526,14 +576,16 @@ export default function StockSearchPage() {
                       }}
                       onMouseEnter={(e) => {
                         if (!watched) {
-                          e.currentTarget.style.borderColor = "#d1d5db";
-                          e.currentTarget.style.background = "#f9fafb";
+                          e.currentTarget.style.borderColor =
+                            watchBtnHoverBorder;
+                          e.currentTarget.style.background = watchBtnHoverBg;
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!watched) {
-                          e.currentTarget.style.borderColor = "#e5e7eb";
-                          e.currentTarget.style.background = "#ffffff";
+                          e.currentTarget.style.borderColor =
+                            watchBtnBorder(false);
+                          e.currentTarget.style.background = watchBtnBg(false);
                         }
                       }}
                     >
@@ -545,7 +597,7 @@ export default function StockSearchPage() {
                       className="company-result-arrow"
                       style={{
                         fontSize: "18px",
-                        color: "#9ca3af",
+                        color: textSecondary,
                         transition: "transform 0.18s ease, color 0.18s ease",
                         flexShrink: 0,
                       }}
