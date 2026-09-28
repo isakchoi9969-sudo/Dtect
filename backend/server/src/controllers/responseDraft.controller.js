@@ -3,7 +3,14 @@
 const { generateResponseDraft } = require("../services/aiClient.service");
 
 async function createResponseDraft(req, res) {
-  const { documentType, issueName, analysisText, company, industry } = req.body;
+  const {
+    documentType,
+    issueName,
+    analysisText,
+    company,
+    industry,
+    referenceArticles, // 프론트에서 받은 참고 기사 3건
+  } = req.body;
 
   // 프론트 입력값 검증
   if (!issueName || !analysisText) {
@@ -20,6 +27,11 @@ async function createResponseDraft(req, res) {
       analysis_text: analysisText,
       company: company || "",
       industry: industry || "",
+
+      // 선택한 이슈의 실제 기사만 최대 3건 전달
+      reference_articles: Array.isArray(referenceArticles)
+        ? referenceArticles.slice(0, 3)
+        : [],
     });
 
     // 생성 성공 여부는 사용자 화면이 아닌 Node 터미널에서만 확인합니다.

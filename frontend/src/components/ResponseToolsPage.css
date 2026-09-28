@@ -276,6 +276,77 @@
   font-weight: bold;
 }
 
+/* 참고 기사 전체 영역 */
+.reference-articles {
+  margin-top: 22px;
+  padding-top: 15px;
+  border-top: 1px solid #cfe0f2;
+}
+
+/* 참고 기사 3건 보기 버튼 */
+.reference-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  color: #1779df;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+/* 펼쳤을 때 나타나는 기사 목록 */
+.reference-article-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reference-article-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 12px;
+  border: 1px solid #d7e5f3;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.reference-article-list li div {
+  min-width: 0;
+}
+
+.reference-article-list strong,
+.reference-article-list span {
+  display: block;
+}
+
+.reference-article-list strong {
+  overflow: hidden;
+  color: #334155;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reference-article-list span {
+  margin-top: 4px;
+  color: #8290a2;
+  font-size: 11px;
+}
+
+.reference-article-list a {
+  flex: 0 0 auto;
+  color: #1779df;
+  font-size: 12px;
+  font-weight: 750;
+}
+
 /* 산업과 이슈 선택 영역을 2열로 배치합니다. */
 .generator-selection-grid {
   display: grid;
