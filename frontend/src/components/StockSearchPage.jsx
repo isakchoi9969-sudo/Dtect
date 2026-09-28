@@ -117,11 +117,6 @@ const companyDomains = {
   KG스틸: "kg-steel.co.kr",
 };
 
-/*
- * 키워드별 기업 분류
- *
- * 같은 기업이 여러 분야에 들어갈 수 있습니다.
- */
 const keywordCompanies = {
   삼성: [
     "삼성전자",
@@ -227,9 +222,7 @@ const keywordCompanies = {
 
 const getCompanyLogo = (companyName) => {
   const domain = companyDomains[companyName];
-  if (!domain) {
-    return null;
-  }
+  if (!domain) return null;
   return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=128`;
 };
 
@@ -238,13 +231,6 @@ export default function StockSearchPage() {
   const { isWatched, toggleWatch } = useWatchlist();
   const companyNames = keywordCompanies[selectedKeyword] || [];
 
-  /*
-   * 기업명 → 실제 companyId 찾기
-   *
-   * StockSearchPage의 기업 목록은 프론트에서 관리하지만
-   * 상세 페이지는 기존 companyId를 사용하므로
-   * 클릭했을 때 백엔드에서 해당 기업의 ID만 가져옵니다.
-   */
   const handleCompanyClick = async (companyName) => {
     try {
       const response = await api.get("/api/company/search", {
@@ -257,18 +243,9 @@ export default function StockSearchPage() {
           companyName.trim().toLowerCase(),
       );
       if (!company?.companyId) {
-        console.error("기업 정보를 찾을 수 없습니다.", {
-          companyName,
-          response: response.data,
-          companies,
-        });
         alert(`"${companyName}" 기업 정보를 찾을 수 없습니다.`);
         return;
       }
-      console.log("기업 상세 페이지 이동:", {
-        companyName: company.companyName,
-        companyId: company.companyId,
-      });
       window.location.assign(
         `${ROUTES.COMPANY_DETAIL}?companyId=${company.companyId}`,
       );
@@ -283,13 +260,22 @@ export default function StockSearchPage() {
       <Header />
       <main className="company-search-main">
         {/* 페이지 소개 */}
-        <section className="company-search-intro">
-          <p className="company-search-eyebrow">COMPANY INTELLIGENCE</p>
-          <div className="company-search-logo">
+        <section
+          className="company-search-intro"
+          style={{ marginBottom: "28px" }}
+        >
+          <p className="company-search-eyebrow" style={{ marginBottom: "6px" }}>
+            COMPANY INTELLIGENCE
+          </p>
+          <div className="company-search-logo" style={{ marginBottom: "8px" }}>
             D<span>:</span>TECT
           </div>
-          <h1>관심 있는 기업을 찾아보세요.</h1>
-          <p>
+          <h1
+            style={{ marginBottom: "8px", fontSize: "1.5rem", fontWeight: 700 }}
+          >
+            관심 있는 기업을 찾아보세요.
+          </h1>
+          <p style={{ color: "#6b7280", fontSize: "14px", lineHeight: 1.5 }}>
             관심 있는 기업이나 산업 분야를 선택하면
             <br />
             관련 기업을 확인하고 주요 이슈를 분석할 수 있습니다.
@@ -297,14 +283,21 @@ export default function StockSearchPage() {
         </section>
 
         {/* 키워드 버튼 */}
-        <section className="company-search-workspace">
-          <p className="company-search-eyebrow">RECOMMENDED KEYWORDS</p>
+        <section
+          className="company-search-workspace"
+          style={{ marginBottom: "28px" }}
+        >
+          <p
+            className="company-search-eyebrow"
+            style={{ marginBottom: "10px" }}
+          >
+            RECOMMENDED KEYWORDS
+          </p>
           <div
             style={{
               display: "flex",
               flexWrap: "wrap",
-              gap: "8px",
-              marginTop: "16px",
+              gap: "6px",
             }}
           >
             {recommendedKeywords.map((keyword) => {
@@ -315,7 +308,7 @@ export default function StockSearchPage() {
                   type="button"
                   onClick={() => setSelectedKeyword(keyword)}
                   style={{
-                    padding: "8px 14px",
+                    padding: "6px 12px",
                     borderRadius: "999px",
                     border: isSelected
                       ? "1px solid #111827"
@@ -323,9 +316,22 @@ export default function StockSearchPage() {
                     background: isSelected ? "#111827" : "#ffffff",
                     color: isSelected ? "#ffffff" : "#374151",
                     fontWeight: 600,
-                    fontSize: "13px",
+                    fontSize: "12.5px",
                     cursor: "pointer",
-                    transition: "all 0.2s ease",
+                    transition: "all 0.18s ease",
+                    transform: isSelected ? "scale(1.02)" : "scale(1)",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.borderColor = "#d1d5db";
+                      e.currentTarget.style.background = "#f9fafb";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.borderColor = "#e5e7eb";
+                      e.currentTarget.style.background = "#ffffff";
+                    }
                   }}
                 >
                   {keyword}
@@ -337,24 +343,52 @@ export default function StockSearchPage() {
 
         {/* 기업 결과 */}
         <section className="company-search-results">
-          <div className="company-search-results-heading">
-            <div>
-              <p>
-                <b>{selectedKeyword}</b> 관련 기업
-              </p>
-              <span>{companyNames.length}개 기업</span>
-            </div>
+          <div
+            className="company-search-results-heading"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              marginBottom: "12px",
+            }}
+          >
+            <p style={{ margin: 0, fontSize: "15px" }}>
+              <b>{selectedKeyword}</b> 관련 기업
+            </p>
+            <span style={{ fontSize: "13px", color: "#9ca3af" }}>
+              {companyNames.length}개 기업
+            </span>
           </div>
-          <div className="company-result-list">
+
+          <div
+            className="company-result-list"
+            style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+          >
             {companyNames.map((companyName) => {
               const logoUrl = getCompanyLogo(companyName);
               const watched = isWatched(companyName);
+
               return (
                 <article
                   className="company-result"
                   key={companyName}
                   style={{
-                    transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                    borderRadius: "10px",
+                    border: "1px solid #e5e7eb",
+                    background: "#ffffff",
+                    transition:
+                      "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 12px rgba(0,0,0,0.04)";
+                    e.currentTarget.style.borderColor = "#d1d5db";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.borderColor = "#e5e7eb";
                   }}
                 >
                   <div
@@ -369,26 +403,28 @@ export default function StockSearchPage() {
                       }
                     }}
                     style={{
-                      transition: "background 0.15s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "10px 12px",
+                      cursor: "pointer",
                     }}
                   >
                     {/* 기업 로고 */}
                     <span
                       className="company-result-mark"
                       style={{
-                        width: "48px",
-                        height: "48px",
-                        minWidth: "48px",
-                        minHeight: "48px",
+                        width: "40px",
+                        height: "40px",
+                        minWidth: "40px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        flexShrink: 0,
-                        borderRadius: "12px",
-                        background: "#ffffff",
-                        border: "1px solid #e5e7eb",
+                        borderRadius: "10px",
+                        background: "#f9fafb",
+                        border: "1px solid #f3f4f6",
                         overflow: "hidden",
-                        boxSizing: "border-box",
+                        flexShrink: 0,
                       }}
                     >
                       {logoUrl ? (
@@ -396,17 +432,15 @@ export default function StockSearchPage() {
                           src={logoUrl}
                           alt={`${companyName} 로고`}
                           style={{
-                            width: "34px",
-                            height: "34px",
+                            width: "28px",
+                            height: "28px",
                             objectFit: "contain",
                           }}
                           onError={(event) => {
                             event.currentTarget.style.display = "none";
                             const fallback =
                               event.currentTarget.nextElementSibling;
-                            if (fallback) {
-                              fallback.style.display = "flex";
-                            }
+                            if (fallback) fallback.style.display = "flex";
                           }}
                         />
                       ) : null}
@@ -417,7 +451,7 @@ export default function StockSearchPage() {
                           justifyContent: "center",
                           width: "100%",
                           height: "100%",
-                          fontSize: "15px",
+                          fontSize: "14px",
                           fontWeight: 700,
                           color: "#111827",
                         }}
@@ -432,7 +466,7 @@ export default function StockSearchPage() {
                             justifyContent: "center",
                             width: "100%",
                             height: "100%",
-                            fontSize: "15px",
+                            fontSize: "14px",
                             fontWeight: 700,
                             color: "#111827",
                           }}
@@ -443,12 +477,32 @@ export default function StockSearchPage() {
                     </span>
 
                     {/* 기업명 */}
-                    <span className="company-result-copy">
-                      <strong>{companyName}</strong>
-                      <em>기업 정보 및 주요 이슈</em>
+                    <span
+                      className="company-result-copy"
+                      style={{ flex: 1, minWidth: 0 }}
+                    >
+                      <strong
+                        style={{
+                          display: "block",
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          color: "#111827",
+                        }}
+                      >
+                        {companyName}
+                      </strong>
+                      <em
+                        style={{
+                          fontSize: "12px",
+                          color: "#9ca3af",
+                          fontStyle: "normal",
+                        }}
+                      >
+                        기업 정보 및 주요 이슈
+                      </em>
                     </span>
 
-                    {/* 관심기업 */}
+                    {/* 관심기업 버튼 */}
                     <button
                       type="button"
                       onClick={(event) => {
@@ -456,27 +510,45 @@ export default function StockSearchPage() {
                         toggleWatch(companyName);
                       }}
                       style={{
-                        marginLeft: "auto",
-                        marginRight: "12px",
-                        border: "1px solid #e5e7eb",
+                        border: watched
+                          ? "1px solid #111827"
+                          : "1px solid #e5e7eb",
                         background: watched ? "#111827" : "#ffffff",
                         color: watched ? "#ffffff" : "#6b7280",
-                        borderRadius: "8px",
-                        padding: "6px 10px",
-                        fontSize: "12px",
+                        borderRadius: "7px",
+                        padding: "5px 9px",
+                        fontSize: "11.5px",
                         fontWeight: 600,
                         cursor: "pointer",
                         whiteSpace: "nowrap",
-                        transition: "all 0.2s ease",
+                        transition: "all 0.18s ease",
+                        flexShrink: 0,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!watched) {
+                          e.currentTarget.style.borderColor = "#d1d5db";
+                          e.currentTarget.style.background = "#f9fafb";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!watched) {
+                          e.currentTarget.style.borderColor = "#e5e7eb";
+                          e.currentTarget.style.background = "#ffffff";
+                        }
                       }}
                     >
                       {watched ? "관심기업" : "관심등록"}
                     </button>
 
-                    {/* 이동 화살표 */}
+                    {/* 화살표 */}
                     <span
                       className="company-result-arrow"
-                      style={{ transition: "transform 0.15s ease" }}
+                      style={{
+                        fontSize: "18px",
+                        color: "#9ca3af",
+                        transition: "transform 0.18s ease, color 0.18s ease",
+                        flexShrink: 0,
+                      }}
                     >
                       ›
                     </span>
