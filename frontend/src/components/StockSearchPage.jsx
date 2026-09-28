@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
+
 import { useWatchlist } from "../hooks/useWatchlist";
+
 import { ROUTES } from "../config/routes";
+
 import { api } from "../config/api";
+
 import Header from "./Header";
 
 const recommendedKeywords = [
@@ -236,32 +240,24 @@ export default function StockSearchPage() {
 
   useEffect(() => {
     const checkDark = () => {
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)",
-      ).matches;
-
       const hasDarkClass = document.documentElement.classList.contains("dark");
-
       const hasDarkDataTheme =
         document.documentElement.getAttribute("data-theme") === "dark";
 
-      setIsDark(prefersDark || hasDarkClass || hasDarkDataTheme);
+      setIsDark(hasDarkClass || hasDarkDataTheme);
     };
 
     checkDark();
 
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    media.addEventListener("change", checkDark);
-
     // class 변경도 감지 (next-themes 등 토글용)
     const observer = new MutationObserver(checkDark);
+
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class", "data-theme"],
     });
 
     return () => {
-      media.removeEventListener("change", checkDark);
       observer.disconnect();
     };
   }, []);
@@ -271,16 +267,20 @@ export default function StockSearchPage() {
       const response = await api.get("/api/company/search", {
         params: { keyword: companyName },
       });
+
       const companies = response.data.data || [];
+
       const company = companies.find(
         (item) =>
           item.companyName?.trim().toLowerCase() ===
           companyName.trim().toLowerCase(),
       );
+
       if (!company?.companyId) {
         alert(`"${companyName}" 기업 정보를 찾을 수 없습니다.`);
         return;
       }
+
       window.location.assign(
         `${ROUTES.COMPANY_DETAIL}?companyId=${company.companyId}`,
       );
@@ -294,28 +294,34 @@ export default function StockSearchPage() {
   const cardBg = isDark ? "#0f172a" : "#ffffff";
   const cardBorder = isDark ? "#1e293b" : "#e5e7eb";
   const cardBorderHover = isDark ? "#334155" : "#d1d5db";
+
   const cardShadowHover = isDark
     ? "0 4px 12px rgba(0,0,0,0.3)"
     : "0 4px 12px rgba(0,0,0,0.04)";
 
   const logoBg = isDark ? "#1e293b" : "#f9fafb";
   const logoBorder = isDark ? "#334155" : "#f3f4f6";
+
   const textPrimary = isDark ? "#f1f5f9" : "#111827";
   const textSecondary = isDark ? "#94a3b8" : "#9ca3af";
   const fallbackText = isDark ? "#f1f5f9" : "#111827";
 
   const watchBtnBorder = (watched) =>
     watched ? (isDark ? "#e2e8f0" : "#111827") : isDark ? "#334155" : "#e5e7eb";
+
   const watchBtnBg = (watched) =>
     watched ? (isDark ? "#e2e8f0" : "#111827") : isDark ? "#0f172a" : "#ffffff";
+
   const watchBtnColor = (watched) =>
     watched ? (isDark ? "#0f172a" : "#ffffff") : isDark ? "#94a3b8" : "#6b7280";
+
   const watchBtnHoverBg = isDark ? "#1e293b" : "#f9fafb";
   const watchBtnHoverBorder = isDark ? "#475569" : "#d1d5db";
 
   return (
     <div className="company-search-page">
       <Header />
+
       <main className="company-search-main">
         {/* 페이지 소개 */}
         <section
@@ -325,14 +331,21 @@ export default function StockSearchPage() {
           <p className="company-search-eyebrow" style={{ marginBottom: "6px" }}>
             COMPANY INTELLIGENCE
           </p>
+
           <div className="company-search-logo" style={{ marginBottom: "8px" }}>
             D<span>:</span>TECT
           </div>
+
           <h1
-            style={{ marginBottom: "8px", fontSize: "1.5rem", fontWeight: 700 }}
+            style={{
+              marginBottom: "8px",
+              fontSize: "1.5rem",
+              fontWeight: 700,
+            }}
           >
             관심 있는 기업을 찾아보세요.
           </h1>
+
           <p style={{ color: "#6b7280", fontSize: "14px", lineHeight: 1.5 }}>
             관심 있는 기업이나 산업 분야를 선택하면
             <br />
@@ -351,6 +364,7 @@ export default function StockSearchPage() {
           >
             RECOMMENDED KEYWORDS
           </p>
+
           <div
             style={{
               display: "flex",
@@ -360,6 +374,7 @@ export default function StockSearchPage() {
           >
             {recommendedKeywords.map((keyword) => {
               const isSelected = selectedKeyword === keyword;
+
               return (
                 <button
                   key={keyword}
@@ -413,6 +428,7 @@ export default function StockSearchPage() {
             <p style={{ margin: 0, fontSize: "15px" }}>
               <b>{selectedKeyword}</b> 관련 기업
             </p>
+
             <span style={{ fontSize: "13px", color: "#9ca3af" }}>
               {companyNames.length}개 기업
             </span>
@@ -420,7 +436,11 @@ export default function StockSearchPage() {
 
           <div
             className="company-result-list"
-            style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+            }}
           >
             {companyNames.map((companyName) => {
               const logoUrl = getCompanyLogo(companyName);
@@ -433,7 +453,7 @@ export default function StockSearchPage() {
                   style={{
                     borderRadius: "10px",
                     border: `1px solid ${cardBorder}`,
-                    background: cardBg,
+                    backgroundColor: isDark ? "#0f172a" : "#ffffff",
                     transition:
                       "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
                   }}
@@ -465,6 +485,7 @@ export default function StockSearchPage() {
                       gap: "12px",
                       padding: "10px 12px",
                       cursor: "pointer",
+                      backgroundColor: isDark ? "#0f172a" : "#ffffff",
                     }}
                   >
                     {/* 기업 로고 */}
@@ -495,12 +516,15 @@ export default function StockSearchPage() {
                           }}
                           onError={(event) => {
                             event.currentTarget.style.display = "none";
+
                             const fallback =
                               event.currentTarget.nextElementSibling;
+
                             if (fallback) fallback.style.display = "flex";
                           }}
                         />
                       ) : null}
+
                       <span
                         style={{
                           display: logoUrl ? "none" : "flex",
@@ -515,6 +539,7 @@ export default function StockSearchPage() {
                       >
                         {companyName.charAt(0)}
                       </span>
+
                       {logoUrl && (
                         <span
                           style={{
@@ -548,6 +573,7 @@ export default function StockSearchPage() {
                       >
                         {companyName}
                       </strong>
+
                       <em
                         style={{
                           fontSize: "12px",
