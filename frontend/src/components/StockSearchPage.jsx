@@ -136,6 +136,10 @@ const companyDomains = {
   신세계: "shinsegae.com",
 
   GS건설: "gsenc.com",
+  기아: "kia.com",
+  DB하이텍: "dbhitek.com",
+  유한양행: "yuhan.co.kr",
+  삼양식품: "samyangfoods.com",
 };
 
 /*
