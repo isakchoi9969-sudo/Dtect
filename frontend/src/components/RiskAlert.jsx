@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+// import axios from "axios";
+import { api } from "../config/api";
 import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
 import Header from "./Header";
@@ -30,15 +31,10 @@ export default function RiskSurgeAlertPage() {
     setLoading(true);
     setNotice("");
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/company/risk-surge",
-        {
-          params: {
-            // 필요하면 hours, limit 등 파라미터 추가 가능
-            hours: 24,
-          },
-        },
-      );
+      const response = await api.get("/api/company/risk-surge", {
+        params: { hours: 24 },
+      });
+      setAlerts(response.data.data || []);
       setAlerts(response.data.data || []);
     } catch (error) {
       console.error("위험도 급상승 알림 조회 실패:", error);
@@ -54,10 +50,9 @@ export default function RiskSurgeAlertPage() {
 
     const loadInitialAlerts = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3000/api/company/risk-surge",
-          { params: { hours: 24 } },
-        );
+        const response = await api.get("/api/company/risk-surge", {
+          params: { hours: 24 },
+        });
         if (isActive) setAlerts(response.data.data || []);
       } catch (error) {
         console.error("위험도 급상승 알림 조회 실패:", error);
@@ -194,17 +189,16 @@ export default function RiskSurgeAlertPage() {
                       </span>
                       <span className="company-result-copy">
                         <strong>{item.companyName}</strong>
-                        <em
-                          className={`risk-badge ${riskClass(item.riskLevel)}`}
-                        >
-                          {item.riskLevel}
-                          {item.scoreChange != null && (
-                            <> · +{Math.round(item.scoreChange * 100)}% 상승</>
-                          )}
-                        </em>
+                        <em className="risk-badge danger">위험도 급상승</em>
+
                         <span className="risk-meta">
                           감지 시각 {formatTime(item.detectedAt)}
-                          {item.reason && ` · ${item.reason}`}
+                          <br />
+                          직전 분석 대비{" "}
+                          {Number(item.changeRate || 0).toFixed(1)}%p 상승
+                          <br />
+                          직전 {Number(item.previousRate || 0).toFixed(1)}% →
+                          현재 {Number(item.currentRate || 0).toFixed(1)}%
                         </span>
                       </span>
                       <span className="company-result-arrow">›</span>

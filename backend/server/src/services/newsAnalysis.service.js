@@ -5,6 +5,8 @@ const {
 } = require("./naverNews.service");
 const { analyzeSentiments } = require("./aiClient.service");
 
+const { persistNewsAnalysis } = require("./newsHistory.service");
+
 async function analyzeCompanyNews(query, page, perPage) {
   const startedAt = performance.now();
   const {
@@ -42,6 +44,10 @@ async function analyzeCompanyNews(query, page, perPage) {
       score: Number(Number(prediction.score).toFixed(4)),
     };
   });
+
+  // 감성 분석한 기사 결과를 기존 NEWS_ARTICLE_ANALYSIS 테이블에 저장합니다.
+  // 같은 기사는 ARTICLE_HASH 기준으로 중복 저장되지 않습니다.
+  await persistNewsAnalysis(query, analyzedNews);
 
   const result = {
     query,
