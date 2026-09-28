@@ -6,6 +6,7 @@ import Header from "./Header";
 
 const recommendedKeywords = ["삼성", "현대", "카카오", "바이오", "2차전지"];
 const LOGO_DEV_TOKEN = "pk_LmDNVeHjR3Sh2eSen5P1yA";
+
 const companyDomains = {
   삼성SDI: "samsungsdi.co.kr",
   삼성물산: "samsungcnt.com",
@@ -116,8 +117,10 @@ const companyDomains = {
   한화솔루션: "hanwhasolutions.com",
   한화에어로스페이스: "hanwhaaerospace.com",
   한화오션: "hanwhaocean.com",
-  호텔신라: "hotelshilla.net",
-  하나금융: "hanafn.com",
+  쿠팡: "coupang.com",
+  신한지주: "shinhangroup.com",
+  아모레퍼시픽: "amorepacific.com",
+  넷마블: "netmarble.com",
 };
 
 function CompanySearchLogo({ companyName }) {
@@ -158,19 +161,14 @@ export default function CompanySearchPage() {
     error: watchlistError,
   } = useWatchlist();
 
-  // 검색 실행 (폼 제출과 추천 검색어 클릭에서 공통 사용)
   const runSearch = async (rawKeyword) => {
     const keyword = rawKeyword.trim();
-
-    if (!keyword) {
-      return;
-    }
+    if (!keyword) return;
 
     try {
       const response = await api.get("/api/company/search", {
         params: { keyword },
       });
-
       setSearchResults(response.data.data || []);
       setSubmittedQuery(keyword);
       setNotice("");
@@ -192,8 +190,6 @@ export default function CompanySearchPage() {
     runSearch(keyword);
   };
 
-  // 별표 클릭: 카드 이동(openAnalysis)이 같이 실행되지 않도록 전파를 막고,
-  // DB의 COMPANY_ID 기준으로 관심기업 등록/해제
   const toggleWatchlist = (event, company) => {
     event.stopPropagation();
     toggleCompany(company.companyId);
@@ -215,13 +211,10 @@ export default function CompanySearchPage() {
         {!hasResults && (
           <section className="company-search-intro">
             <p className="company-search-eyebrow">CORPORATE INTELLIGENCE</p>
-
             <div className="company-search-logo">
               D<span>:</span>TECT
             </div>
-
             <h1>기업의 오늘을 검색하세요.</h1>
-
             <p>
               뉴스와 시장 신호를 분석해 기업의 리스크와 감성 변화를
               보여드립니다.
@@ -236,25 +229,32 @@ export default function CompanySearchPage() {
 
           <form className="company-search-form" onSubmit={submitSearch}>
             <span aria-hidden="true">⌕</span>
-
             <input
               autoFocus
               onChange={(event) => setQuery(event.target.value)}
               placeholder="기업명을 검색하세요"
               value={query}
             />
-
             <button type="submit">검색</button>
           </form>
 
           <div className="company-search-recommendations">
             <span>추천 검색어</span>
-
             {recommendedKeywords.map((keyword) => (
               <button
                 key={keyword}
                 onClick={() => chooseKeyword(keyword)}
                 type="button"
+                style={{ transition: "all 0.2s ease" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 2px 6px rgba(0,0,0,0.06)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
               >
                 {keyword}
               </button>
@@ -281,10 +281,8 @@ export default function CompanySearchPage() {
                 <p>
                   <b>{submittedQuery}</b> 검색 결과
                 </p>
-
                 <span>{searchResults.length}개 기업을 찾았습니다.</span>
               </div>
-
               <small>
                 관심기업 {count}/{limit}
               </small>
@@ -296,7 +294,41 @@ export default function CompanySearchPage() {
                   const watched = isWatched(company.companyId);
 
                   return (
-                    <article className="company-result" key={company.companyId}>
+                    <article
+                      className="company-result"
+                      key={company.companyId}
+                      style={{
+                        transition:
+                          "transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-3px)";
+                        e.currentTarget.style.boxShadow =
+                          "0 8px 20px rgba(0,0,0,0.07)";
+                        e.currentTarget.style.borderColor = "#d1d5db";
+
+                        const arrow = e.currentTarget.querySelector(
+                          ".company-result-arrow",
+                        );
+                        if (arrow) {
+                          arrow.style.transform = "translateX(4px)";
+                          arrow.style.color = "#111827";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "none";
+                        e.currentTarget.style.borderColor = "";
+
+                        const arrow = e.currentTarget.querySelector(
+                          ".company-result-arrow",
+                        );
+                        if (arrow) {
+                          arrow.style.transform = "translateX(0)";
+                          arrow.style.color = "";
+                        }
+                      }}
+                    >
                       <button
                         className="company-result-main"
                         onClick={() => openAnalysis(company)}
@@ -325,15 +357,21 @@ export default function CompanySearchPage() {
 
                         <span className="company-result-copy">
                           <strong>{company.companyName}</strong>
-
                           <em>
                             검색 관련도 {Math.round(company.score * 100)}%
                           </em>
-
                           <span>DB에 등록된 기업입니다.</span>
                         </span>
 
-                        <span className="company-result-arrow">›</span>
+                        <span
+                          className="company-result-arrow"
+                          style={{
+                            transition:
+                              "transform 0.22s ease, color 0.22s ease",
+                          }}
+                        >
+                          ›
+                        </span>
                       </button>
 
                       <button
@@ -343,6 +381,15 @@ export default function CompanySearchPage() {
                         className={`company-star ${watched ? "is-active" : ""}`}
                         onClick={(event) => toggleWatchlist(event, company)}
                         type="button"
+                        style={{
+                          transition: "transform 0.18s ease, color 0.18s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "scale(1.15)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "scale(1)";
+                        }}
                       >
                         ★
                       </button>
