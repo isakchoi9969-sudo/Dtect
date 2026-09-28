@@ -78,6 +78,10 @@ export default function CommunityStockPage() {
   const [activeTab, setActiveTab] = useState("최신");
   const [isDark, setIsDark] = useState(false);
 
+  const handleWriteClick = () => {
+    alert("로그인 후 이용 가능합니다.");
+  };
+
   // Header의 ThemeToggle이 사용하는 data-theme을 감지
   useEffect(() => {
     const updateTheme = () => {
@@ -258,35 +262,17 @@ export default function CommunityStockPage() {
 
             <button
               type="button"
-              onClick={() => alert("글쓰기 기능은 준비 중입니다.")}
+              onClick={handleWriteClick}
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "7px",
+                padding: "10px 16px",
                 border: "none",
-                borderRadius: "10px",
-                padding: "11px 16px",
-                background: PRIMARY,
-                color: "#FFFFFF",
-                fontSize: "13px",
-                fontWeight: 750,
+                borderRadius: 8,
+                background: "#2563EB",
+                color: "#fff",
+                fontWeight: 700,
                 cursor: "pointer",
-                whiteSpace: "nowrap",
-                boxShadow: "0 7px 18px rgba(37, 99, 235, 0.22)",
-                transition: "transform 0.18s ease, box-shadow 0.18s ease",
-              }}
-              onMouseEnter={(event) => {
-                event.currentTarget.style.transform = "translateY(-2px)";
-                event.currentTarget.style.boxShadow =
-                  "0 10px 24px rgba(37, 99, 235, 0.28)";
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.transform = "translateY(0)";
-                event.currentTarget.style.boxShadow =
-                  "0 7px 18px rgba(37, 99, 235, 0.22)";
               }}
             >
-              <span style={{ fontSize: "17px", lineHeight: 1 }}>+</span>
               글쓰기
             </button>
           </div>
@@ -566,7 +552,7 @@ export default function CommunityStockPage() {
                   <article
                     key={post.id}
                     onClick={() =>
-                      alert(`"${post.title}" 게시글은 준비 중입니다.`)
+                      alert(`"${post.title}" 로그인 후 이용가능 합니다.`)
                     }
                     style={{
                       position: "relative",
