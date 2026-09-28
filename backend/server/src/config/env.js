@@ -38,7 +38,7 @@ module.exports = {
   port: process.env.PORT || 3000,
   frontendOrigin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
 
-  aiServerUrl: process.env.AI_SERVER_URL || "http://localhost:6000",
+  aiServerUrl: process.env.AI_SERVER_URL || "http://localhost:8000",
 
   db: {
     host: process.env.DB_HOST,
