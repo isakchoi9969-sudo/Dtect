@@ -5,7 +5,9 @@ import { ROUTES } from "../config/routes";
 import Header from "./Header";
 
 const recommendedKeywords = ["삼성", "현대", "카카오", "바이오", "2차전지"];
+
 const LOGO_DEV_TOKEN = "pk_LmDNVeHjR3Sh2eSen5P1yA";
+
 const companyDomains = {
   삼성SDI: "samsungsdi.co.kr",
   삼성물산: "samsungcnt.com",
@@ -116,7 +118,7 @@ const companyDomains = {
   GS건설: "gsenc.com",
 };
 
-function getCompanyLogo(companyName) {
+const getCompanyLogo = (companyName) => {
   const domain = companyDomains[companyName];
 
   if (!domain) {
@@ -124,54 +126,35 @@ function getCompanyLogo(companyName) {
   }
 
   return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=128`;
-}
+};
 
 export default function StockSearchPage() {
-  const [keyword, setKeyword] = useState("");
+  const [selectedKeyword, setSelectedKeyword] = useState("삼성");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
   const { isWatched, toggleWatch } = useWatchlist();
 
-  const searchCompanies = async (searchKeyword) => {
-    const trimmedKeyword = searchKeyword.trim();
-
-    if (!trimmedKeyword) {
-      setResults([]);
-      setSearched(false);
-      return;
-    }
-
+  const searchCompanies = async (keyword) => {
+    setSelectedKeyword(keyword);
     setLoading(true);
     setSearched(true);
 
     try {
       const response = await api.get("/api/company/search", {
         params: {
-          keyword: trimmedKeyword,
+          keyword,
         },
       });
 
-      const companies = response.data?.companies ?? [];
-
-      setResults(companies);
+      setResults(response.data?.companies ?? []);
     } catch (error) {
       console.error("기업 검색 실패:", error);
       setResults([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    searchCompanies(keyword);
-  };
-
-  const handleRecommendedKeyword = (recommendedKeyword) => {
-    setKeyword(recommendedKeyword);
-    searchCompanies(recommendedKeyword);
   };
 
   const handleCompanyClick = (company) => {
@@ -200,45 +183,50 @@ export default function StockSearchPage() {
           <h1>관심 있는 기업을 찾아보세요.</h1>
 
           <p>
-            기업명을 검색하면 관련 기업의 정보를 확인하고
+            관심 있는 기업이나 산업 분야를 선택하면
             <br />
-            주요 이슈와 리스크를 분석할 수 있습니다.
+            관련 기업을 확인하고 주요 이슈를 분석할 수 있습니다.
           </p>
         </section>
 
-        {/* 검색 영역 */}
+        {/* 추천 키워드 버튼 */}
         <section className="company-search-workspace">
-          <form className="company-search-form" onSubmit={handleSubmit}>
-            <div className="company-search-input-wrap">
-              <input
-                type="text"
-                value={keyword}
-                onChange={(event) => setKeyword(event.target.value)}
-                placeholder="기업명을 입력해 주세요."
-                aria-label="기업명 검색"
-              />
+          <p className="company-search-eyebrow">RECOMMENDED KEYWORDS</p>
 
-              <button type="submit" disabled={loading}>
-                {loading ? "검색 중..." : "검색"}
-              </button>
-            </div>
-          </form>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "10px",
+              marginTop: "20px",
+            }}
+          >
+            {recommendedKeywords.map((keyword) => {
+              const isSelected = selectedKeyword === keyword;
 
-          {/* 추천 검색어 */}
-          <div className="company-search-recommended">
-            <span>추천 검색어</span>
-
-            <div>
-              {recommendedKeywords.map((recommendedKeyword) => (
+              return (
                 <button
-                  key={recommendedKeyword}
+                  key={keyword}
                   type="button"
-                  onClick={() => handleRecommendedKeyword(recommendedKeyword)}
+                  onClick={() => searchCompanies(keyword)}
+                  style={{
+                    padding: "11px 18px",
+                    borderRadius: "999px",
+                    border: isSelected
+                      ? "1px solid #111827"
+                      : "1px solid #e5e7eb",
+                    background: isSelected ? "#111827" : "#fff",
+                    color: isSelected ? "#fff" : "#374151",
+                    fontWeight: 600,
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
                 >
-                  {recommendedKeyword}
+                  {keyword}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </section>
 
@@ -246,32 +234,43 @@ export default function StockSearchPage() {
         <section className="company-search-results">
           <div className="company-search-results-heading">
             <div>
-              <p>{searched ? "검색 결과" : "기업을 검색해보세요."}</p>
+              <p>
+                <b>{selectedKeyword}</b> 관련 기업
+              </p>
 
-              {searched && <span>{results.length}개 기업</span>}
+              {searched && !loading && <span>{results.length}개 기업</span>}
             </div>
           </div>
 
-          {/* 검색 전 */}
+          {/* 처음 페이지에 들어왔을 때 */}
           {!searched && (
             <div className="company-search-empty">
-              <strong>분석하고 싶은 기업을 검색해보세요.</strong>
+              <strong>관심 있는 키워드를 선택해보세요.</strong>
 
-              <p>기업명을 입력하거나 추천 검색어를 선택할 수 있습니다.</p>
+              <p>위의 키워드를 선택하면 관련 기업이 표시됩니다.</p>
+            </div>
+          )}
+
+          {/* 로딩 */}
+          {loading && (
+            <div className="company-search-empty">
+              <strong>기업을 불러오는 중입니다.</strong>
+
+              <p>잠시만 기다려주세요.</p>
             </div>
           )}
 
           {/* 검색 결과 없음 */}
           {searched && !loading && results.length === 0 && (
             <div className="company-search-empty">
-              <strong>검색 결과가 없습니다.</strong>
+              <strong>관련 기업을 찾을 수 없습니다.</strong>
 
-              <p>다른 기업명이나 검색어를 입력해보세요.</p>
+              <p>다른 키워드를 선택해보세요.</p>
             </div>
           )}
 
-          {/* 검색 결과 목록 */}
-          {results.length > 0 && (
+          {/* 기업 목록 */}
+          {!loading && results.length > 0 && (
             <div className="company-result-list">
               {results.map((company) => {
                 const companyId = company.companyId ?? company.id;
@@ -313,7 +312,7 @@ export default function StockSearchPage() {
                           justifyContent: "center",
                           flexShrink: 0,
                           borderRadius: "14px",
-                          background: "#ffffff",
+                          background: "#fff",
                           border: "1px solid #e5e7eb",
                           overflow: "hidden",
                           boxSizing: "border-box",
@@ -324,8 +323,8 @@ export default function StockSearchPage() {
                             src={logoUrl}
                             alt={`${companyName} 로고`}
                             style={{
-                              width: "38px",
-                              height: "38px",
+                              width: "40px",
+                              height: "40px",
                               objectFit: "contain",
                             }}
                             onError={(event) => {
@@ -341,7 +340,7 @@ export default function StockSearchPage() {
                           />
                         ) : null}
 
-                        {/* 로고를 불러오지 못했을 때 */}
+                        {/* 로고가 없거나 불러오기 실패했을 때 */}
                         <span
                           style={{
                             display: logoUrl ? "none" : "flex",
@@ -349,7 +348,7 @@ export default function StockSearchPage() {
                             justifyContent: "center",
                             width: "100%",
                             height: "100%",
-                            fontSize: "16px",
+                            fontSize: "17px",
                             fontWeight: 700,
                             color: "#111827",
                           }}
@@ -365,7 +364,7 @@ export default function StockSearchPage() {
                               justifyContent: "center",
                               width: "100%",
                               height: "100%",
-                              fontSize: "16px",
+                              fontSize: "17px",
                               fontWeight: 700,
                               color: "#111827",
                             }}
@@ -375,7 +374,7 @@ export default function StockSearchPage() {
                         )}
                       </span>
 
-                      {/* 기업 정보 */}
+                      {/* 기업명 */}
                       <span className="company-result-copy">
                         <strong>{companyName}</strong>
 
@@ -386,7 +385,7 @@ export default function StockSearchPage() {
                         )}
                       </span>
 
-                      {/* 관심기업 버튼 */}
+                      {/* 관심기업 */}
                       {companyId && (
                         <button
                           type="button"
@@ -398,8 +397,8 @@ export default function StockSearchPage() {
                             marginLeft: "auto",
                             marginRight: "12px",
                             border: "1px solid #e5e7eb",
-                            background: watched ? "#111827" : "#ffffff",
-                            color: watched ? "#ffffff" : "#6b7280",
+                            background: watched ? "#111827" : "#fff",
+                            color: watched ? "#fff" : "#6b7280",
                             borderRadius: "10px",
                             padding: "8px 12px",
                             fontSize: "12px",
@@ -412,7 +411,7 @@ export default function StockSearchPage() {
                         </button>
                       )}
 
-                      {/* 화살표 */}
+                      {/* 이동 화살표 */}
                       <span className="company-result-arrow">›</span>
                     </div>
                   </article>
