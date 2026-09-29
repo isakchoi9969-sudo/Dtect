@@ -68,9 +68,56 @@ function calculateSearchScore(keyword, companyName) {
   return similarity(normalizedKeyword, normalizedCompanyName);
 }
 
+function calculateIncludedFieldScore(keyword, value, score) {
+  const normalizedKeyword = normalizeSearchKeyword(keyword);
+  const normalizedValue = normalizeSearchKeyword(value);
+
+  if (!normalizedKeyword || !normalizedValue) return 0;
+  if (normalizedKeyword === normalizedValue) return score;
+
+  return normalizedValue.includes(normalizedKeyword) ? score : 0;
+}
+
+function calculateCompanySearchScore(keyword, company) {
+  const nameScore = calculateSearchScore(keyword, company.companyName);
+  const industryScore = calculateIncludedFieldScore(keyword, company.industry, 0.84);
+  const descriptionScore = calculateIncludedFieldScore(
+    keyword,
+    company.companyInfo,
+    0.72,
+  );
+  const ceoScore = calculateIncludedFieldScore(keyword, company.ceoName, 0.68);
+  const stockCodeScore = calculateIncludedFieldScore(
+    keyword,
+    company.stockCode,
+    0.64,
+  );
+
+  return Math.max(
+    nameScore,
+    industryScore,
+    descriptionScore,
+    ceoScore,
+    stockCodeScore,
+  );
+}
+
+function calculateIndustrySearchScore(keyword, company) {
+  const industryScore = calculateIncludedFieldScore(keyword, company.industry, 0.84);
+  const descriptionScore = calculateIncludedFieldScore(
+    keyword,
+    company.companyInfo,
+    0.72,
+  );
+
+  return Math.max(industryScore, descriptionScore);
+}
+
 module.exports = {
   levenshteinDistance,
   similarity,
   normalizeSearchKeyword,
   calculateSearchScore,
+  calculateCompanySearchScore,
+  calculateIndustrySearchScore,
 };

@@ -3,7 +3,10 @@ const {
   assessCompanyRisk,
 } = require("../services/companyRiskAssessment.service");
 
-const { calculateSearchScore } = require("../services/companySearch.service");
+const {
+  calculateCompanySearchScore,
+  calculateIndustrySearchScore,
+} = require("../services/companySearch.service");
 const {
   fetchExchangeRate,
   fetchMarketIndexHistories,
@@ -25,6 +28,8 @@ const {
 const {
   saveAnalysisAndCreateAlerts,
 } = require("../services/analysisAlert.service");
+
+const MIN_COMPANY_SEARCH_SCORE = 0.4;
 
 /**
  * GET /api/company
@@ -63,12 +68,13 @@ async function getCompanies(_req, res) {
  *
  * 검색 방식
  * 1. COMPANY 전체 조회
- * 2. 검색어와 기업명 비교
+ * 2. 검색어와 기업 정보(기업명·산업·CEO·설명·종목코드) 비교
  * 3. 관련도 점수 계산
  * 4. 점수가 높은 기업부터 반환
  */
 async function searchCompany(req, res) {
   const keyword = String(req.query.keyword || "").trim();
+  const isIndustryScope = req.query.scope === "industry";
 
   if (!keyword) {
     return res.status(400).json({
@@ -85,14 +91,17 @@ async function searchCompany(req, res) {
         COMPANY_NAME AS companyName,
         STOCK_CODE AS stockCode,
         INDUSTRY AS industry,
+        CEO_NAME AS ceoName,
         COMPANY_INFO AS companyInfo
       FROM COMPANY
     `);
 
-    // 검색어와 기업명의 관련도 계산
+    // 산업 페이지는 산업 분류·기업 설명만, 일반 검색은 기업 전체 정보를 비교한다.
     const scoredCompanies = companies
       .map((company) => {
-        const score = calculateSearchScore(keyword, company.companyName);
+        const score = isIndustryScope
+          ? calculateIndustrySearchScore(keyword, company)
+          : calculateCompanySearchScore(keyword, company);
 
         return {
           ...company,
@@ -101,7 +110,7 @@ async function searchCompany(req, res) {
       })
 
       // 관련도가 너무 낮은 기업은 제외
-      .filter((company) => company.score >= 0.4)
+      .filter((company) => company.score >= MIN_COMPANY_SEARCH_SCORE)
 
       // 관련도가 높은 기업부터 정렬
       .sort((a, b) => b.score - a.score)
