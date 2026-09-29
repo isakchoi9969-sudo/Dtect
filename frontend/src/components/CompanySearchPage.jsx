@@ -112,8 +112,6 @@ const companyDomains = {
   크래프톤: "krafton.com",
   포스코퓨처엠: "poscofuturem.com",
   하나금융지주: "hanafn.com",
-  GS건설: "gsenc.com",
-  기아: "kia.com",
   DB하이텍: "dbhitek.com",
   KG스틸: "kg-steel.co.kr",
   한미약품: "hanmi.co.kr",

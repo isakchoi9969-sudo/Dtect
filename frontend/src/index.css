@@ -4437,6 +4437,32 @@ button:focus-visible {
   }
 }
 
+/* My page */
+.mypage-page-content { padding-bottom: 88px; }
+.mypage-section + .mypage-section { margin-top: 42px; }
+.mypage-section-heading { margin-bottom: 14px; }
+.mypage-section-heading p { margin: 0 0 6px; color: #0878e8; font-size: 10px; font-weight: 850; letter-spacing: 0.15em; }
+.mypage-section-heading h2 { margin: 0; color: #354962; font-size: 20px; letter-spacing: -0.04em; }
+.mypage-profile-grid, .mypage-company-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.mypage-profile-grid > div, .mypage-company-card { border: 1px solid #e1eaf2; border-radius: 15px; background: #fff; box-shadow: 0 2px 10px rgba(25, 63, 104, 0.025); }
+.mypage-profile-grid > div { padding: 16px 18px; }
+.mypage-profile-grid dt, .mypage-company-details dt { color: #8291a5; font-size: 11px; font-weight: 650; }
+.mypage-profile-grid dd, .mypage-company-details dd { margin: 6px 0 0; color: #354962; font-size: 14px; font-weight: 700; }
+.mypage-company-card { padding: 18px; }
+.mypage-company-card-header { display: flex; align-items: center; gap: 12px; }
+.mypage-company-logo { display: flex; width: 52px; height: 52px; min-width: 52px; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; color: #0878e8; font-size: 12px; font-weight: 900; }
+.mypage-company-card-header > div { min-width: 0; }
+.mypage-company-card-header strong, .mypage-company-card-header span { display: block; }
+.mypage-company-card-header strong { color: #354962; font-size: 15px; }
+.mypage-company-card-header span { margin-top: 3px; color: #4775a6; font-size: 11px; }
+.mypage-company-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 18px 0; }
+.mypage-analysis-button { width: 100%; min-height: 38px; border: 1px solid #d7e5f2; border-radius: 9px; background: #f5f9fd; color: #0878e8; font-size: 12px; font-weight: 750; cursor: pointer; }
+.mypage-analysis-button:hover { border-color: #0878e8; background: #edf6ff; }
+:root[data-theme="dark"] .mypage-profile-grid > div, :root[data-theme="dark"] .mypage-company-card { border-color: #2b394b; background: #111a27; }
+:root[data-theme="dark"] .mypage-section-heading h2, :root[data-theme="dark"] .mypage-profile-grid dd, :root[data-theme="dark"] .mypage-company-details dd, :root[data-theme="dark"] .mypage-company-card-header strong { color: #e8eef8; }
+:root[data-theme="dark"] .mypage-analysis-button { border-color: #2f577d; background: #152a40; color: #8fc5ff; }
+@media (max-width: 760px) { .mypage-profile-grid, .mypage-company-grid { grid-template-columns: 1fr; } }
+
 /* Watchlist page */
 .watchlist-page-content {
   width: min(calc(100% - 64px), 1080px);
