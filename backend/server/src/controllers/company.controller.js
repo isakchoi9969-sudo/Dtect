@@ -346,7 +346,9 @@ async function getMarketIndices(_req, res) {
  */
 async function saveCompanyAnalysisSnapshot(req, res) {
   const companyId = Number(req.params.companyId);
-  const riskSignalRate = Number(req.body?.riskSignalRate);
+  const riskSignalRate = Number(req.body?.riskSignalRate ?? 0);
+  const riskScore = Number(req.body?.riskScore);
+  const riskLevel = req.body?.riskLevel;
   const analyzedCount = Number(req.body?.analyzedCount || 0);
   const analyzedAt = req.body?.analyzedAt || new Date().toISOString();
 
@@ -357,14 +359,17 @@ async function saveCompanyAnalysisSnapshot(req, res) {
     });
   }
 
-  if (
-    !Number.isFinite(riskSignalRate) ||
-    riskSignalRate < 0 ||
-    riskSignalRate > 100
-  ) {
+  if (!Number.isFinite(riskScore) || riskScore < 0 || riskScore > 100) {
     return res.status(400).json({
       success: false,
-      message: "위험 신호 비율은 0~100 사이여야 합니다.",
+      message: "종합 리스크 점수는 0~100 사이여야 합니다.",
+    });
+  }
+
+  if (!["낮음", "주의", "높음", "심각"].includes(riskLevel)) {
+    return res.status(400).json({
+      success: false,
+      message: "올바른 위험 단계가 필요합니다.",
     });
   }
 
@@ -373,6 +378,8 @@ async function saveCompanyAnalysisSnapshot(req, res) {
       userId: req.authUserId,
       companyId,
       riskSignalRate,
+      riskScore,
+      riskLevel,
       analyzedCount,
       analyzedAt,
     });

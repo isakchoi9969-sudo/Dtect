@@ -1,6 +1,7 @@
 const cron = require("node-cron");
 const { pool } = require("../db/pool");
 const { analyzeCompanyNews } = require("./newsAnalysis.service");
+const { assessCompanyRisk } = require("./companyRiskAssessment.service");
 const { saveAnalysisAndCreateAlerts } = require("./analysisAlert.service");
 
 let isRunning = false;
@@ -8,10 +9,9 @@ let isRunning = false;
 /**
  * 전체 관심기업을 기업별로 한 번씩 분석합니다.
  * 같은 기업을 여러 사용자가 관심기업으로 등록했어도
- * 뉴스 분석은 한 번만 실행하고, 알림은 사용자별로 저장합니다.
+ * 뉴스 분석과 종합 리스크 평가는 한 번만 실행합니다.
  */
 async function runWatchlistAnalysisJob() {
-  // 이전 작업이 아직 끝나지 않았다면 중복 실행하지 않습니다.
   if (isRunning) {
     console.log("[관심기업 정기 분석] 이전 작업이 아직 진행 중입니다.");
     return;
@@ -20,7 +20,6 @@ async function runWatchlistAnalysisJob() {
   isRunning = true;
 
   try {
-    // 관심기업으로 한 번 이상 등록된 기업만 중복 없이 가져옵니다.
     const [companies] = await pool.query(
       `SELECT DISTINCT
          c.COMPANY_ID AS companyId,
@@ -31,20 +30,43 @@ async function runWatchlistAnalysisJob() {
 
     console.log(`[관심기업 정기 분석] ${companies.length}개 기업 분석 시작`);
 
-    // API 호출량을 고려해 기업을 순서대로 분석합니다.
     for (const company of companies) {
       try {
-        // 최신 뉴스 수집 → 감성 분석 → NEWS_ARTICLE_ANALYSIS 저장
+        // 1. 최신 뉴스 수집 및 감성 분석
         const analysis = await analyzeCompanyNews(company.companyName, 1, 100);
 
+        // 2. 감성·추이·이슈를 반영한 실제 종합 리스크 평가
+        const assessment = await assessCompanyRisk({
+          companyId: company.companyId,
+          articles: (analysis.news_list || []).map((article) => ({
+            title: article.title,
+            description: article.description,
+            pub_date: article.pub_date,
+            source: article.source,
+            original_link: article.original_link,
+            sentiment: article.sentiment,
+            score: article.score,
+          })),
+        });
+
+        // 종합 리스크 점수를 산출하지 못한 경우에는 알림을 만들지 않음
+        if (
+          assessment?.status !== "ready" ||
+          !Number.isFinite(Number(assessment?.riskScore))
+        ) {
+          console.log(
+            `[관심기업 정기 분석 보류] ${company.companyName} · 종합 리스크 평가 대기`,
+          );
+          continue;
+        }
+
         const riskSignalRate = analysis.sentiment_percentages?.negative ?? 0;
-        const riskScore = analysis.risk_score ?? 0;
-        const riskLevel = analysis.risk_level ?? "낮음";
+        const riskScore = Number(assessment.riskScore);
+        const riskLevel = assessment.riskLevel;
 
         const analyzedCount = analysis.analyzed_count ?? 0;
         const analyzedAt = analysis.analyzed_at;
 
-        // 이 기업을 관심기업으로 등록한 사용자 목록을 가져옵니다.
         const [users] = await pool.query(
           `SELECT USER_ID AS userId
            FROM FAVORITE_COMPANY
@@ -52,7 +74,6 @@ async function runWatchlistAnalysisJob() {
           [company.companyId],
         );
 
-        // 사용자별 스냅샷 저장 및 알림 생성
         for (const user of users) {
           await saveAnalysisAndCreateAlerts({
             userId: user.userId,
@@ -66,10 +87,9 @@ async function runWatchlistAnalysisJob() {
         }
 
         console.log(
-          `[관심기업 정기 분석 완료] ${company.companyName} · 위험 신호 ${riskSignalRate}%`,
+          `[관심기업 정기 분석 완료] ${company.companyName} · 종합 리스크 ${riskScore}점 (${riskLevel})`,
         );
       } catch (error) {
-        // 한 기업 분석 실패가 전체 작업을 멈추지 않게 합니다.
         console.error(
           `[관심기업 분석 실패] ${company.companyName}:`,
           error.message,
@@ -86,7 +106,6 @@ async function runWatchlistAnalysisJob() {
 }
 
 function startWatchlistAnalysisScheduler() {
-  // 매시간 정각에 관심기업 전체를 분석합니다.
   cron.schedule(
     "0 * * * *",
     () => {
