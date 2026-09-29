@@ -1,1 +1,701 @@
-﻿.response-page { min-height: 100vh; background: #f7f9fc; color: #1b2a3d; }.response-main { width: min(calc(100% - 48px), 920px); margin: 0 auto; padding: 62px 0 90px; }.response-kicker { margin: 0 0 10px; color: #1779df; font-size: 11px; font-weight: 850; letter-spacing: .15em; }.response-main h1 { margin: 0; font-size: 34px; letter-spacing: -.06em; }.response-description { margin: 11px 0 28px; color: #77869a; font-size: 14px; }.response-tabs { display: flex; gap: 26px; border-bottom: 1px solid #dfe6ee; }.response-tabs button { position: relative; padding: 0 2px 14px; color: #8290a2; background: transparent; cursor: pointer; font-size: 14px; font-weight: 750; }.response-tabs button.active { color: #1779df; }.response-tabs button.active::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; content: ""; background: #1779df; }.tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }.tool-card { padding: 25px; border: 1px solid #e1e7ef; border-radius: 14px; background: #fff; }.tool-card > span { color: #1779df; font-size: 10px; font-weight: 850; letter-spacing: .13em; }.tool-card h2 { margin: 8px 0 19px; font-size: 19px; }.case-options { display: grid; gap: 8px; }.case-options button { display: flex; justify-content: space-between; padding: 13px; border: 1px solid #e6ebf1; border-radius: 9px; color: #536278; background: #fff; cursor: pointer; text-align: left; }.case-options button.selected { border-color: #84b8f3; color: #1779df; background: #f0f7ff; font-weight: 750; }.case-options i { font-size: 19px; font-style: normal; }.simulation-result > p { min-height: 46px; color: #718095; font-size: 13px; line-height: 1.65; }.result-metrics { display: grid; grid-template-columns: 1fr 1fr; margin: 22px 0; border: 1px solid #e7edf3; border-radius: 9px; }.result-metrics p { margin: 0; padding: 12px; text-align: center; }.result-metrics p + p { border-left: 1px solid #e7edf3; }.result-metrics b, .result-metrics span { display: block; }.result-metrics b { color: #1779df; font-size: 19px; }.result-metrics span { margin-top: 3px; color: #94a0af; font-size: 10px; }.primary-action { padding: 12px 17px; border-radius: 8px; color: #fff; background: #1779df; cursor: pointer; font-size: 13px; font-weight: 800; }.generator-card { max-width: 650px; margin-top: 22px; }.generator-card label { display: grid; gap: 8px; margin-top: 15px; color: #4e5e73; font-size: 12px; font-weight: 750; }.generator-card select, .generator-card textarea { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #dce4ed; border-radius: 8px; color: #4e5e73; background: #fff; font: inherit; font-weight: 500; }.generator-card textarea { min-height: 105px; resize: vertical; }.generator-card .primary-action { margin-top: 19px; }.generated-draft { margin-top: 20px; padding: 16px; border-radius: 9px; background: #f0f7ff; }.generated-draft b { color: #1779df; font-size: 13px; }.generated-draft p { margin: 8px 0 0; color: #5f7187; font-size: 13px; line-height: 1.6; } @media (max-width: 600px) { .response-main { width: min(calc(100% - 32px), 920px); padding-top: 38px; }.response-main h1 { font-size: 28px; }.tool-grid { grid-template-columns: 1fr; }.response-tabs { gap: 17px; }.response-tabs button { font-size: 12px; } }
+﻿/* =========================================
+   D:TECT DARK MODE - HEADER TEXT
+   이 페이지에서는 헤더 글자만 흰색
+   ========================================= */
+
+[data-theme="dark"] .response-page header,
+[data-theme="dark"] .response-page header a,
+[data-theme="dark"] .response-page header button,
+[data-theme="dark"] .response-page header span {
+  color: #ffffff !important;
+}
+
+/* 헤더 네비게이션 글자 */
+[data-theme="dark"] .response-page header nav a,
+[data-theme="dark"] .response-page header nav button {
+  color: #ffffff !important;
+}
+
+/* 로고 */
+[data-theme="dark"] .response-page header .logo,
+[data-theme="dark"] .response-page header .header-logo {
+  color: #ffffff !important;
+}
+
+/* 헤더 안의 아이콘/메뉴 버튼 */
+[data-theme="dark"] .response-page header svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* 모바일 메뉴가 있다면 메뉴 글자도 흰색 */
+[data-theme="dark"] .response-page header ul,
+[data-theme="dark"] .response-page header li,
+[data-theme="dark"] .response-page header li a {
+  color: #ffffff !important;
+}
+.response-page {
+  min-height: 100vh;
+  background: #f7f9fc;
+  color: #1b2a3d;
+}
+.response-main {
+  width: min(calc(100% - 48px), 920px);
+  margin: 0 auto;
+  padding: 62px 0 90px;
+}
+.response-kicker {
+  margin: 0 0 10px;
+  color: #1779df;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.15em;
+}
+.response-main h1 {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: -0.06em;
+}
+.response-description {
+  margin: 11px 0 28px;
+  color: #77869a;
+  font-size: 14px;
+}
+.response-tabs {
+  display: flex;
+  gap: 26px;
+  border-bottom: 1px solid #dfe6ee;
+}
+.response-tabs button {
+  position: relative;
+  padding: 0 2px 14px;
+  color: #8290a2;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 750;
+}
+.response-tabs button.active {
+  color: #1779df;
+}
+.response-tabs button.active::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  content: "";
+  background: #1779df;
+}
+.tool-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 22px;
+}
+.tool-card {
+  padding: 25px;
+  border: 1px solid #e1e7ef;
+  border-radius: 14px;
+  background: #fff;
+}
+.tool-card > span {
+  color: #1779df;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+}
+.tool-card h2 {
+  margin: 8px 0 19px;
+  font-size: 19px;
+}
+.case-options {
+  display: grid;
+  gap: 8px;
+}
+.case-options button {
+  display: flex;
+  justify-content: space-between;
+  padding: 13px;
+  border: 1px solid #e6ebf1;
+  border-radius: 9px;
+  color: #536278;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+.case-options button.selected {
+  border-color: #84b8f3;
+  color: #1779df;
+  background: #f0f7ff;
+  font-weight: 750;
+}
+.case-options i {
+  font-size: 19px;
+  font-style: normal;
+}
+.simulation-result > p {
+  min-height: 46px;
+  color: #718095;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.result-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 22px 0;
+  border: 1px solid #e7edf3;
+  border-radius: 9px;
+}
+.result-metrics p {
+  margin: 0;
+  padding: 12px;
+  text-align: center;
+}
+.result-metrics p + p {
+  border-left: 1px solid #e7edf3;
+}
+.result-metrics b,
+.result-metrics span {
+  display: block;
+}
+.result-metrics b {
+  color: #1779df;
+  font-size: 19px;
+}
+.result-metrics span {
+  margin-top: 3px;
+  color: #94a0af;
+  font-size: 10px;
+}
+.primary-action {
+  padding: 12px 17px;
+  border-radius: 8px;
+  color: #fff;
+  background: #1779df;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+.generator-card {
+  max-width: 900px;
+  margin-top: 22px;
+}
+.generator-card label {
+  display: grid;
+  gap: 8px;
+  margin-top: 15px;
+  color: #4e5e73;
+  font-size: 12px;
+  font-weight: 750;
+}
+.generator-card select,
+.generator-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px;
+  border: 1px solid #dce4ed;
+  border-radius: 8px;
+  color: #4e5e73;
+  background: #fff;
+  font: inherit;
+  font-weight: 500;
+}
+.generator-card textarea {
+  min-height: 105px;
+  resize: vertical;
+}
+.generator-card .primary-action {
+  margin-top: 19px;
+}
+.generated-draft {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 9px;
+  background: #f0f7ff;
+}
+.generated-draft b {
+  color: #1779df;
+  font-size: 13px;
+}
+.generated-draft p {
+  margin: 8px 0 0;
+  color: #5f7187;
+  font-size: 13px;
+  line-height: 1.6;
+}
+@media (max-width: 600px) {
+  .response-main {
+    width: min(calc(100% - 32px), 920px);
+    padding-top: 38px;
+  }
+  .response-main h1 {
+    font-size: 28px;
+  }
+  .tool-grid {
+    grid-template-columns: 1fr;
+  }
+  .response-tabs {
+    gap: 17px;
+  }
+  .response-tabs button {
+    font-size: 12px;
+  }
+}
+/* AI 초안 결과의 가독성을 위한 영역 */
+.draft-content {
+  margin-top: 18px;
+  color: #334155;
+  line-height: 1.7;
+}
+
+.draft-content h3 {
+  margin: 22px 0 8px;
+  color: #0f4c9a;
+  font-size: 15px;
+}
+
+.draft-content h3:first-child {
+  margin-top: 0;
+}
+
+.draft-content p {
+  margin: 6px 0;
+}
+
+.draft-content .draft-bullet {
+  position: relative;
+  padding-left: 14px;
+}
+
+.draft-content .draft-bullet::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #257be7;
+  font-weight: bold;
+}
+
+/* 참고 기사 전체 영역 */
+.reference-articles {
+  margin-top: 22px;
+  padding-top: 15px;
+  border-top: 1px solid #cfe0f2;
+}
+
+/* 참고 기사 3건 보기 버튼 */
+.reference-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  color: #1779df;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+/* 펼쳤을 때 나타나는 기사 목록 */
+.reference-article-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reference-article-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 12px;
+  border: 1px solid #d7e5f3;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.reference-article-list li div {
+  min-width: 0;
+}
+
+.reference-article-list strong,
+.reference-article-list span {
+  display: block;
+}
+
+.reference-article-list strong {
+  overflow: hidden;
+  color: #334155;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reference-article-list span {
+  margin-top: 4px;
+  color: #8290a2;
+  font-size: 11px;
+}
+
+.reference-article-list a {
+  flex: 0 0 auto;
+  color: #1779df;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+/* 산업과 이슈 선택 영역을 2열로 배치합니다. */
+.generator-selection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* 선택한 이슈의 요약 정보를 보여주는 카드입니다. */
+.selected-issue-summary {
+  margin-top: 16px;
+  padding: 15px 16px;
+  border: 1px solid #cfe2f8;
+  border-radius: 9px;
+  background: #f5f9fe;
+}
+
+.selected-issue-summary > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #1779df;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+}
+
+.selected-issue-summary strong {
+  color: #203552;
+  font-size: 14px;
+}
+
+.selected-issue-summary p {
+  margin: 7px 0 0;
+  color: #718095;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.generator-intro {
+  margin: -8px 0 6px;
+  color: #718095;
+  font-size: 13px;
+}
+
+.generator-card small {
+  color: #97a3b4;
+  font-weight: 500;
+}
+
+/* 모바일에서는 산업·이슈 선택칸을 세로로 표시합니다. */
+@media (max-width: 600px) {
+  .generator-selection-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.issue-insight-card {
+  margin-top: 22px;
+  padding: 20px;
+  border: 1px solid #cfe2f8;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #f5f9fe 0%, #fbfdff 100%);
+}
+
+.issue-insight-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.issue-insight-header span {
+  display: block;
+  margin-bottom: 7px;
+  color: #1779df;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+}
+
+.issue-insight-header h3 {
+  margin: 0;
+  color: #203552;
+  font-size: 16px;
+}
+
+.risk-badge {
+  height: fit-content;
+  padding: 6px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* 관심: 아직 초기 언급 단계 */
+.risk-interest {
+  color: #355a7a;
+  background: #dcebf7;
+}
+
+/* 주의: 증가 추세라 모니터링 필요 */
+.risk-caution {
+  color: #805600;
+  background: #ffe7a3;
+}
+
+/* 경계: 확산 또는 실질적 영향 발생 */
+.risk-warning {
+  color: #9a3d00;
+  background: #ffd5b8;
+}
+
+/* 심각: 즉각적인 대응이 필요한 상태 */
+.risk-critical {
+  color: #971b1b;
+  background: #ffcaca;
+}
+
+.issue-insight-card > p {
+  margin: 10px 0 17px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.insight-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
+  border: 1px solid #dde9f5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.insight-metrics div {
+  padding: 11px 13px;
+}
+
+.insight-metrics div + div {
+  border-left: 1px solid #e5edf5;
+}
+
+.insight-metrics span,
+.insight-metrics strong {
+  display: block;
+}
+
+.insight-metrics span {
+  color: #93a0b0;
+  font-size: 10px;
+}
+
+.insight-metrics strong {
+  margin-top: 4px;
+  color: #334155;
+  font-size: 13px;
+}
+
+.keyword-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 13px;
+}
+
+.keyword-tags span {
+  padding: 5px 8px;
+  border-radius: 5px;
+  color: #3874ae;
+  background: #eaf4ff;
+  font-size: 11px;
+}
+
+.document-guide {
+  margin: 8px 0 0;
+  color: #718095;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 단계 번호와 제목을 한 줄로 묶어 정렬합니다. */
+.step-heading {
+  margin-bottom: 14px;
+}
+
+.step-title-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.step-heading > p {
+  margin: 6px 0 0 25px;
+  color: #7d8ca0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.step-heading b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  color: #1779df;
+  background: #eaf4ff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.step-heading h2 {
+  margin: 0;
+  color: #203552;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+
+.generator-step {
+  padding: 20px 0;
+}
+
+.generator-card-header {
+  padding-bottom: 17px;
+}
+
+.generator-card-header p {
+  margin: 7px 0 0;
+  color: #718095;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* 입력 항목 제목과 '선택' 표시를 같은 줄에 배치합니다. */
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4e5e73;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.field-label em {
+  color: #97a3b4;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.issue-load-error {
+  margin: 10px 0 0;
+  color: #c2410c;
+  font-size: 12px;
+}
+
+.risk-reason {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 10px 0 0;
+  color: #718095;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.risk-reason b {
+  flex: 0 0 auto;
+  color: #4d6680;
+  font-size: 11px;
+}
+
+/* 버튼 안에서 로딩 표시와 문구를 한 줄로 정렬 */
+.primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 생성 중인 버튼임을 마우스 커서로도 전달 */
+.primary-action.is-loading {
+  cursor: wait;
+}
+
+/* 흰색 원형 로딩 표시 */
+.generate-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: generate-spin 0.7s linear infinite;
+}
+
+@keyframes generate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 생성 결과의 복사·재생성 버튼 */
+.draft-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.draft-action-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #bcd8f4;
+  border-radius: 7px;
+  background: #fff;
+  color: #176fc5;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.draft-action-button:hover {
+  background: #e8f3ff;
+}
+
+.draft-action-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* 다시 생성 버튼은 주요 행동으로 표시 */
+.draft-regenerate-button {
+  border-color: #1779df;
+  background: #1779df;
+  color: #fff;
+}
+
+.draft-regenerate-button:hover {
+  background: #0968c9;
+}
+
+.draft-action-notice,
+.draft-regenerate-guide {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+
+.draft-action-notice {
+  color: #176fc5;
+}
+
+.draft-regenerate-guide {
+  color: #728198;
+}

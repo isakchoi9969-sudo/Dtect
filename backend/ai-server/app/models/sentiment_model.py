@@ -2,12 +2,37 @@
 
 import logging
 import os
+from collections import OrderedDict
+from hashlib import sha256
 from threading import Lock
+from time import perf_counter
 
 logger = logging.getLogger(__name__)
 
 _sentiment_pipeline = None
 _model_lock = Lock()
+_inference_lock = Lock()
+_prediction_cache = OrderedDict()
+_CACHE_LIMIT = 4096
+
+
+def resolve_model_source(model_name: str) -> str:
+    """캐시된 모델을 우선 사용하고, 없을 때만 원격 저장소를 사용한다."""
+    from huggingface_hub import snapshot_download
+
+    try:
+        local_model_path = snapshot_download(
+            repo_id=model_name,
+            local_files_only=True,
+        )
+        logger.info("로컬 감성분석 모델 캐시 사용: %s", local_model_path)
+        return local_model_path
+    except Exception as error:
+        logger.warning(
+            "로컬 감성분석 모델 캐시를 사용할 수 없어 원격 모델을 조회합니다: %s",
+            error,
+        )
+        return model_name
 
 
 def get_sentiment_pipeline():
@@ -37,10 +62,11 @@ def get_sentiment_pipeline():
             )
 
             logger.info("감성분석 모델 로딩 시작: %s", model_name)
+            model_source = resolve_model_source(model_name)
 
             _sentiment_pipeline = pipeline(
                 "text-classification",
-                model=model_name,
+                model=model_source,
             )
 
             logger.info("감성분석 모델 로딩 완료")
@@ -81,23 +107,29 @@ def analyze_sentiments(texts: list[str]) -> list[dict]:
 
     model = get_sentiment_pipeline()
 
-    batch_size = int(
-        os.getenv("SENTIMENT_BATCH_SIZE", "8")
-    )
-
-    results = model(
-        texts,
-        truncation=True,
-        max_length=512,
-        batch_size=batch_size,
-    )
-    
-    logger.info("KR-FinBERT 원본 결과: %s", results)
-   
-    return [
-        {
-            "label": normalize_label(result["label"]),
-            "score": float(result["score"]),
-        }
-        for result in results
-    ]
+    started = perf_counter()
+    # Cache exact text under the loaded model instance. A model restart/replacement
+    # cannot reuse predictions from a different model. Do not cache source text.
+    keys = [(id(model), sha256(text.encode("utf-8")).hexdigest()) for text in texts]
+    with _inference_lock:
+        missing = {key: text for key, text in zip(keys, texts) if key not in _prediction_cache}
+        resolved = {key: _prediction_cache[key] for key in keys if key in _prediction_cache}
+        if missing:
+            predictions = model(
+                list(missing.values()), truncation=True, max_length=512,
+                batch_size=max(1, int(os.getenv("SENTIMENT_BATCH_SIZE", "8"))),
+            )
+            if len(predictions) != len(missing):
+                raise ValueError("감성분석 결과 개수가 입력 개수와 일치하지 않습니다.")
+            resolved.update({key: {"label": normalize_label(prediction["label"]),
+                                   "score": float(prediction["score"])}
+                             for key, prediction in zip(missing, predictions)})
+        for key in keys:
+            _prediction_cache[key] = resolved[key]
+            _prediction_cache.move_to_end(key)
+        while len(_prediction_cache) > _CACHE_LIMIT:
+            _prediction_cache.popitem(last=False)
+        results = [dict(resolved[key]) for key in keys]
+    logger.info("Sentiment: articles=%d inferred=%d elapsed_ms=%.0f",
+                len(texts), len(missing), (perf_counter() - started) * 1000)
+    return results

@@ -103,6 +103,168 @@ function AuthPage({ mode }) {
 
   return (
     <main className="auth-page">
+      <style>{`
+        .auth-page .auth-intro {
+          position: relative;
+          display: flex;
+          min-height: 100%;
+          flex-direction: column;
+          justify-content: space-between;
+          overflow: hidden;
+          padding: clamp(28px, 4vw, 52px);
+          background:
+            radial-gradient(circle at 15% 18%, rgba(96, 165, 250, 0.2), transparent 30%),
+            linear-gradient(145deg, #0b1120 0%, #111c35 54%, #172554 100%);
+          color: #f8fafc;
+          isolation: isolate;
+        }
+
+        .auth-page .auth-intro::before {
+          content: "";
+          position: absolute;
+          z-index: -1;
+          top: 25%;
+          right: -120px;
+          width: 360px;
+          height: 360px;
+          border: 1px solid rgba(147, 197, 253, 0.16);
+          border-radius: 50%;
+          box-shadow: 0 0 0 34px rgba(147, 197, 253, 0.035), 0 0 0 68px rgba(147, 197, 253, 0.025);
+          transform: translateY(-50%);
+        }
+
+        .auth-page .auth-intro::after {
+          content: "";
+          position: absolute;
+          z-index: -1;
+          right: 12%;
+          bottom: 12%;
+          width: 140px;
+          height: 140px;
+          border-radius: 50%;
+          background: rgba(59, 130, 246, 0.16);
+          filter: blur(42px);
+          pointer-events: none;
+        }
+
+        .auth-page .auth-logo {
+          display: inline-flex;
+          width: fit-content;
+          align-items: center;
+          gap: 9px;
+          color: #fff;
+          font-size: 17px;
+          font-weight: 800;
+          letter-spacing: -0.04em;
+          text-decoration: none;
+        }
+
+        .auth-page .auth-logo::before {
+          content: "";
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #60a5fa;
+          box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.12), 0 0 18px rgba(96, 165, 250, 0.7);
+        }
+
+        .auth-page .auth-intro-copy {
+          max-width: 430px;
+          margin: auto 0;
+          padding: clamp(44px, 7vw, 92px) 0;
+        }
+
+        .auth-page .auth-intro-copy > span {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: #93c5fd;
+          font-size: 10px;
+          font-weight: 750;
+          letter-spacing: 0.16em;
+        }
+
+        .auth-page .auth-intro-copy > span::before {
+          content: "";
+          width: 22px;
+          height: 1px;
+          background: currentColor;
+          opacity: 0.7;
+        }
+
+        .auth-page .auth-intro-copy h1 {
+          margin: 18px 0 17px;
+          color: #f8fafc;
+          font-size: clamp(2rem, 4vw, 3.3rem);
+          font-weight: 720;
+          line-height: 1.16;
+          letter-spacing: -0.07em;
+          word-break: keep-all;
+        }
+
+        .auth-page .auth-intro-copy p {
+          max-width: 340px;
+          margin: 0;
+          color: #a8b5cb;
+          font-size: 13px;
+          line-height: 1.75;
+          word-break: keep-all;
+        }
+
+        .auth-page .auth-signal {
+          display: flex;
+          width: min(100%, 360px);
+          align-items: end;
+          gap: 5px;
+          margin-top: 34px;
+          padding-top: 15px;
+          border-top: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .auth-page .auth-signal-bar {
+          width: 8px;
+          height: var(--signal-height);
+          border-radius: 3px 3px 1px 1px;
+          background: linear-gradient(180deg, #93c5fd, rgba(59, 130, 246, 0.18));
+          opacity: 0.8;
+          animation: authSignalIn 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          animation-delay: calc(var(--signal-index) * 65ms);
+        }
+
+        .auth-page .auth-signal-caption {
+          margin-left: 10px;
+          color: #7f91ad;
+          font-size: 10px;
+          letter-spacing: 0.06em;
+        }
+
+        .auth-page .auth-copyright {
+          margin: 0;
+          color: #71819b;
+          font-size: 10px;
+          letter-spacing: 0.03em;
+        }
+
+        @keyframes authSignalIn {
+          from { opacity: 0; transform: scaleY(0.25); transform-origin: bottom; }
+          to { opacity: 0.8; transform: scaleY(1); transform-origin: bottom; }
+        }
+
+        @media (max-width: 760px) {
+          .auth-page .auth-intro {
+            min-height: 280px;
+            padding: 28px 24px;
+          }
+          .auth-page .auth-intro-copy { padding: 42px 0 28px; }
+          .auth-page .auth-intro-copy h1 { font-size: clamp(2rem, 9vw, 2.7rem); }
+          .auth-page .auth-signal { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .auth-page .auth-signal-bar { animation: none; }
+        }
+      `}</style>
+
       <section className="auth-intro" aria-label="D:TECT 소개">
         <a className="auth-logo" href={ROUTES.HOME}>
           D:TECT
@@ -116,9 +278,23 @@ function AuthPage({ mode }) {
           <p>
             흩어진 시장의 목소리를 분석해, 놓치기 쉬운 리스크를 알려드립니다.
           </p>
+          <div className="auth-signal" aria-hidden="true">
+            {[34, 52, 42, 68, 56, 82, 64, 92, 74].map((height, index) => (
+              <span
+                className="auth-signal-bar"
+                key={index}
+                style={{
+                  "--signal-height": `${height}%`,
+                  "--signal-index": index,
+                }}
+              />
+            ))}
+            <span className="auth-signal-caption">SIGNALS IN VIEW</span>
+          </div>
         </div>
         <p className="auth-copyright">© 2026 D:TECT. All rights reserved.</p>
       </section>
+
       <section className="auth-form-section">
         <div className="auth-form-wrap">
           <a className="auth-mobile-logo" href={ROUTES.HOME}>

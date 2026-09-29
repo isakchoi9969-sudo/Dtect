@@ -6,11 +6,14 @@ KR-FinBERT 로 감성분석한 결과만 반환한다.
 그 역할은 전부 Node.js 서버(../server)가 담당한다.
 """
 
-from fastapi import APIRouter
+import logging
+
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.models.sentiment_model import analyze_sentiments
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 
 
@@ -35,14 +38,16 @@ class SentimentResponse(BaseModel):
 
 @router.post("/sentiment", response_model=SentimentResponse)
 def sentiment(payload: SentimentRequest):
-    print("===== FastAPI 입력 텍스트 =====")
-    print(payload.texts)
-    print("==============================")
     """텍스트 리스트를 받아 순서를 유지한 채 감성분석 결과를 반환한다."""
-    predictions = analyze_sentiments(payload.texts)
-    print("===== FastAPI 결과 =====")
-    print(predictions)
-    print("=======================")
+    try:
+        predictions = analyze_sentiments(payload.texts)
+    except Exception as error:
+        logger.exception("감성분석 처리 실패 (입력 %d건)", len(payload.texts))
+        raise HTTPException(
+            status_code=500,
+            detail=f"{type(error).__name__}: {error}",
+        ) from error
+
     return SentimentResponse(
         results=[SentimentResult(**p) for p in predictions]
     )

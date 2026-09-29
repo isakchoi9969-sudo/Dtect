@@ -9,6 +9,12 @@ const newsRoutes = require("./routes/news.routes");
 const companyRoutes = require("./routes/company.routes");
 const healthRoutes = require("./routes/health.routes");
 const simulatorRoutes = require("./routes/simulator.routes");
+const responseDraftRoutes = require("./routes/responseDraft.routes");
+const communityRoutes = require("./routes/community.routes");
+
+const {
+  startWatchlistAnalysisScheduler,
+} = require("./services/watchlistAnalysis.scheduler");
 
 const app = express();
 
@@ -27,6 +33,8 @@ app.use("/api/company", companyRoutes);
 app.use("/api/favorite-company", favoriteCompanyRoutes);
 app.use("/api/simulator", simulatorRoutes);
 app.use("/api", healthRoutes);
+app.use("/api/response-drafts", responseDraftRoutes);
+app.use("/api/community", communityRoutes);
 
 // 프론트엔드 빌드 결과물을 이 서버에서 함께 서빙하려면 아래 주석을 해제하세요.
 // const path = require("path");
@@ -37,6 +45,8 @@ app.use("/api", healthRoutes);
 
 const server = app.listen(port, () => {
   console.log(`서버가 http://localhost:${port} 에서 실행 중입니다.`);
+  // 관심기업 뉴스 분석을 매시간 정각에 자동 실행합니다.
+  startWatchlistAnalysisScheduler();
 });
 
 let isShuttingDown = false;

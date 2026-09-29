@@ -7,7 +7,6 @@ import ThemeToggle from "./ThemeToggle";
 const copy = {
   homeLabel: "D:TECT \uba54\uc778 \ud398\uc774\uc9c0",
   primaryMenu: "\uc8fc\uc694 \uba54\ub274",
-  paidService: "\uc720\ub8cc \uc11c\ube44\uc2a4",
   login: "\ub85c\uadf8\uc778",
   openMenu: "\uba54\ub274 \uc5f4\uae30",
 };
@@ -70,10 +69,14 @@ function Header() {
       return ROUTES.DASHBOARD_WATCHLIST;
     if (item.href === ROUTES.DASHBOARD && childIndex === 1)
       return ROUTES.DASHBOARD_ISSUE_RISK;
+
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 0)
       return ROUTES.COMPANY_SEARCH;
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 1)
       return ROUTES.COMPANY_WATCHLIST;
+    if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 2)
+      return ROUTES.STOCK_SEARCH;
+
     if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 0)
       return ROUTES.CASE_SIMULATOR;
     if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 1)
@@ -83,6 +86,13 @@ function Header() {
       return ROUTES.RISK_ALERT;
     if (item.href === ROUTES.ALERTS && childIndex === 1)
       return ROUTES.MAJOR_ISSUE_ALERT;
+
+    // 커뮤니티
+    if (item.href === ROUTES.COMUNITY && childIndex === 0)
+      return ROUTES.COMUNITY;
+
+    if (item.href === ROUTES.COMUNITY && childIndex === 1)
+      return ROUTES.COMMUNITY_STOCK;
 
     return item.href;
   };
@@ -106,9 +116,6 @@ function Header() {
               </a>
               <div className="dropdown">
                 <div className="dropdown-inner">
-                  {item.paidService && (
-                    <span className="business-badge">{copy.paidService}</span>
-                  )}
                   {item.children.map((child) => (
                     <a href={getChildHref(item, child)} key={child}>
                       {child}
@@ -124,6 +131,9 @@ function Header() {
           {currentUser ? (
             <>
               <span className="header-user-name">{currentUser.name} 님</span>
+              <a href={ROUTES.MYPAGE} className="login-button desktop-login">
+                마이페이지
+              </a>
               <button
                 type="button"
                 className="login-button desktop-login"
@@ -170,9 +180,6 @@ function Header() {
               </button>
               {openMobileMenu === index && (
                 <div className="mobile-submenu">
-                  {item.paidService && (
-                    <span className="business-badge">{copy.paidService}</span>
-                  )}
                   {item.children.map((child) => (
                     <a
                       href={getChildHref(item, child)}
@@ -187,13 +194,22 @@ function Header() {
             </div>
           ))}
           {currentUser ? (
-            <button
-              type="button"
-              className="login-button mobile-login"
-              onClick={handleLogout}
-            >
-              로그아웃
-            </button>
+            <>
+              <a
+                href={ROUTES.MYPAGE}
+                className="login-button mobile-login"
+                onClick={closeMobileMenu}
+              >
+                마이페이지
+              </a>
+              <button
+                type="button"
+                className="login-button mobile-login"
+                onClick={handleLogout}
+              >
+                로그아웃
+              </button>
+            </>
           ) : (
             <a
               href={ROUTES.LOGIN}

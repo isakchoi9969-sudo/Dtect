@@ -10,11 +10,19 @@ async function analyzeSentiments(texts) {
     return [];
   }
 
-  const response = await axios.post(
-    `${aiServerUrl}/api/ai/sentiment`,
-    { texts },
-    { timeout: 30000 }
-  );
+  let response;
+
+  try {
+    response = await axios.post(
+      `${aiServerUrl}/api/ai/sentiment`,
+      { texts },
+      { timeout: 120000 },
+    );
+  } catch (error) {
+    const detail = error.response?.data?.detail;
+    const reason = detail || error.message;
+    throw new Error(`AI 감성분석 처리 오류: ${reason}`, { cause: error });
+  }
 
   return response.data.results;
 }
@@ -31,6 +39,44 @@ async function searchSimilarNews(title, content) {
   );
 
   return response.data.results;
+}
+
+/**
+ * 별칭별 검색 결과를 NEWS_ID 기준으로 합친 뒤, 가장 높은 cosine 점수를 유지한다.
+ * 합친 뒤에도 Chroma 후보 상한 100건은 그대로 적용한다.
+ */
+function mergeSimilarNewsMatches(matchLists) {
+  const matchesByNewsId = new Map();
+
+  for (const matches of matchLists) {
+    for (const match of matches || []) {
+      const newsId = Number(match.news_id);
+      const similarity = Number(match.similarity);
+      if (!Number.isInteger(newsId) || !Number.isFinite(similarity)) continue;
+
+      const previous = matchesByNewsId.get(newsId);
+      if (!previous || similarity > previous.similarity) {
+        matchesByNewsId.set(newsId, { ...match, news_id: newsId, similarity });
+      }
+    }
+  }
+
+  return [...matchesByNewsId.values()]
+    .sort((left, right) => right.similarity - left.similarity || left.news_id - right.news_id)
+    .slice(0, 100);
+}
+
+/** 별칭별 독립 검색을 실행해 주제 검색의 recall을 보완한다. */
+async function searchSimilarNewsByQueries(queries) {
+  const normalizedQueries = (queries || [])
+    .filter((query) => String(query?.title || "").trim() || String(query?.content || "").trim());
+
+  if (normalizedQueries.length === 0) return [];
+
+  const matchLists = await Promise.all(
+    normalizedQueries.map((query) => searchSimilarNews(query.title, query.content)),
+  );
+  return mergeSimilarNewsMatches(matchLists);
 }
 
 /**
@@ -64,9 +110,39 @@ async function getIssueEmbedding(title, content) {
   return response.data.embedding;
 }
 
+/** FastAPI AI 서버에 대응자료 초안 생성을 요청합니다. */
+async function generateResponseDraft(payload) {
+  const response = await axios.post(
+    `${aiServerUrl}/api/ai/response-draft`,
+    payload,
+    { timeout: 60000 },
+  );
+
+  return response.data;
+}
+
+/** FastAPI AI 서버에 기사 근거 기반 종합 리스크 판단을 요청한다. */
+async function generateRiskAssessment(payload) {
+  try {
+    const response = await axios.post(
+      `${aiServerUrl}/api/ai/risk-assessment`,
+      payload,
+      { timeout: 90000 },
+    );
+    return response.data;
+  } catch (error) {
+    const detail = error.response?.data?.detail;
+    throw new Error(`LLM 리스크 평가 처리 오류: ${detail || error.message}`, { cause: error });
+  }
+}
+
 module.exports = {
   analyzeSentiments,
+  mergeSimilarNewsMatches,
   searchSimilarNews,
+  searchSimilarNewsByQueries,
   getNewsEmbeddings,
   getIssueEmbedding,
+  generateResponseDraft, // 대응자료 생성 함수 내보내기
+  generateRiskAssessment,
 };

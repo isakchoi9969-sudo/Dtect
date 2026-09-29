@@ -5,17 +5,25 @@
  * - 하위 도메인도 같은 언론사로 인정한다. 예: news.kbs.co.kr → kbs.co.kr
  */
 const APPROVED_NEWS_SOURCES = [
+  // 방송사
+  { id: "kbs", name: "KBS", domains: ["kbs.co.kr"] },
+  { id: "mbc", name: "MBC", domains: ["imbc.com"] },
+  { id: "sbs", name: "SBS", domains: ["sbs.co.kr"] },
+  { id: "jtbc", name: "JTBC", domains: ["jtbc.co.kr"] },
+  { id: "tvchosun", name: "TV조선", domains: ["tvchosun.com"] },
+  { id: "channela", name: "채널A", domains: ["ichannela.com"] },
+  { id: "mbn", name: "MBN", domains: ["mbn.co.kr"] },
+  { id: "ytn", name: "YTN", domains: ["ytn.co.kr"] },
+  {
+    id: "yonhapnewstv",
+    name: "연합뉴스TV",
+    domains: ["yonhapnewstv.co.kr"],
+  },
+
   // 통신사
   { id: "yonhap", name: "연합뉴스", domains: ["yna.co.kr"] },
   { id: "news1", name: "뉴스1", domains: ["news1.kr"] },
   { id: "newsis", name: "뉴시스", domains: ["newsis.com"] },
-
-  // 방송·종합 뉴스
-  { id: "kbs", name: "KBS", domains: ["kbs.co.kr"] },
-  { id: "mbc", name: "MBC", domains: ["imbc.com"] },
-  { id: "sbs", name: "SBS", domains: ["sbs.co.kr"] },
-  { id: "ytn", name: "YTN", domains: ["ytn.co.kr"] },
-  { id: "jtbc", name: "JTBC", domains: ["jtbc.co.kr"] },
 
   // 전국 종합일간지
   { id: "khan", name: "경향신문", domains: ["khan.co.kr"] },
@@ -29,6 +37,19 @@ const APPROVED_NEWS_SOURCES = [
   { id: "hani", name: "한겨레", domains: ["hani.co.kr"] },
   { id: "hankookilbo", name: "한국일보", domains: ["hankookilbo.com"] },
 
+  // 경제 주간지
+  // 상위 도메인(mk.co.kr, hankyung.com)보다 먼저 검사해야 매체명이 정확히 표시된다.
+  {
+    id: "mkeconomy",
+    name: "매경이코노미",
+    domains: ["economy.mk.co.kr"],
+  },
+  {
+    id: "hankyungbusiness",
+    name: "한경비즈니스",
+    domains: ["magazine.hankyung.com"],
+  },
+
   // 경제지
   { id: "mk", name: "매일경제", domains: ["mk.co.kr"] },
   { id: "moneytoday", name: "머니투데이", domains: ["mt.co.kr"] },
@@ -36,8 +57,28 @@ const APPROVED_NEWS_SOURCES = [
   { id: "asiae", name: "아시아경제", domains: ["asiae.co.kr"] },
   { id: "edaily", name: "이데일리", domains: ["edaily.co.kr"] },
   { id: "fnnews", name: "파이낸셜뉴스", domains: ["fnnews.com"] },
-  { id: "hankyung", name: "한국경제", domains: ["hankyung.com"] },
+  { id: "hankyung", name: "한국경제신문", domains: ["hankyung.com"] },
   { id: "herald", name: "헤럴드경제", domains: ["heraldcorp.com"] },
+
+  // IT 전문지
+  { id: "dt", name: "디지털타임스", domains: ["dt.co.kr"] },
+  { id: "etnews", name: "전자신문", domains: ["etnews.com"] },
+
+  // 인터넷·전문 매체
+  { id: "ohmynews", name: "오마이뉴스", domains: ["ohmynews.com"] },
+  {
+    id: "mediatoday",
+    name: "미디어오늘",
+    domains: ["mediatoday.co.kr"],
+  },
+  {
+    id: "bizwatch",
+    name: "비즈니스워치",
+    domains: ["bizwatch.co.kr"],
+  },
+  { id: "joseilbo", name: "조세일보", domains: ["joseilbo.com"] },
+  { id: "kukinews", name: "쿠키뉴스", domains: ["kukinews.com"] },
+  { id: "dailian", name: "데일리안", domains: ["dailian.co.kr"] },
 ];
 
 /**
