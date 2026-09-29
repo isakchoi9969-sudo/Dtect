@@ -3242,11 +3242,15 @@ button:focus-visible {
   color: #62778e;
   font-size: 13px;
 }
-.risk-sentiment-combined-card > .overall-risk-assessment > .risk-assessment-content,
+.risk-sentiment-combined-card
+  > .overall-risk-assessment
+  > .risk-assessment-content,
 .risk-sentiment-combined-card > .overall-risk-assessment > :not(:first-child) {
   grid-column: 1 / -1;
 }
-.risk-sentiment-combined-card > .overall-risk-assessment > .risk-assessment-loading {
+.risk-sentiment-combined-card
+  > .overall-risk-assessment
+  > .risk-assessment-loading {
   grid-column: 1;
   grid-row: 2 / 4;
   align-self: stretch;
@@ -3260,7 +3264,9 @@ button:focus-visible {
   min-height: 0 !important;
   padding: 20px 16px !important;
 }
-.risk-sentiment-combined-card .risk-assessment-content { display: contents; }
+.risk-sentiment-combined-card .risk-assessment-content {
+  display: contents;
+}
 .risk-sentiment-combined-card > .sentiment-summary-pane {
   grid-area: sentiment;
   min-width: 0;
@@ -3423,10 +3429,16 @@ button:focus-visible {
   opacity: 0;
   visibility: hidden;
   transform: translateY(4px);
-  transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease,
+    visibility 140ms ease;
   pointer-events: none;
 }
-.risk-signal-info-tooltip strong { color: #173553; font-size: 12px; }
+.risk-signal-info-tooltip strong {
+  color: #173553;
+  font-size: 12px;
+}
 .risk-signal-info-trigger:hover .risk-signal-info-tooltip,
 .risk-signal-info-trigger:focus-within .risk-signal-info-tooltip {
   opacity: 1;
@@ -3453,10 +3465,22 @@ button:focus-visible {
 .risk-sentiment-combined-card .risk-signal-track {
   height: 8px;
   border: 1px solid #e8edf3;
-  background: repeating-linear-gradient(90deg, #e8edf3 0, #e8edf3 calc(10% - 2px), #fff calc(10% - 2px), #fff 10%);
+  background: repeating-linear-gradient(
+    90deg,
+    #e8edf3 0,
+    #e8edf3 calc(10% - 2px),
+    #fff calc(10% - 2px),
+    #fff 10%
+  );
 }
 .risk-sentiment-combined-card .risk-signal-track i {
-  background: repeating-linear-gradient(90deg, #6f9dcb 0, #6f9dcb calc(10% - 2px), #fff calc(10% - 2px), #fff 10%);
+  background: repeating-linear-gradient(
+    90deg,
+    #6f9dcb 0,
+    #6f9dcb calc(10% - 2px),
+    #fff calc(10% - 2px),
+    #fff 10%
+  );
 }
 .risk-sentiment-combined-card .risk-signal-track.is-empty {
   border-style: dashed;
@@ -4381,30 +4405,140 @@ button:focus-visible {
 }
 
 /* My page */
-.mypage-page-content { padding-bottom: 88px; }
-.mypage-section + .mypage-section { margin-top: 42px; }
-.mypage-section-heading { margin-bottom: 14px; }
-.mypage-section-heading p { margin: 0 0 6px; color: #0878e8; font-size: 10px; font-weight: 850; letter-spacing: 0.15em; }
-.mypage-section-heading h2 { margin: 0; color: #354962; font-size: 20px; letter-spacing: -0.04em; }
-.mypage-profile-grid, .mypage-company-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.mypage-profile-grid > div, .mypage-company-card { border: 1px solid #e1eaf2; border-radius: 15px; background: #fff; box-shadow: 0 2px 10px rgba(25, 63, 104, 0.025); }
-.mypage-profile-grid > div { padding: 16px 18px; }
-.mypage-profile-grid dt, .mypage-company-details dt { color: #8291a5; font-size: 11px; font-weight: 650; }
-.mypage-profile-grid dd, .mypage-company-details dd { margin: 6px 0 0; color: #354962; font-size: 14px; font-weight: 700; }
-.mypage-company-card { padding: 18px; }
-.mypage-company-card-header { display: flex; align-items: center; gap: 12px; }
-.mypage-company-logo { display: flex; width: 52px; height: 52px; min-width: 52px; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; color: #0878e8; font-size: 12px; font-weight: 900; }
-.mypage-company-card-header > div { min-width: 0; }
-.mypage-company-card-header strong, .mypage-company-card-header span { display: block; }
-.mypage-company-card-header strong { color: #354962; font-size: 15px; }
-.mypage-company-card-header span { margin-top: 3px; color: #4775a6; font-size: 11px; }
-.mypage-company-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 18px 0; }
-.mypage-analysis-button { width: 100%; min-height: 38px; border: 1px solid #d7e5f2; border-radius: 9px; background: #f5f9fd; color: #0878e8; font-size: 12px; font-weight: 750; cursor: pointer; }
-.mypage-analysis-button:hover { border-color: #0878e8; background: #edf6ff; }
-:root[data-theme="dark"] .mypage-profile-grid > div, :root[data-theme="dark"] .mypage-company-card { border-color: #2b394b; background: #111a27; }
-:root[data-theme="dark"] .mypage-section-heading h2, :root[data-theme="dark"] .mypage-profile-grid dd, :root[data-theme="dark"] .mypage-company-details dd, :root[data-theme="dark"] .mypage-company-card-header strong { color: #e8eef8; }
-:root[data-theme="dark"] .mypage-analysis-button { border-color: #2f577d; background: #152a40; color: #8fc5ff; }
-@media (max-width: 760px) { .mypage-profile-grid, .mypage-company-grid { grid-template-columns: 1fr; } }
+.mypage-page-content {
+  padding-bottom: 88px;
+}
+.mypage-section + .mypage-section {
+  margin-top: 42px;
+}
+.mypage-section-heading {
+  margin-bottom: 14px;
+}
+.mypage-section-heading p {
+  margin: 0 0 6px;
+  color: #0878e8;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.15em;
+}
+.mypage-section-heading h2 {
+  margin: 0;
+  color: #354962;
+  font-size: 20px;
+  letter-spacing: -0.04em;
+}
+.mypage-profile-grid,
+.mypage-company-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.mypage-profile-grid > div,
+.mypage-company-card {
+  border: 1px solid #e1eaf2;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(25, 63, 104, 0.025);
+}
+.mypage-profile-grid > div {
+  padding: 16px 18px;
+}
+.mypage-profile-grid dt,
+.mypage-company-details dt {
+  color: #8291a5;
+  font-size: 11px;
+  font-weight: 650;
+}
+.mypage-profile-grid dd,
+.mypage-company-details dd {
+  margin: 6px 0 0;
+  color: #354962;
+  font-size: 14px;
+  font-weight: 700;
+}
+.mypage-company-card {
+  padding: 18px;
+}
+.mypage-company-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mypage-company-logo {
+  display: flex;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  color: #0878e8;
+  font-size: 12px;
+  font-weight: 900;
+}
+.mypage-company-card-header > div {
+  min-width: 0;
+}
+.mypage-company-card-header strong,
+.mypage-company-card-header span {
+  display: block;
+}
+.mypage-company-card-header strong {
+  color: #354962;
+  font-size: 15px;
+}
+.mypage-company-card-header span {
+  margin-top: 3px;
+  color: #4775a6;
+  font-size: 11px;
+}
+.mypage-company-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+.mypage-analysis-button {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid #d7e5f2;
+  border-radius: 9px;
+  background: #f5f9fd;
+  color: #0878e8;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.mypage-analysis-button:hover {
+  border-color: #0878e8;
+  background: #edf6ff;
+}
+:root[data-theme="dark"] .mypage-profile-grid > div,
+:root[data-theme="dark"] .mypage-company-card {
+  border-color: #2b394b;
+  background: #111a27;
+}
+:root[data-theme="dark"] .mypage-section-heading h2,
+:root[data-theme="dark"] .mypage-profile-grid dd,
+:root[data-theme="dark"] .mypage-company-details dd,
+:root[data-theme="dark"] .mypage-company-card-header strong {
+  color: #e8eef8;
+}
+:root[data-theme="dark"] .mypage-analysis-button {
+  border-color: #2f577d;
+  background: #152a40;
+  color: #8fc5ff;
+}
+@media (max-width: 760px) {
+  .mypage-profile-grid,
+  .mypage-company-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Watchlist page */
 .watchlist-page-content {
@@ -5735,21 +5869,45 @@ button:focus-visible {
   background: currentColor;
 }
 .risk-level-low .risk-score-number strong,
-.risk-level-low .risk-level-pill { color: #18794e; }
-.risk-level-low { border-left-color: #45a77b; }
-.risk-level-low .risk-level-pill { background: #e5f5ed; }
+.risk-level-low .risk-level-pill {
+  color: #18794e;
+}
+.risk-level-low {
+  border-left-color: #45a77b;
+}
+.risk-level-low .risk-level-pill {
+  background: #e5f5ed;
+}
 .risk-level-watch .risk-score-number strong,
-.risk-level-watch .risk-level-pill { color: #946200; }
-.risk-level-watch { border-left-color: #d2a33c; }
-.risk-level-watch .risk-level-pill { background: #fff3d2; }
+.risk-level-watch .risk-level-pill {
+  color: #946200;
+}
+.risk-level-watch {
+  border-left-color: #d2a33c;
+}
+.risk-level-watch .risk-level-pill {
+  background: #fff3d2;
+}
 .risk-level-high .risk-score-number strong,
-.risk-level-high .risk-level-pill { color: #b45309; }
-.risk-level-high { border-left-color: #df8b40; }
-.risk-level-high .risk-level-pill { background: #fff0df; }
+.risk-level-high .risk-level-pill {
+  color: #b45309;
+}
+.risk-level-high {
+  border-left-color: #df8b40;
+}
+.risk-level-high .risk-level-pill {
+  background: #fff0df;
+}
 .risk-level-critical .risk-score-number strong,
-.risk-level-critical .risk-level-pill { color: #b42332; }
-.risk-level-critical { border-left-color: #cf5963; }
-.risk-level-critical .risk-level-pill { background: #fdebed; }
+.risk-level-critical .risk-level-pill {
+  color: #b42332;
+}
+.risk-level-critical {
+  border-left-color: #cf5963;
+}
+.risk-level-critical .risk-level-pill {
+  background: #fdebed;
+}
 .risk-final-evaluation {
   min-height: 91px;
   margin: 16px 0 18px;
@@ -5846,6 +6004,55 @@ button:focus-visible {
   border-radius: inherit;
   background: linear-gradient(90deg, #a3c5e7, #679bd0);
 }
+.risk-driver-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 13px;
+}
+.risk-driver {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 8px;
+  color: #718196;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.risk-driver strong {
+  color: #405872;
+}
+.risk-driver-evidence {
+  display: grid;
+  gap: 3px;
+  margin-top: 4px;
+}
+.risk-driver-evidence a {
+  overflow: hidden;
+  color: #3978b8;
+  font-size: 10px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.risk-driver-evidence a:hover {
+  text-decoration: underline;
+}
+.risk-assessment-details {
+  margin-top: 11px;
+  color: #708196;
+  font-size: 11px;
+}
+.risk-assessment-details summary {
+  cursor: pointer;
+}
+.risk-assessment-details p {
+  margin: 6px 0 0;
+  line-height: 1.45;
+}
+.risk-assessment-meta {
+  margin-top: 15px;
+  color: #92a0af;
+  font-size: 12px;
+}
 .risk-analysis-narrative {
   margin: 12px 0 0 23px;
   padding: 13px 15px;
@@ -5902,7 +6109,9 @@ button:focus-visible {
   background: #edf6ff;
   color: #236cae;
 }
-.article-pagination button.is-active { font-weight: 750; }
+.article-pagination button.is-active {
+  font-weight: 750;
+}
 .article-pagination button:disabled {
   color: #aeb9c5;
   background: #f7f9fb;
@@ -5933,7 +6142,7 @@ button:focus-visible {
   color: #7890a8;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: .04em;
+  letter-spacing: 0.04em;
 }
 .sentiment-breakdown-summary strong {
   color: #203b58;
@@ -5948,7 +6157,10 @@ button:focus-visible {
   border-radius: 999px;
   background: #edf2f7;
 }
-.sentiment-composition-bar span { min-width: 0; transition: width .25s ease; }
+.sentiment-composition-bar span {
+  min-width: 0;
+  transition: width 0.25s ease;
+}
 .sentiment-breakdown-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -5962,7 +6174,7 @@ button:focus-visible {
   padding: 15px 14px 13px;
   border: 1px solid #e6edf4;
   border-radius: 11px;
-  background: rgba(255, 255, 255, .82);
+  background: rgba(255, 255, 255, 0.82);
 }
 .sentiment-breakdown-label {
   display: flex;
@@ -6002,9 +6214,15 @@ button:focus-visible {
   border-radius: inherit;
   background: var(--sentiment-color);
 }
-.sentiment-positive { --sentiment-color: #35b984; }
-.sentiment-neutral { --sentiment-color: #4f8ef7; }
-.sentiment-negative { --sentiment-color: #f16d75; }
+.sentiment-positive {
+  --sentiment-color: #35b984;
+}
+.sentiment-neutral {
+  --sentiment-color: #4f8ef7;
+}
+.sentiment-negative {
+  --sentiment-color: #f16d75;
+}
 .sentiment-breakdown-note {
   margin: 0;
   color: #8192a4;
@@ -6012,12 +6230,25 @@ button:focus-visible {
   line-height: 1.5;
 }
 @media (max-width: 620px) {
-  .overall-risk-assessment { padding: 18px 16px 16px !important; }
-  .overall-risk-assessment > :first-child { margin-bottom: 18px !important; }
-  .risk-score-summary { padding: 14px 15px; }
-  .risk-final-evaluation { padding: 11px 12px; }
-  .risk-score-number strong { font-size: 30px; }
-  .risk-signal-row { grid-template-columns: 104px minmax(24px, 1fr) 36px; gap: 8px; }
+  .overall-risk-assessment {
+    padding: 18px 16px 16px !important;
+  }
+  .overall-risk-assessment > :first-child {
+    margin-bottom: 18px !important;
+  }
+  .risk-score-summary {
+    padding: 14px 15px;
+  }
+  .risk-final-evaluation {
+    padding: 11px 12px;
+  }
+  .risk-score-number strong {
+    font-size: 30px;
+  }
+  .risk-signal-row {
+    grid-template-columns: 104px minmax(24px, 1fr) 36px;
+    gap: 8px;
+  }
 }
 @media (max-width: 900px) {
   .risk-sentiment-combined-card {
@@ -6038,7 +6269,9 @@ button:focus-visible {
     min-height: 0;
     padding: 22px 4px 8px;
   }
-  .risk-sentiment-combined-card > .overall-risk-assessment > .risk-assessment-loading {
+  .risk-sentiment-combined-card
+    > .overall-risk-assessment
+    > .risk-assessment-loading {
     grid-column: 1;
     grid-row: 2 / 4;
     margin: 0 20px;
@@ -6125,6 +6358,151 @@ button:focus-visible {
     padding-top: 28px;
   }
 }
+
+/* 마이페이지: 생성 이력 목록 */
+.mypage-draft-list {
+  overflow: hidden;
+  border: 1px solid #e1eaf2;
+  border-radius: 15px;
+  background: #fff;
+}
+
+.mypage-draft-item + .mypage-draft-item {
+  border-top: 1px solid #edf1f5;
+}
+
+/* 항목 전체를 눌러 초안을 열고 닫습니다. */
+.mypage-draft-summary {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 0;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mypage-draft-summary:hover {
+  background: #f7fbff;
+}
+
+.mypage-draft-type {
+  flex-shrink: 0;
+  color: #0878e8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.mypage-draft-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.mypage-draft-text strong,
+.mypage-draft-text small {
+  display: block;
+}
+
+.mypage-draft-text strong {
+  overflow: hidden;
+  color: #354962;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mypage-draft-text small {
+  margin-top: 4px;
+  color: #8291a5;
+  font-size: 11px;
+}
+
+.mypage-draft-summary time {
+  flex-shrink: 0;
+  color: #8291a5;
+  font-size: 11px;
+}
+
+.mypage-draft-arrow {
+  flex-shrink: 0;
+  color: #0878e8;
+}
+
+/* 펼쳐진 초안 본문 */
+.mypage-draft-detail {
+  padding: 0 18px 18px;
+  border-top: 1px solid #edf1f5;
+  background: #f8fbfe;
+}
+
+.mypage-draft-content {
+  margin: 0;
+  padding: 16px 0;
+  color: #40536a;
+  font-size: 13px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.mypage-draft-copy-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #bcd8f4;
+  border-radius: 7px;
+  background: #fff;
+  color: #176fc5;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.mypage-draft-copy-button:hover {
+  background: #e8f3ff;
+}
+
+.mypage-draft-copy-notice {
+  margin-left: 10px;
+  color: #176fc5;
+  font-size: 12px;
+}
+
+.mypage-draft-empty {
+  padding: 28px 20px;
+}
+
+@media (max-width: 600px) {
+  .mypage-draft-summary {
+    flex-wrap: wrap;
+  }
+
+  .mypage-draft-summary time {
+    margin-left: auto;
+  }
+}
+
+/* 펼쳐진 초안의 복사·삭제 버튼 묶음 */
+.mypage-draft-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mypage-draft-delete-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #f1c4c4;
+  border-radius: 7px;
+  background: #fff;
+  color: #c53d3d;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.mypage-draft-delete-button:hover {
+  border-color: #df5555;
+  background: #fff2f2;
 .company-discussion-panel {
   display: flex;
   flex-direction: column;

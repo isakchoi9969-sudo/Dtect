@@ -1,7 +1,7 @@
-// 프론트 요청을 받아 FastAPI AI 서버로 전달하는 컨트롤러입니다.
-
 const { generateResponseDraft } = require("../services/aiClient.service");
+const { pool } = require("../db/pool");
 
+// AI 초안을 생성하고, 로그인 사용자별 이력으로 저장합니다.
 async function createResponseDraft(req, res) {
   const {
     documentType,
@@ -9,10 +9,10 @@ async function createResponseDraft(req, res) {
     analysisText,
     company,
     industry,
-    referenceArticles, // 프론트에서 받은 참고 기사 3건
+    additionalRequest,
+    referenceArticles,
   } = req.body;
 
-  // 프론트 입력값 검증
   if (!issueName || !analysisText) {
     return res.status(400).json({
       success: false,
@@ -21,27 +21,50 @@ async function createResponseDraft(req, res) {
   }
 
   try {
+    // FastAPI AI 서버에 초안 생성 요청
     const result = await generateResponseDraft({
       document_type: documentType || "보도자료",
       issue_name: issueName,
       analysis_text: analysisText,
       company: company || "",
       industry: industry || "",
-
-      // 선택한 이슈의 실제 기사만 최대 3건 전달
       reference_articles: Array.isArray(referenceArticles)
         ? referenceArticles.slice(0, 3)
         : [],
     });
 
-    // 생성 성공 여부는 사용자 화면이 아닌 Node 터미널에서만 확인합니다.
-    console.log(
-      `[대응자료 생성] 상태: ${result.data?.generationStatus || "unknown"}`,
+    const draft = result.data;
+
+    // 생성 성공한 초안을 로그인 사용자 ID와 함께 DB에 저장
+    await pool.query(
+      `INSERT INTO RESPONSE_DRAFT_HISTORY (
+        USER_ID,
+        ISSUE_NAME,
+        INDUSTRY,
+        DOCUMENT_TYPE,
+        ANALYSIS_TEXT,
+        ADDITIONAL_REQUEST,
+        DRAFT_RESPONSE,
+        RISK_TYPE,
+        GENERATION_STATUS,
+        REFERENCE_ARTICLES
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        req.authUserId,
+        issueName,
+        industry || "",
+        draft.documentType || documentType || "보도자료",
+        analysisText,
+        additionalRequest?.trim() || null,
+        draft.draftResponse,
+        draft.riskType || null,
+        draft.generationStatus || "generated",
+        JSON.stringify(draft.referenceArticles || []),
+      ],
     );
 
     return res.json(result);
   } catch (error) {
-    // FastAPI가 전달한 실제 오류를 화면에서도 확인할 수 있게 합니다.
     const detail =
       error.response?.data?.detail ||
       error.message ||
@@ -56,4 +79,88 @@ async function createResponseDraft(req, res) {
   }
 }
 
-module.exports = { createResponseDraft };
+// 마이페이지에서 로그인 사용자의 최근 생성 이력을 조회합니다.
+async function getResponseDraftHistory(req, res) {
+  const requestedLimit = Number(req.query.limit);
+
+  // 한 번에 너무 많은 이력이 노출되지 않도록 최대 20건으로 제한
+  const limit = Number.isInteger(requestedLimit)
+    ? Math.min(Math.max(requestedLimit, 1), 20)
+    : 5;
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT
+        DRAFT_ID AS draftId,
+        ISSUE_NAME AS issueName,
+        INDUSTRY AS industry,
+        DOCUMENT_TYPE AS documentType,
+        DRAFT_RESPONSE AS draftResponse,
+        GENERATION_STATUS AS generationStatus,
+        GENERATED_AT AS generatedAt
+      FROM RESPONSE_DRAFT_HISTORY
+      WHERE USER_ID = ?
+      ORDER BY GENERATED_AT DESC, DRAFT_ID DESC
+      LIMIT ?`,
+      [req.authUserId, limit],
+    );
+
+    return res.json({
+      success: true,
+      drafts: rows,
+    });
+  } catch (error) {
+    console.error("대응자료 생성 이력 조회 실패:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "대응자료 생성 이력을 불러오지 못했습니다.",
+    });
+  }
+}
+
+// 로그인한 사용자가 생성한 초안만 삭제합니다.
+async function deleteResponseDraft(req, res) {
+  const draftId = Number(req.params.draftId);
+
+  if (!Number.isInteger(draftId) || draftId < 1) {
+    return res.status(400).json({
+      success: false,
+      message: "삭제할 초안 정보가 올바르지 않습니다.",
+    });
+  }
+
+  try {
+    // USER_ID 조건을 함께 사용해 다른 사용자의 이력은 삭제할 수 없습니다.
+    const [result] = await pool.query(
+      `DELETE FROM RESPONSE_DRAFT_HISTORY
+       WHERE DRAFT_ID = ? AND USER_ID = ?`,
+      [draftId, req.authUserId],
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "삭제할 초안을 찾을 수 없습니다.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "저장된 초안을 삭제했습니다.",
+    });
+  } catch (error) {
+    console.error("대응자료 생성 이력 삭제 실패:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "초안을 삭제하지 못했습니다.",
+    });
+  }
+}
+
+module.exports = {
+  createResponseDraft,
+  getResponseDraftHistory,
+  deleteResponseDraft,
+};

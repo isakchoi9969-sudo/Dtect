@@ -292,6 +292,9 @@ function ResponseToolsPage({ mode }) {
   const [generateError, setGenerateError] = useState("");
   const [draft, setDraft] = useState(null);
 
+  // 초안 복사 후 사용자에게 보여줄 안내 문구
+  const [copyNotice, setCopyNotice] = useState("");
+
   // 참고 기사 목록을 처음에는 접어 둠
   const [isReferenceArticlesOpen, setIsReferenceArticlesOpen] = useState(false);
 
@@ -344,6 +347,7 @@ function ResponseToolsPage({ mode }) {
 
     setIsGenerating(true);
     setGenerateError("");
+    setCopyNotice("");
     setDraft(null);
     // 새 초안을 생성할 때는 기사 목록을 다시 접은 상태로 시작
     setIsReferenceArticlesOpen(false);
@@ -369,6 +373,7 @@ function ResponseToolsPage({ mode }) {
 
         // 나중에 생성 결과 아래 참고 기사로 표시할 실제 기사입니다.
         referenceArticles: selectedIssue.referenceArticles || [],
+        additionalRequest: additionalRequest.trim(),
       });
 
       setDraft(response.data.data);
@@ -380,6 +385,21 @@ function ResponseToolsPage({ mode }) {
       setIsGenerating(false);
     }
   };
+
+  // 현재 생성된 초안을 클립보드에 복사합니다.
+  const handleCopyDraft = async () => {
+    if (!draft?.draftResponse) return;
+
+    try {
+      await navigator.clipboard.writeText(draft.draftResponse);
+      setCopyNotice("초안을 클립보드에 복사했습니다.");
+    } catch {
+      setCopyNotice(
+        "복사하지 못했습니다. 초안 내용을 직접 선택해 복사해 주세요.",
+      );
+    }
+  };
+
   const simulator = activeMode === "simulator";
   const displayValue = (value) => value || "정보 준비 중";
 
@@ -613,7 +633,10 @@ function ResponseToolsPage({ mode }) {
                 문서 유형
                 <select
                   value={document}
-                  onChange={(event) => setDocument(event.target.value)}
+                  onChange={(event) => {
+                    setDocument(event.target.value);
+                    setCopyNotice("");
+                  }}
                 >
                   {documents.map((item) => (
                     <option key={item}>{item}</option>
@@ -661,6 +684,8 @@ function ResponseToolsPage({ mode }) {
                   <span className="generate-spinner" aria-hidden="true" />
                   AI 초안 생성 중...
                 </>
+              ) : draft ? (
+                "다시 생성하기"
               ) : (
                 "AI 초안 생성하기"
               )}
@@ -671,6 +696,35 @@ function ResponseToolsPage({ mode }) {
             {draft && (
               <div className="generated-draft">
                 <b>{draft.documentType} 초안이 준비되었습니다.</b>
+
+                {/* 현재 초안을 복사하거나, 같은 이슈로 새 초안을 생성합니다. */}
+                <div className="draft-actions">
+                  <button
+                    type="button"
+                    className="draft-action-button"
+                    onClick={handleCopyDraft}
+                  >
+                    초안 복사
+                  </button>
+
+                  <button
+                    type="button"
+                    className="draft-action-button draft-regenerate-button"
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                  >
+                    다시 생성
+                  </button>
+                </div>
+
+                {copyNotice && (
+                  <p className="draft-action-notice">{copyNotice}</p>
+                )}
+
+                <p className="draft-regenerate-guide">
+                  문서 유형을 변경한 뒤 다시 생성하면 선택한 유형의 새 초안을
+                  만들 수 있습니다.
+                </p>
 
                 <div className="draft-content">
                   {draft.draftResponse.split("\n").map((line, index) => {
