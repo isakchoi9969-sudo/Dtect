@@ -19,10 +19,28 @@ const {
 
 const app = express();
 
-// 프론트엔드에서 오는 요청만 허용 (쿠키/인증 헤더를 주고받으려면 origin을 정확히 명시)
+// 개발 환경에서는 localhost와 같은 네트워크의 프론트엔드 접속을 허용합니다.
 app.use(
   cors({
-    origin: frontendOrigin,
+    origin(origin, callback) {
+      // 브라우저 Origin이 없는 요청 또는 기존 localhost 접속
+      if (!origin || origin === frontendOrigin) {
+        return callback(null, true);
+      }
+
+      try {
+        const url = new URL(origin);
+
+        // 개발 서버의 5173 포트에서 들어오는 요청 허용
+        if (url.protocol === "http:" && url.port === "5173") {
+          return callback(null, true);
+        }
+      } catch {
+        // 잘못된 Origin은 아래에서 거부
+      }
+
+      return callback(new Error("허용되지 않은 Origin입니다."));
+    },
     credentials: true,
   }),
 );
