@@ -6429,6 +6429,8 @@ button:focus-visible {
 .mypage-draft-delete-button:hover {
   border-color: #df5555;
   background: #fff2f2;
+}
+
 .company-discussion-panel {
   display: flex;
   flex-direction: column;
