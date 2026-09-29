@@ -1,5 +1,7 @@
 const { pool } = require("../db/pool");
-const { assessCompanyRisk } = require("../services/companyRiskAssessment.service");
+const {
+  assessCompanyRisk,
+} = require("../services/companyRiskAssessment.service");
 
 const { calculateSearchScore } = require("../services/companySearch.service");
 const {
@@ -80,7 +82,10 @@ async function searchCompany(req, res) {
     const [companies] = await pool.query(`
       SELECT
         COMPANY_ID AS companyId,
-        COMPANY_NAME AS companyName
+        COMPANY_NAME AS companyName,
+        STOCK_CODE AS stockCode,
+        INDUSTRY AS industry,
+        COMPANY_INFO AS companyInfo
       FROM COMPANY
     `);
 
@@ -168,19 +173,26 @@ async function getCompanyRelations(req, res) {
 async function getCompanyRiskAssessment(req, res) {
   const companyId = Number(req.params.companyId);
   if (!Number.isInteger(companyId) || companyId < 1) {
-    return res.status(400).json({ success: false, message: "올바른 기업 ID가 필요합니다." });
+    return res
+      .status(400)
+      .json({ success: false, message: "올바른 기업 ID가 필요합니다." });
   }
   try {
     const result = await assessCompanyRisk({
       companyId,
       articles: req.body?.articles,
     });
-    if (!result) return res.status(404).json({ success: false, message: "기업을 찾을 수 없습니다." });
+    if (!result)
+      return res
+        .status(404)
+        .json({ success: false, message: "기업을 찾을 수 없습니다." });
     res.set("Cache-Control", "no-store");
     return res.json({ success: true, data: result });
   } catch (error) {
     console.error("종합 리스크 평가 실패:", error.message);
-    return res.status(500).json({ success: false, message: "종합 리스크를 평가하지 못했습니다." });
+    return res
+      .status(500)
+      .json({ success: false, message: "종합 리스크를 평가하지 못했습니다." });
   }
 }
 
@@ -390,6 +402,8 @@ async function getCompanyAlerts(req, res, alertType) {
          a.PREVIOUS_RATE AS previousRate,
          a.CURRENT_RATE AS currentRate,
          a.CHANGE_RATE AS changeRate,
+         a.RISK_SCORE AS riskScore,
+         a.RISK_LEVEL AS riskLevel,
          a.DETECTED_AT AS detectedAt,
          c.COMPANY_ID AS companyId,
          c.COMPANY_NAME AS companyName
@@ -402,34 +416,15 @@ async function getCompanyAlerts(req, res, alertType) {
       [req.authUserId, alertType, hours],
     );
 
-    // 화면의 위험/주의, 높음/보통 필터에 사용할 값을 함께 만듭니다.
-    const data = alerts.map((alert) => {
-      const currentRate = Number(alert.currentRate);
-
-      return {
-        ...alert,
-        currentRate,
-        previousRate:
-          alert.previousRate === null ? null : Number(alert.previousRate),
-        changeRate: alert.changeRate === null ? null : Number(alert.changeRate),
-
-        // 위험도 급상승 알림 화면용
-        riskLevel:
-          alertType === "risk_surge"
-            ? currentRate >= 80
-              ? "위험"
-              : "주의"
-            : undefined,
-
-        // 주요 이슈 발생 알림 화면용
-        severity:
-          alertType === "major_issue"
-            ? currentRate >= 80
-              ? "높음"
-              : "보통"
-            : undefined,
-      };
-    });
+    const data = alerts.map((alert) => ({
+      ...alert,
+      riskScore: Number(alert.riskScore ?? 0),
+      riskLevel: alert.riskLevel,
+      currentRate: Number(alert.currentRate),
+      previousRate:
+        alert.previousRate === null ? null : Number(alert.previousRate),
+      changeRate: alert.changeRate === null ? null : Number(alert.changeRate),
+    }));
 
     return res.json({
       success: true,

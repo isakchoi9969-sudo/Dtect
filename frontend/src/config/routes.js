@@ -1,8 +1,5 @@
 ﻿export const ROUTES = {
   HOME: "/",
-  DASHBOARD: "/dashboard",
-  DASHBOARD_WATCHLIST: "/dashboard/watchlist",
-  DASHBOARD_ISSUE_RISK: "/dashboard/issue-risk",
   COMPANY_ANALYSIS: "/company-analysis",
   COMPANY_DETAIL: "/company-analysis/company",
   COMPANY_WATCHLIST: "/company-analysis/watchlist",
