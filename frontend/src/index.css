@@ -4719,8 +4719,8 @@ button:focus-visible {
 .company-result-main {
   display: grid;
   min-width: 0;
-  grid-template-columns: 48px minmax(0, 1fr) 95px 14px;
-  gap: 16px;
+  grid-template-columns: 52px minmax(0, 1fr) 14px;
+  gap: 12px;
   align-items: center;
   padding: 0;
   color: inherit;
@@ -4732,7 +4732,43 @@ button:focus-visible {
   justify-self: end;
 }
 .company-star {
-  border: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid #325978;
+  border-radius: 9px;
+  color: #fff;
+  background: #1d3e59;
+  font-size: 16px;
+  line-height: 1;
+}
+.company-star.is-active {
+  color: #fff;
+  background: #1d3e59;
+}
+.company-star:not(.is-active) {
+  color: #fff;
+  background: transparent;
+}
+:root:not([data-theme="dark"]) .company-star {
+  border-color: #b6cadb;
+  color: #54718a;
+  background: #fff;
+}
+:root:not([data-theme="dark"]) .company-star.is-active {
+  border-color: #b6cadb;
+  color: #1d5f91;
+  background: #fff;
+}
+:root[data-theme="dark"] .company-star,
+:root[data-theme="dark"] .company-star.is-active {
+  border-color: #486986;
+  color: #fff;
+  background: #1c344b;
+}
+:root[data-theme="dark"] .company-star:not(.is-active) {
+  color: #fff;
+  background: transparent;
 }
 .company-star:focus-visible,
 .company-result-main:focus-visible {
