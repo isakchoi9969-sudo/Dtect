@@ -2521,6 +2521,9 @@ button:focus-visible {
   width: min(100%, 720px);
   margin: 0 auto;
 }
+.industry-search-workspace {
+  width: 100%;
+}
 .company-search-form {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -4774,6 +4777,36 @@ button:focus-visible {
 .company-result-main:focus-visible {
   outline-offset: 3px;
 }
+.company-search-modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  padding: 20px;
+  place-items: center;
+  background: rgba(9, 18, 31, 0.52);
+}
+.company-search-modal {
+  width: min(100%, 360px);
+  padding: 26px;
+  border: 1px solid #dce8f3;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(9, 18, 31, 0.24);
+}
+.company-search-modal > p { margin: 0 0 7px; color: #0878e8; font-size: 10px; font-weight: 850; letter-spacing: 0.15em; }
+.company-search-modal h2, .company-search-modal > span strong { color: #354962; }
+.company-search-modal h2 { margin: 0; font-size: 20px; }
+.company-search-modal > span { display: block; margin-top: 11px; color: #6e7e93; font-size: 13px; line-height: 1.55; }
+.company-search-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
+.company-search-modal-actions button { min-width: 68px; min-height: 36px; padding: 0 13px; border: 1px solid #d7e5f2; border-radius: 8px; background: #f7fafc; color: #4d6178; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.company-search-modal-actions .is-danger { border-color: #d95c69; background: #d95c69; color: #fff; }
+.company-search-modal-actions button:disabled { cursor: wait; opacity: 0.6; }
+:root[data-theme="dark"] .company-search-modal { border-color: #2b394b; background: #111a27; }
+:root[data-theme="dark"] .company-search-modal h2, :root[data-theme="dark"] .company-search-modal > span strong { color: #e8eef8; }
+:root[data-theme="dark"] .company-search-modal > span { color: #aab8ca; }
+:root[data-theme="dark"] .company-search-modal-actions button { border-color: #384b60; background: #1c2939; color: #dbe7f5; }
+:root[data-theme="dark"] .company-search-modal-actions .is-danger { border-color: #b84e5b; background: #b84e5b; color: #fff; }
 @media (max-width: 700px) {
   .company-result-main {
     grid-template-columns: 43px minmax(0, 1fr) 14px;
