@@ -19,6 +19,7 @@ function Header() {
 
   useEffect(() => {
     const controller = new AbortController();
+    const handleUserUpdated = (event) => setCurrentUser(event.detail);
 
     api
       .get("/api/auth/me", { signal: controller.signal })
@@ -29,7 +30,12 @@ function Header() {
         }
       });
 
-    return () => controller.abort();
+    window.addEventListener("dtect-user-updated", handleUserUpdated);
+
+    return () => {
+      controller.abort();
+      window.removeEventListener("dtect-user-updated", handleUserUpdated);
+    };
   }, []);
 
   useEffect(() => {
@@ -126,20 +132,41 @@ function Header() {
           {currentUser ? (
             <>
               <span className="header-user-name">{currentUser.name} 님</span>
-              <a href={ROUTES.MYPAGE} className="login-button desktop-login">
-                마이페이지
+              <a
+                href={ROUTES.MYPAGE}
+                className="header-icon-button desktop-login"
+                aria-label="마이페이지"
+                title="마이페이지"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 20c0-3.3 3.6-5.5 8-5.5s8 2.2 8 5.5" />
+                  <circle cx="12" cy="7.5" r="3.5" />
+                </svg>
               </a>
               <button
                 type="button"
-                className="login-button desktop-login"
+                className="header-icon-button desktop-login"
                 onClick={handleLogout}
+                aria-label="로그아웃"
+                title="로그아웃"
               >
-                로그아웃
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M10 5H5v14h5" />
+                  <path d="M14 8l4 4-4 4M18 12H9" />
+                </svg>
               </button>
             </>
           ) : (
-            <a href={ROUTES.LOGIN} className="login-button desktop-login">
-              {copy.login}
+            <a
+              href={ROUTES.LOGIN}
+              className="header-icon-button desktop-login"
+              aria-label={copy.login}
+              title={copy.login}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v9" />
+                <path d="M7.1 5.8a8 8 0 1 0 9.8 0" />
+              </svg>
             </a>
           )}
         </div>
