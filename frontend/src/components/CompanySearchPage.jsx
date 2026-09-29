@@ -112,15 +112,15 @@ const companyDomains = {
   크래프톤: "krafton.com",
   포스코퓨처엠: "poscofuturem.com",
   하나금융지주: "hanafn.com",
+  DB하이텍: "dbhitek.com",
+  KG스틸: "kg-steel.co.kr",
   한미약품: "hanmi.co.kr",
   한진칼: "hanjinkal.co.kr",
   한화솔루션: "hanwhasolutions.com",
   한화에어로스페이스: "hanwhaaerospace.com",
   한화오션: "hanwhaocean.com",
-  쿠팡: "coupang.com",
-  신한지주: "shinhangroup.com",
-  아모레퍼시픽: "amorepacific.com",
-  넷마블: "netmarble.com",
+  호텔신라: "hotelshilla.net",
+  하나금융: "hanafn.com",
 };
 
 function CompanySearchLogo({ companyName }) {

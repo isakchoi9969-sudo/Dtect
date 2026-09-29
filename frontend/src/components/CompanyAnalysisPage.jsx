@@ -7,6 +7,7 @@ import { api } from "../config/api";
 import { ROUTES } from "../config/routes";
 import { paginate } from "../utils/pagination";
 import CompanyLogo from "./CompanyLogo";
+import { communitySamplePosts } from "../data/communityPosts";
 
 /* =========================================================
    유틸
@@ -71,8 +72,8 @@ function getApiErrorMessage(error, fallbackMessage) {
 
 function AnalysisUnavailable({ description, label = "준비 중" }) {
   return (
-    <div style={styles.analysisUnavailable}>
-      <span style={styles.analysisUnavailableBadge}>{label}</span>
+    <div className="analysis-unavailable" style={styles.analysisUnavailable}>
+      <span className="analysis-unavailable-badge" style={styles.analysisUnavailableBadge}>{label}</span>
       <p>{description}</p>
     </div>
   );
@@ -1157,6 +1158,11 @@ export default function CompanyAnalysisPage() {
   const targetReached = newsAnalysis?.target_reached ?? false;
   const minimumKeywordMentions = newsAnalysis?.minimum_keyword_mentions ?? 2;
   const articles = newsAnalysis?.news_list ?? [];
+  const companyDiscussionPosts = communitySamplePosts
+    .filter((post) => post.code === String(selectedCompany?.ticker || ""))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 3);
+  const companyDiscussionUrl = `${ROUTES.COMMUNITY_STOCK}?company=${encodeURIComponent(selectedCompany?.name || "")}&code=${encodeURIComponent(selectedCompany?.ticker || "")}`;
   const articlesPerPage = 10;
   const articlePageCount = Math.ceil(articles.length / articlesPerPage);
   const currentArticlePage = Math.min(
@@ -1184,12 +1190,12 @@ export default function CompanyAnalysisPage() {
         ? `원본 기사 ${fetchedCount.toLocaleString()}건을 모두 확인해 관련 기사 ${relevantCount.toLocaleString()}건을 분석했습니다. 조건을 충족하는 기사가 100건보다 적을 수 있습니다.`
         : "최신 뉴스를 확인하며, 내용이 같은 기사의 감성분석 결과는 재사용합니다.";
   if (isCompanyLoading) {
-    return <div>기업 정보를 불러오는 중입니다...</div>;
+    return <div className="company-analysis-empty" style={styles.emptyPage}>기업 정보를 불러오는 중입니다...</div>;
   }
 
   if (!selectedCompany) {
     return (
-      <div style={styles.emptyPage}>
+      <div className="company-analysis-empty" style={styles.emptyPage}>
         <div style={styles.emptyIcon}>☆</div>
         <h2>등록된 관심기업이 없습니다.</h2>
         <p>기업 검색에서 관심기업을 등록해주세요.</p>
@@ -1199,7 +1205,7 @@ export default function CompanyAnalysisPage() {
 
   if (!selectedCompany) {
     return (
-      <div style={styles.emptyPage}>
+      <div className="company-analysis-empty" style={styles.emptyPage}>
         <div style={styles.emptyIcon}>☆</div>
         <h2>등록된 관심기업이 없습니다.</h2>
         <p>기업 검색에서 관심기업을 등록해주세요.</p>
@@ -1210,7 +1216,7 @@ export default function CompanyAnalysisPage() {
   // 뉴스 분석 오류
   if (newsError) {
     return (
-      <div style={styles.emptyPage}>
+      <div className="company-analysis-empty" style={styles.emptyPage}>
         <div style={styles.emptyIcon}>!</div>
         <h2>AI 분석 결과를 불러오지 못했습니다.</h2>
         <p>{newsError}</p>
@@ -1480,74 +1486,6 @@ export default function CompanyAnalysisPage() {
                         </div>
                       ))}
                     </div>
-                    {riskAssessment.keyDrivers?.length > 0 && (
-                      <div className="risk-driver-list">
-                        {riskAssessment.keyDrivers.map((driver, index) => (
-                          <div
-                            className="risk-driver"
-                            key={`${driver.factor}-${index}`}
-                          >
-                            <strong>{driver.factor}</strong>
-                            <div>
-                              <span>{driver.explanation}</span>
-                              {driver.evidenceIds?.length > 0 && (
-                                <div className="risk-driver-evidence">
-                                  {riskAssessment.evidence
-                                    ?.filter((item) =>
-                                      driver.evidenceIds.includes(item.id),
-                                    )
-                                    .map((item) => (
-                                      <a
-                                        href={item.url}
-                                        key={item.id}
-                                        rel="noreferrer"
-                                        target="_blank"
-                                      >
-                                        {item.press ? `${item.press} · ` : ""}
-                                        {item.title}
-                                      </a>
-                                    ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {(riskAssessment.dataLimitations?.length > 0 ||
-                      riskAssessment.watchItems?.length > 0) && (
-                      <details className="risk-assessment-details">
-                        <summary>관찰 항목 및 데이터 한계</summary>
-                        {[
-                          ...(riskAssessment.watchItems || []),
-                          ...(riskAssessment.dataLimitations || []),
-                        ].map((item, index) => (
-                          <p key={`${index}-${item}`}>{item}</p>
-                        ))}
-                      </details>
-                    )}
-                    <div className="risk-assessment-meta">
-                      기사 {riskAssessment.articleCount}건 · 신뢰도{" "}
-                      {{ low: "낮음", medium: "보통", high: "높음" }[
-                        riskAssessment.confidence
-                      ] || "낮음"}
-                      {riskAssessment.status === "ready" &&
-                        Number.isFinite(
-                          Number(riskAssessment.scoreCoverage),
-                        ) && (
-                          <span>
-                            {" "}
-                            · 산출 범위{" "}
-                            {Math.round(riskAssessment.scoreCoverage * 100)}%
-                          </span>
-                        )}
-                      {riskAssessment.evidence?.length > 0 && (
-                        <span>
-                          {" "}
-                          · 근거 기사 {riskAssessment.evidence.length}건
-                        </span>
-                      )}
-                    </div>
                   </div>
                 ) : (
                   <AnalysisUnavailable
@@ -1756,6 +1694,7 @@ export default function CompanyAnalysisPage() {
                           <p style={styles.articleTitle}>{article.title}</p>
                         )}
                         <span
+                          className={`analysis-article-sentiment analysis-article-sentiment--${article.sentiment || "unknown"}`}
                           style={{
                             ...styles.articleSentiment,
                             ...sentimentStyles[article.sentiment],
@@ -1833,12 +1772,37 @@ export default function CompanyAnalysisPage() {
               )}
             </div>
 
-            {/* 주요 이슈 타임라인 */}
-            <div style={styles.largePanel}>
-              <div style={styles.panelHeader}>
-                <h3>주요 이슈 타임라인</h3>
+            {/* 해당 기업의 종목 토론 */}
+            <div className="company-discussion-panel" style={styles.largePanel}>
+              <div className="company-discussion-heading">
+                <div>
+                  <span className="company-discussion-eyebrow">COMMUNITY</span>
+                  <h3>{selectedCompany.name} 종목토론방</h3>
+                  <p>이 기업의 종목 코드와 연결된 게시글만 모았습니다.</p>
+                </div>
+                <a href={companyDiscussionUrl}>토론방 전체 보기 <span aria-hidden="true">›</span></a>
               </div>
-              <AnalysisUnavailable description="유사 기사를 묶어 주요 이슈와 발생 시점을 만드는 기능을 준비하고 있습니다." />
+              {companyDiscussionPosts.length ? (
+                <div className="company-discussion-list">
+                  {companyDiscussionPosts.map((post) => (
+                    <a className="company-discussion-post" href={companyDiscussionUrl} key={post.id}>
+                      <div className="company-discussion-post-meta">
+                        <span>{post.author}</span><i>·</i><span>{post.time}</span>
+                        <span className="company-discussion-post-sentiment">{post.sentiment}</span>
+                      </div>
+                      <strong>{post.title}</strong>
+                      <span className="company-discussion-post-stats">조회 {post.views.toLocaleString()} · 댓글 {post.comments.toLocaleString()}</span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="company-discussion-empty">
+                  <span aria-hidden="true">✦</span>
+                  <strong>아직 이 종목에 등록된 글이 없습니다.</strong>
+                  <p>토론방에서 {selectedCompany.name} 관련 의견을 확인해보세요.</p>
+                  <a href={companyDiscussionUrl}>종목토론방 열기</a>
+                </div>
+              )}
             </div>
           </section>
         </div>
