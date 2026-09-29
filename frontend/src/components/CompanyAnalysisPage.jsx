@@ -72,7 +72,12 @@ function getApiErrorMessage(error, fallbackMessage) {
 function AnalysisUnavailable({ description, label = "준비 중" }) {
   return (
     <div className="analysis-unavailable" style={styles.analysisUnavailable}>
-      <span className="analysis-unavailable-badge" style={styles.analysisUnavailableBadge}>{label}</span>
+      <span
+        className="analysis-unavailable-badge"
+        style={styles.analysisUnavailableBadge}
+      >
+        {label}
+      </span>
       <p>{description}</p>
     </div>
   );
@@ -828,25 +833,34 @@ export default function CompanyAnalysisPage() {
     return companies.find((company) => company.id === selectedCompanyId);
   }, [companies, selectedCompanyId]);
 
-  const companyDiscussionPage = companyDiscussionPageState.companyId === selectedCompanyId
-    ? companyDiscussionPageState.page
-    : 1;
+  const companyDiscussionPage =
+    companyDiscussionPageState.companyId === selectedCompanyId
+      ? companyDiscussionPageState.page
+      : 1;
 
   useEffect(() => {
     if (!selectedCompanyId) return undefined;
     const controller = new AbortController();
-    api.get("/api/community/posts", {
-      params: { companyId: selectedCompanyId, page: companyDiscussionPage, pageSize: 5, sort: "recent" },
-      signal: controller.signal,
-    })
-      .then((response) => setCompanyDiscussionState({
-        companyId: selectedCompanyId,
-        page: companyDiscussionPage,
-        posts: response.data.items || [],
-        total: response.data.total || 0,
-        totalPages: response.data.totalPages || 0,
-        error: "",
-      }))
+    api
+      .get("/api/community/posts", {
+        params: {
+          companyId: selectedCompanyId,
+          page: companyDiscussionPage,
+          pageSize: 5,
+          sort: "recent",
+        },
+        signal: controller.signal,
+      })
+      .then((response) =>
+        setCompanyDiscussionState({
+          companyId: selectedCompanyId,
+          page: companyDiscussionPage,
+          posts: response.data.items || [],
+          total: response.data.total || 0,
+          totalPages: response.data.totalPages || 0,
+          error: "",
+        }),
+      )
       .catch((error) => {
         if (error.code !== "ERR_CANCELED") {
           setCompanyDiscussionState({
@@ -862,15 +876,22 @@ export default function CompanyAnalysisPage() {
     return () => controller.abort();
   }, [selectedCompanyId, companyDiscussionPage]);
   const companyDiscussionLoading = Boolean(
-    selectedCompanyId && (
-      companyDiscussionState.companyId !== selectedCompanyId ||
-      companyDiscussionState.page !== companyDiscussionPage
-    ),
+    selectedCompanyId &&
+    (companyDiscussionState.companyId !== selectedCompanyId ||
+      companyDiscussionState.page !== companyDiscussionPage),
   );
-  const companyDiscussionPosts = companyDiscussionLoading ? [] : companyDiscussionState.posts;
-  const companyDiscussionError = companyDiscussionLoading ? "" : companyDiscussionState.error;
-  const companyDiscussionTotal = companyDiscussionLoading ? 0 : companyDiscussionState.total;
-  const companyDiscussionPageCount = companyDiscussionLoading ? 0 : companyDiscussionState.totalPages;
+  const companyDiscussionPosts = companyDiscussionLoading
+    ? []
+    : companyDiscussionState.posts;
+  const companyDiscussionError = companyDiscussionLoading
+    ? ""
+    : companyDiscussionState.error;
+  const companyDiscussionTotal = companyDiscussionLoading
+    ? 0
+    : companyDiscussionState.total;
+  const companyDiscussionPageCount = companyDiscussionLoading
+    ? 0
+    : companyDiscussionState.totalPages;
   const companyDiscussionPageStart = Math.max(
     1,
     Math.min(companyDiscussionPage - 2, companyDiscussionPageCount - 4),
@@ -1069,14 +1090,36 @@ export default function CompanyAnalysisPage() {
         },
         { signal: controller.signal },
       )
-      .then((response) =>
+      .then((response) => {
+        const assessment = response.data.data || null;
+
         setRiskAssessmentResult({
           companyId: selectedCompanyId,
           newsAnalysis,
-          assessment: response.data.data || null,
+          assessment,
           error: "",
-        }),
-      )
+        });
+
+        // 실제 종합 리스크 평가가 완료된 경우에만 이력과 알림 저장
+        if (
+          assessment?.status === "ready" &&
+          Number.isFinite(Number(assessment?.riskScore))
+        ) {
+          void api
+            .post(`/api/company/${selectedCompanyId}/analysis-snapshots`, {
+              riskSignalRate: newsAnalysis.sentiment_percentages?.negative ?? 0,
+              riskScore: assessment.riskScore,
+              riskLevel: assessment.riskLevel,
+              analyzedCount: newsAnalysis.analyzed_count ?? 0,
+              analyzedAt: newsAnalysis.analyzed_at,
+            })
+            .catch((saveError) => {
+              if (saveError.response?.status !== 401) {
+                console.error("분석 이력 저장 실패:", saveError);
+              }
+            });
+        }
+      })
       .catch((error) => {
         if (error.code === "ERR_CANCELED") return;
         setRiskAssessmentResult({
@@ -1117,21 +1160,6 @@ export default function CompanyAnalysisPage() {
         setNewsAnalysis(analysis);
         setArticlePage(1);
         setNewsError("");
-
-        // 관심기업일 때만 서버가 이력과 알림을 저장합니다.
-        // 로그인하지 않은 경우는 화면 오류로 표시하지 않습니다.
-        void api
-          .post(`/api/company/${selectedCompanyId}/analysis-snapshots`, {
-            // 모델 내부 결과값을 위험 신호 비율로 전달
-            riskSignalRate: analysis.sentiment_percentages?.negative ?? 0,
-            analyzedCount: analysis.analyzed_count ?? 0,
-            analyzedAt: analysis.analyzed_at,
-          })
-          .catch((saveError) => {
-            if (saveError.response?.status !== 401) {
-              console.error("분석 이력 저장 실패:", saveError);
-            }
-          });
       })
       .catch((error) => {
         if (
@@ -1252,7 +1280,11 @@ export default function CompanyAnalysisPage() {
         ? `원본 기사 ${fetchedCount.toLocaleString()}건을 모두 확인해 관련 기사 ${relevantCount.toLocaleString()}건을 분석했습니다. 조건을 충족하는 기사가 100건보다 적을 수 있습니다.`
         : "최신 뉴스를 확인하며, 내용이 같은 기사의 감성분석 결과는 재사용합니다.";
   if (isCompanyLoading) {
-    return <div className="company-analysis-empty" style={styles.emptyPage}>기업 정보를 불러오는 중입니다...</div>;
+    return (
+      <div className="company-analysis-empty" style={styles.emptyPage}>
+        기업 정보를 불러오는 중입니다...
+      </div>
+    );
   }
 
   if (!selectedCompany) {
@@ -1840,12 +1872,20 @@ export default function CompanyAnalysisPage() {
                 <div>
                   <span className="company-discussion-eyebrow">COMMUNITY</span>
                   <h3>{selectedCompany.name} 종목토론방</h3>
-                  <p>{companyDiscussionLoading ? "게시글을 확인하고 있습니다." : `전체 ${companyDiscussionTotal.toLocaleString()}건 · ${companyDiscussionPage}/${Math.max(companyDiscussionPageCount, 1)}페이지`}</p>
+                  <p>
+                    {companyDiscussionLoading
+                      ? "게시글을 확인하고 있습니다."
+                      : `전체 ${companyDiscussionTotal.toLocaleString()}건 · ${companyDiscussionPage}/${Math.max(companyDiscussionPageCount, 1)}페이지`}
+                  </p>
                 </div>
-                <a href={companyDiscussionUrl}>토론방 전체 보기 <span aria-hidden="true">›</span></a>
+                <a href={companyDiscussionUrl}>
+                  토론방 전체 보기 <span aria-hidden="true">›</span>
+                </a>
               </div>
               {companyDiscussionLoading ? (
-                <div className="company-discussion-empty" role="status">게시글을 불러오고 있습니다.</div>
+                <div className="company-discussion-empty" role="status">
+                  게시글을 불러오고 있습니다.
+                </div>
               ) : companyDiscussionError ? (
                 <div className="company-discussion-empty" role="alert">
                   <strong>{companyDiscussionError}</strong>
@@ -1855,23 +1895,48 @@ export default function CompanyAnalysisPage() {
                 <>
                   <div className="company-discussion-list">
                     {companyDiscussionPosts.map((post) => (
-                      <a className="company-discussion-post" href={`${companyDiscussionUrl}&post=${post.id}`} key={post.id}>
+                      <a
+                        className="company-discussion-post"
+                        href={`${companyDiscussionUrl}&post=${post.id}`}
+                        key={post.id}
+                      >
                         <div className="company-discussion-post-meta">
-                          <span>{post.author}</span><i>·</i><span>{formatArticleTime(post.createdAt)}</span>
+                          <span>{post.author}</span>
+                          <i>·</i>
+                          <span>{formatArticleTime(post.createdAt)}</span>
                         </div>
                         <strong>{post.title}</strong>
-                        <span className="company-discussion-post-stats">조회 {post.views.toLocaleString()} · 댓글 {post.comments.toLocaleString()}</span>
+                        <span className="company-discussion-post-stats">
+                          조회 {post.views.toLocaleString()} · 댓글{" "}
+                          {post.comments.toLocaleString()}
+                        </span>
                       </a>
                     ))}
                   </div>
                   {companyDiscussionPageCount > 1 && (
-                    <nav aria-label="종목토론방 페이지" className="article-pagination company-discussion-pagination">
-                      <button aria-label="이전 토론방 페이지" disabled={companyDiscussionPage === 1} onClick={() => goToCompanyDiscussionPage(companyDiscussionPage - 1)} type="button">이전</button>
+                    <nav
+                      aria-label="종목토론방 페이지"
+                      className="article-pagination company-discussion-pagination"
+                    >
+                      <button
+                        aria-label="이전 토론방 페이지"
+                        disabled={companyDiscussionPage === 1}
+                        onClick={() =>
+                          goToCompanyDiscussionPage(companyDiscussionPage - 1)
+                        }
+                        type="button"
+                      >
+                        이전
+                      </button>
                       {companyDiscussionVisiblePages.map((page) => (
                         <button
-                          aria-current={page === companyDiscussionPage ? "page" : undefined}
+                          aria-current={
+                            page === companyDiscussionPage ? "page" : undefined
+                          }
                           aria-label={`${page}페이지 토론 글`}
-                          className={page === companyDiscussionPage ? "is-active" : ""}
+                          className={
+                            page === companyDiscussionPage ? "is-active" : ""
+                          }
                           key={page}
                           onClick={() => goToCompanyDiscussionPage(page)}
                           type="button"
@@ -1879,7 +1944,18 @@ export default function CompanyAnalysisPage() {
                           {page}
                         </button>
                       ))}
-                      <button aria-label="다음 토론방 페이지" disabled={companyDiscussionPage === companyDiscussionPageCount} onClick={() => goToCompanyDiscussionPage(companyDiscussionPage + 1)} type="button">다음</button>
+                      <button
+                        aria-label="다음 토론방 페이지"
+                        disabled={
+                          companyDiscussionPage === companyDiscussionPageCount
+                        }
+                        onClick={() =>
+                          goToCompanyDiscussionPage(companyDiscussionPage + 1)
+                        }
+                        type="button"
+                      >
+                        다음
+                      </button>
                     </nav>
                   )}
                 </>
@@ -1887,7 +1963,9 @@ export default function CompanyAnalysisPage() {
                 <div className="company-discussion-empty">
                   <span aria-hidden="true">✦</span>
                   <strong>아직 이 종목에 등록된 글이 없습니다.</strong>
-                  <p>토론방에서 {selectedCompany.name} 관련 의견을 확인해보세요.</p>
+                  <p>
+                    토론방에서 {selectedCompany.name} 관련 의견을 확인해보세요.
+                  </p>
                   <a href={companyDiscussionUrl}>종목토론방 열기</a>
                 </div>
               )}
