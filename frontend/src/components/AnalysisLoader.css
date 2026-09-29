@@ -147,3 +147,36 @@
     transform: translateX(430%);
   }
 }
+
+:root[data-theme="dark"] .analysis-loading-overlay {
+  background: rgba(4, 9, 16, .45);
+}
+
+:root[data-theme="dark"] .analysis-loading-card {
+  border-color: #35465d;
+  background: rgba(22, 33, 48, .96);
+  box-shadow: 0 24px 65px rgba(0, 0, 0, .4);
+}
+
+:root[data-theme="dark"] .analysis-loading-logo,
+:root[data-theme="dark"] .analysis-loading-card h2 {
+  color: #f1f6fd;
+}
+
+:root[data-theme="dark"] .analysis-loading-company {
+  color: #d0dff0;
+}
+
+:root[data-theme="dark"] .analysis-loading-description,
+:root[data-theme="dark"] .analysis-loading-status,
+:root[data-theme="dark"] .analysis-loading-time {
+  color: #a9bed4;
+}
+
+:root[data-theme="dark"] .analysis-loading-bar {
+  background: #35465d;
+}
+
+:root[data-theme="dark"] .analysis-loading-bar-fill {
+  background: #83bfff;
+}
