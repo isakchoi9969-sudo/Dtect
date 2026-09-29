@@ -38,6 +38,8 @@ async function runWatchlistAnalysisJob() {
         const analysis = await analyzeCompanyNews(company.companyName, 1, 100);
 
         const riskSignalRate = analysis.sentiment_percentages?.negative ?? 0;
+        const riskScore = analysis.risk_score ?? 0;
+        const riskLevel = analysis.risk_level ?? "낮음";
 
         const analyzedCount = analysis.analyzed_count ?? 0;
         const analyzedAt = analysis.analyzed_at;
@@ -56,6 +58,8 @@ async function runWatchlistAnalysisJob() {
             userId: user.userId,
             companyId: company.companyId,
             riskSignalRate,
+            riskScore,
+            riskLevel,
             analyzedCount,
             analyzedAt,
           });
