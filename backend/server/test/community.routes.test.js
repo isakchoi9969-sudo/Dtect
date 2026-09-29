@@ -10,6 +10,7 @@ test("community routes filter by company, reject anonymous writes, and use the s
   const calls = [];
   pool.query = async (sql, params = []) => {
     calls.push({ sql, params });
+    if (sql.includes("LOGIN_ID NOT LIKE 'withdrawn_%'")) return [[{ USER_ID: 7 }]];
     if (sql.includes("SELECT COUNT(*) AS total")) return [[{ total: 1 }]];
     if (sql.includes("LEFT(p.CONTENT")) {
       return [[{ id: 4, companyId: 123, title: "게시글", comments: 0 }]];
@@ -17,7 +18,7 @@ test("community routes filter by company, reject anonymous writes, and use the s
     if (sql.includes("UPDATE COMMUNITY_POST")) return [{ affectedRows: 1 }];
     if (sql.includes("SELECT COMPANY_ID FROM COMPANY")) return [[{ COMPANY_ID: 123 }]];
     if (sql.includes("SELECT POST_ID FROM COMMUNITY_POST")) return [[{ POST_ID: 4 }]];
-    if (sql.includes("SELECT COMMENT_ID AS id")) return [[{ id: 2, content: "댓글" }]];
+    if (sql.includes("COMMENT_ID AS id")) return [[{ id: 2, content: "댓글" }]];
     if (sql.includes("INSERT INTO COMMUNITY_POST")) return [{ insertId: 9 }];
     if (sql.includes("INSERT INTO COMMUNITY_COMMENT")) return [{ insertId: 10 }];
     throw new Error(`Unexpected query: ${sql}`);

@@ -27,7 +27,9 @@ function normalizedText(value, maxLength) {
 const postColumns = `
   p.POST_ID AS id, p.COMPANY_ID AS companyId,
   c.COMPANY_NAME AS company, c.STOCK_CODE AS code,
-  p.USER_ID AS authorId, CONCAT('회원 #', p.USER_ID) AS author,
+  p.USER_ID AS authorId,
+  CASE WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자'
+       ELSE CONCAT('회원 #', p.USER_ID) END AS author,
   p.TITLE AS title, p.VIEW_COUNT AS views, p.CREATED_AT AS createdAt,
   (SELECT COUNT(*) FROM COMMUNITY_COMMENT cm
    WHERE cm.POST_ID = p.POST_ID AND cm.STATUS = 'ACTIVE') AS comments
@@ -74,7 +76,7 @@ router.get("/posts", async (req, res) => {
   if (!order) return res.status(400).json({ message: "정렬 방식이 올바르지 않습니다." });
 
   try {
-    const from = "FROM COMMUNITY_POST p JOIN COMPANY c ON c.COMPANY_ID = p.COMPANY_ID";
+    const from = "FROM COMMUNITY_POST p JOIN COMPANY c ON c.COMPANY_ID = p.COMPANY_ID LEFT JOIN `USER` u ON u.USER_ID = p.USER_ID";
     const filter = `WHERE ${where.join(" AND ")}`;
     const [[count]] = await pool.query(
       `SELECT COUNT(*) AS total ${from} ${filter}`,
@@ -106,6 +108,7 @@ router.get("/posts/:postId", async (req, res) => {
     const [[post]] = await pool.query(
       `SELECT ${postColumns}, p.CONTENT AS body
        FROM COMMUNITY_POST p JOIN COMPANY c ON c.COMPANY_ID = p.COMPANY_ID
+       LEFT JOIN \`USER\` u ON u.USER_ID = p.USER_ID
        WHERE p.POST_ID = ? AND p.STATUS = 'ACTIVE'`,
       [postId],
     );
@@ -172,12 +175,15 @@ router.get("/posts/:postId/comments", async (req, res) => {
       [postId],
     );
     const [items] = await pool.query(
-      `SELECT COMMENT_ID AS id, POST_ID AS postId, USER_ID AS authorId,
-              CONCAT('회원 #', USER_ID) AS author, PARENT_COMMENT_ID AS parentCommentId,
-              CONTENT AS content, CREATED_AT AS createdAt
-       FROM COMMUNITY_COMMENT
-       WHERE POST_ID = ? AND STATUS = 'ACTIVE'
-       ORDER BY CREATED_AT ASC, COMMENT_ID ASC LIMIT ? OFFSET ?`,
+      `SELECT cm.COMMENT_ID AS id, cm.POST_ID AS postId, cm.USER_ID AS authorId,
+              CASE WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자'
+                   ELSE CONCAT('회원 #', cm.USER_ID) END AS author,
+              cm.PARENT_COMMENT_ID AS parentCommentId,
+              cm.CONTENT AS content, cm.CREATED_AT AS createdAt
+       FROM COMMUNITY_COMMENT cm
+       LEFT JOIN \`USER\` u ON u.USER_ID = cm.USER_ID
+       WHERE cm.POST_ID = ? AND cm.STATUS = 'ACTIVE'
+       ORDER BY cm.CREATED_AT ASC, cm.COMMENT_ID ASC LIMIT ? OFFSET ?`,
       [postId, pageSize, offset],
     );
     return res.json({
