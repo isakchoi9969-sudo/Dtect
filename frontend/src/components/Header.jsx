@@ -70,10 +70,14 @@ function Header() {
       return ROUTES.DASHBOARD_WATCHLIST;
     if (item.href === ROUTES.DASHBOARD && childIndex === 1)
       return ROUTES.DASHBOARD_ISSUE_RISK;
+
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 0)
       return ROUTES.COMPANY_SEARCH;
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 1)
       return ROUTES.COMPANY_WATCHLIST;
+    if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 2)
+      return ROUTES.STOCK_SEARCH;
+
     if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 0)
       return ROUTES.CASE_SIMULATOR;
     if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 1)
@@ -83,6 +87,13 @@ function Header() {
       return ROUTES.RISK_ALERT;
     if (item.href === ROUTES.ALERTS && childIndex === 1)
       return ROUTES.MAJOR_ISSUE_ALERT;
+
+    // 커뮤니티
+    if (item.href === ROUTES.COMUNITY && childIndex === 0)
+      return ROUTES.COMUNITY;
+
+    if (item.href === ROUTES.COMUNITY && childIndex === 1)
+      return ROUTES.COMMUNITY_STOCK;
 
     return item.href;
   };

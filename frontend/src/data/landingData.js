@@ -2,13 +2,19 @@ export const navigationItems = [
   {
     title: "기업 분석",
     href: "/company-analysis",
-    children: ["기업 검색", "관심 기업"],
+    children: ["기업 검색", "관심 기업", "산업 검색"],
   },
   {
     title: "AI 대응센터",
     href: "/response-center",
     paidService: true,
     children: ["과거 사례 시뮬레이터", "대응자료 생성"],
+  },
+  {
+    title: "커뮤니티",
+    href: "/comunity",
+    paidService: true,
+    children: ["이모저모", "종목 토론방"],
   },
   {
     title: "알림",
