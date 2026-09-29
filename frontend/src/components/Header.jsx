@@ -65,11 +65,6 @@ function Header() {
 
   const getChildHref = (item, child) => {
     const childIndex = item.children.indexOf(child);
-    if (item.href === ROUTES.DASHBOARD && childIndex === 0)
-      return ROUTES.DASHBOARD_WATCHLIST;
-    if (item.href === ROUTES.DASHBOARD && childIndex === 1)
-      return ROUTES.DASHBOARD_ISSUE_RISK;
-
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 0)
       return ROUTES.COMPANY_SEARCH;
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 1)
@@ -111,7 +106,7 @@ function Header() {
         <nav className="desktop-nav" aria-label={copy.primaryMenu}>
           {navigationItems.map((item) => (
             <div className="nav-item" key={item.title}>
-              <a href={item.href} className="nav-link">
+              <a href={getChildHref(item, item.children[0])} className="nav-link">
                 {item.title}
               </a>
               <div className="dropdown">
