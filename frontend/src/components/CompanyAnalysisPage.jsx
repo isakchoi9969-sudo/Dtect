@@ -7,7 +7,6 @@ import { api } from "../config/api";
 import { ROUTES } from "../config/routes";
 import { paginate } from "../utils/pagination";
 import CompanyLogo from "./CompanyLogo";
-import { communitySamplePosts } from "../data/communityPosts";
 
 /* =========================================================
    유틸
@@ -775,6 +774,18 @@ export default function CompanyAnalysisPage() {
   const [isMarketIndicesLoading, setIsMarketIndicesLoading] = useState(true);
   const [marketIndicesError, setMarketIndicesError] = useState("");
   const [riskAssessmentResult, setRiskAssessmentResult] = useState(null);
+  const [companyDiscussionState, setCompanyDiscussionState] = useState({
+    companyId: null,
+    page: 1,
+    posts: [],
+    total: 0,
+    totalPages: 0,
+    error: "",
+  });
+  const [companyDiscussionPageState, setCompanyDiscussionPageState] = useState({
+    companyId: null,
+    page: 1,
+  });
 
   // DB에서 기업 목록 가져오기
   useEffect(() => {
@@ -816,6 +827,61 @@ export default function CompanyAnalysisPage() {
   const selectedCompany = useMemo(() => {
     return companies.find((company) => company.id === selectedCompanyId);
   }, [companies, selectedCompanyId]);
+
+  const companyDiscussionPage = companyDiscussionPageState.companyId === selectedCompanyId
+    ? companyDiscussionPageState.page
+    : 1;
+
+  useEffect(() => {
+    if (!selectedCompanyId) return undefined;
+    const controller = new AbortController();
+    api.get("/api/community/posts", {
+      params: { companyId: selectedCompanyId, page: companyDiscussionPage, pageSize: 5, sort: "recent" },
+      signal: controller.signal,
+    })
+      .then((response) => setCompanyDiscussionState({
+        companyId: selectedCompanyId,
+        page: companyDiscussionPage,
+        posts: response.data.items || [],
+        total: response.data.total || 0,
+        totalPages: response.data.totalPages || 0,
+        error: "",
+      }))
+      .catch((error) => {
+        if (error.code !== "ERR_CANCELED") {
+          setCompanyDiscussionState({
+            companyId: selectedCompanyId,
+            page: companyDiscussionPage,
+            posts: [],
+            total: 0,
+            totalPages: 0,
+            error: getApiErrorMessage(error, "게시글을 불러오지 못했습니다."),
+          });
+        }
+      });
+    return () => controller.abort();
+  }, [selectedCompanyId, companyDiscussionPage]);
+  const companyDiscussionLoading = Boolean(
+    selectedCompanyId && (
+      companyDiscussionState.companyId !== selectedCompanyId ||
+      companyDiscussionState.page !== companyDiscussionPage
+    ),
+  );
+  const companyDiscussionPosts = companyDiscussionLoading ? [] : companyDiscussionState.posts;
+  const companyDiscussionError = companyDiscussionLoading ? "" : companyDiscussionState.error;
+  const companyDiscussionTotal = companyDiscussionLoading ? 0 : companyDiscussionState.total;
+  const companyDiscussionPageCount = companyDiscussionLoading ? 0 : companyDiscussionState.totalPages;
+  const companyDiscussionPageStart = Math.max(
+    1,
+    Math.min(companyDiscussionPage - 2, companyDiscussionPageCount - 4),
+  );
+  const companyDiscussionVisiblePages = Array.from(
+    { length: Math.min(companyDiscussionPageCount, 5) },
+    (_, index) => companyDiscussionPageStart + index,
+  );
+  const goToCompanyDiscussionPage = (page) => {
+    setCompanyDiscussionPageState({ companyId: selectedCompanyId, page });
+  };
 
   useEffect(() => {
     if (!selectedCompanyId || !/^\d{6}$/.test(selectedCompany?.ticker || "")) {
@@ -1158,11 +1224,7 @@ export default function CompanyAnalysisPage() {
   const targetReached = newsAnalysis?.target_reached ?? false;
   const minimumKeywordMentions = newsAnalysis?.minimum_keyword_mentions ?? 2;
   const articles = newsAnalysis?.news_list ?? [];
-  const companyDiscussionPosts = communitySamplePosts
-    .filter((post) => post.code === String(selectedCompany?.ticker || ""))
-    .sort((a, b) => b.views - a.views)
-    .slice(0, 3);
-  const companyDiscussionUrl = `${ROUTES.COMMUNITY_STOCK}?company=${encodeURIComponent(selectedCompany?.name || "")}&code=${encodeURIComponent(selectedCompany?.ticker || "")}`;
+  const companyDiscussionUrl = `${ROUTES.COMMUNITY_STOCK}?company=${encodeURIComponent(selectedCompany?.name || "")}&code=${encodeURIComponent(selectedCompany?.ticker || "")}&companyId=${selectedCompanyId}`;
   const articlesPerPage = 10;
   const articlePageCount = Math.ceil(articles.length / articlesPerPage);
   const currentArticlePage = Math.min(
@@ -1778,23 +1840,49 @@ export default function CompanyAnalysisPage() {
                 <div>
                   <span className="company-discussion-eyebrow">COMMUNITY</span>
                   <h3>{selectedCompany.name} 종목토론방</h3>
-                  <p>이 기업의 종목 코드와 연결된 게시글만 모았습니다.</p>
+                  <p>{companyDiscussionLoading ? "게시글을 확인하고 있습니다." : `전체 ${companyDiscussionTotal.toLocaleString()}건 · ${companyDiscussionPage}/${Math.max(companyDiscussionPageCount, 1)}페이지`}</p>
                 </div>
                 <a href={companyDiscussionUrl}>토론방 전체 보기 <span aria-hidden="true">›</span></a>
               </div>
-              {companyDiscussionPosts.length ? (
-                <div className="company-discussion-list">
-                  {companyDiscussionPosts.map((post) => (
-                    <a className="company-discussion-post" href={companyDiscussionUrl} key={post.id}>
-                      <div className="company-discussion-post-meta">
-                        <span>{post.author}</span><i>·</i><span>{post.time}</span>
-                        <span className="company-discussion-post-sentiment">{post.sentiment}</span>
-                      </div>
-                      <strong>{post.title}</strong>
-                      <span className="company-discussion-post-stats">조회 {post.views.toLocaleString()} · 댓글 {post.comments.toLocaleString()}</span>
-                    </a>
-                  ))}
+              {companyDiscussionLoading ? (
+                <div className="company-discussion-empty" role="status">게시글을 불러오고 있습니다.</div>
+              ) : companyDiscussionError ? (
+                <div className="company-discussion-empty" role="alert">
+                  <strong>{companyDiscussionError}</strong>
+                  <a href={companyDiscussionUrl}>종목토론방 열기</a>
                 </div>
+              ) : companyDiscussionPosts.length ? (
+                <>
+                  <div className="company-discussion-list">
+                    {companyDiscussionPosts.map((post) => (
+                      <a className="company-discussion-post" href={`${companyDiscussionUrl}&post=${post.id}`} key={post.id}>
+                        <div className="company-discussion-post-meta">
+                          <span>{post.author}</span><i>·</i><span>{formatArticleTime(post.createdAt)}</span>
+                        </div>
+                        <strong>{post.title}</strong>
+                        <span className="company-discussion-post-stats">조회 {post.views.toLocaleString()} · 댓글 {post.comments.toLocaleString()}</span>
+                      </a>
+                    ))}
+                  </div>
+                  {companyDiscussionPageCount > 1 && (
+                    <nav aria-label="종목토론방 페이지" className="article-pagination company-discussion-pagination">
+                      <button aria-label="이전 토론방 페이지" disabled={companyDiscussionPage === 1} onClick={() => goToCompanyDiscussionPage(companyDiscussionPage - 1)} type="button">이전</button>
+                      {companyDiscussionVisiblePages.map((page) => (
+                        <button
+                          aria-current={page === companyDiscussionPage ? "page" : undefined}
+                          aria-label={`${page}페이지 토론 글`}
+                          className={page === companyDiscussionPage ? "is-active" : ""}
+                          key={page}
+                          onClick={() => goToCompanyDiscussionPage(page)}
+                          type="button"
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button aria-label="다음 토론방 페이지" disabled={companyDiscussionPage === companyDiscussionPageCount} onClick={() => goToCompanyDiscussionPage(companyDiscussionPage + 1)} type="button">다음</button>
+                    </nav>
+                  )}
+                </>
               ) : (
                 <div className="company-discussion-empty">
                   <span aria-hidden="true">✦</span>
