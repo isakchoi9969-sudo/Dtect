@@ -26,6 +26,25 @@ function MyPage() {
   const [user, setUser] = useState(null);
   const [userLoading, setUserLoading] = useState(true);
   const [userError, setUserError] = useState("");
+  const [profileModalStep, setProfileModalStep] = useState(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    email: "",
+    newPassword: "",
+    newPasswordConfirm: "",
+    userType: "PERSONAL",
+    companyId: "",
+  });
+  const [profileError, setProfileError] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileCompanies, setProfileCompanies] = useState([]);
+  const [profileCompaniesLoading, setProfileCompaniesLoading] = useState(false);
+  const [pendingUserType, setPendingUserType] = useState(null);
+  const [withdrawalOpen, setWithdrawalOpen] = useState(false);
+  const [withdrawalPassword, setWithdrawalPassword] = useState("");
+  const [withdrawalError, setWithdrawalError] = useState("");
+  const [withdrawing, setWithdrawing] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState(null);
   const [removing, setRemoving] = useState(false);
   // 최근 생성한 AI 대응자료 이력
@@ -132,6 +151,109 @@ function MyPage() {
     setPendingRemoval(null);
   };
 
+  const openProfileEditor = () => {
+    setCurrentPassword("");
+    setProfileForm({
+      name: user?.name || "",
+      email: user?.email || "",
+      newPassword: "",
+      newPasswordConfirm: "",
+      userType: user?.userType || "PERSONAL",
+      companyId: user?.companyId ? String(user.companyId) : "",
+    });
+    setProfileError("");
+    setProfileModalStep("verify");
+    setProfileCompaniesLoading(true);
+    api
+      .get("/api/company")
+      .then((response) => setProfileCompanies(response.data.data || []))
+      .catch(() => setProfileError("기업 목록을 불러오지 못했습니다."))
+      .finally(() => setProfileCompaniesLoading(false));
+  };
+
+  const closeProfileEditor = (force = false) => {
+    if (profileSaving && !force) return;
+    setProfileModalStep(null);
+    setCurrentPassword("");
+    setProfileError("");
+    setPendingUserType(null);
+  };
+
+  const verifyPassword = async (event) => {
+    event.preventDefault();
+    setProfileSaving(true);
+    setProfileError("");
+
+    try {
+      await api.post("/api/auth/verify-password", { currentPassword });
+      setProfileModalStep("edit");
+    } catch (error) {
+      setProfileError(
+        error.response?.data?.message || "비밀번호를 확인하지 못했습니다.",
+      );
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const saveProfile = async (event) => {
+    event.preventDefault();
+    setProfileSaving(true);
+    setProfileError("");
+
+    try {
+      const response = await api.patch("/api/auth/me", {
+        currentPassword,
+        ...profileForm,
+      });
+      setUser(response.data.user);
+      window.dispatchEvent(
+        new CustomEvent("dtect-user-updated", { detail: response.data.user }),
+      );
+      closeProfileEditor(true);
+    } catch (error) {
+      setProfileError(
+        error.response?.data?.message || "내 정보를 수정하지 못했습니다.",
+      );
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const openWithdrawal = () => {
+    setWithdrawalPassword("");
+    setWithdrawalError("");
+    setWithdrawalOpen(true);
+  };
+
+  const closeWithdrawal = () => {
+    if (withdrawing) return;
+    setWithdrawalOpen(false);
+    setWithdrawalPassword("");
+    setWithdrawalError("");
+  };
+
+  const withdrawAccount = async (event) => {
+    event.preventDefault();
+    setWithdrawing(true);
+    setWithdrawalError("");
+
+    try {
+      const response = await api.delete("/api/auth/me", {
+        data: { currentPassword: withdrawalPassword },
+      });
+      localStorage.removeItem("isLoggedIn");
+      window.alert(response.data.message || "회원 탈퇴가 완료되었습니다.");
+      window.location.assign(ROUTES.HOME);
+    } catch (error) {
+      setWithdrawalError(
+        error.response?.data?.message || "회원 탈퇴를 처리하지 못했습니다.",
+      );
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+
   return (
     <>
       <Header />
@@ -145,9 +267,20 @@ function MyPage() {
         </header>
 
         <section className="mypage-section" aria-labelledby="mypage-user-title">
-          <div className="mypage-section-heading">
-            <p>ACCOUNT</p>
-            <h2 id="mypage-user-title">내 정보</h2>
+          <div className="mypage-section-heading mypage-profile-heading">
+            <div>
+              <p>ACCOUNT</p>
+              <h2 id="mypage-user-title">내 정보</h2>
+            </div>
+            {!userLoading && !userError && (
+              <button
+                type="button"
+                className="mypage-profile-edit-button"
+                onClick={openProfileEditor}
+              >
+                개인정보 수정하기
+              </button>
+            )}
           </div>
 
           {userLoading ? (
@@ -349,6 +482,17 @@ function MyPage() {
           )}
         </section>
 
+        <section className="mypage-withdrawal-section" aria-labelledby="mypage-withdrawal-title">
+          <div>
+            <p>ACCOUNT MANAGEMENT</p>
+            <h2 id="mypage-withdrawal-title">회원 탈퇴</h2>
+            <span>탈퇴하면 관심기업, 알림 및 저장한 대응자료를 복구할 수 없습니다.</span>
+          </div>
+          <button type="button" className="mypage-withdrawal-button" onClick={openWithdrawal}>
+            회원 탈퇴하기
+          </button>
+        </section>
+
         {pendingRemoval && (
           <div className="mypage-modal-backdrop" role="presentation">
             <section
@@ -375,6 +519,225 @@ function MyPage() {
           </div>
         )}
       </main>
+
+      {profileModalStep && (
+        <div
+          className="mypage-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeProfileEditor();
+          }}
+        >
+          <section
+            className="mypage-modal mypage-profile-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mypage-profile-modal-title"
+          >
+            {profileModalStep === "verify" ? (
+              <form onSubmit={verifyPassword}>
+                <p>ACCOUNT SECURITY</p>
+                <h2 id="mypage-profile-modal-title">현재 비밀번호 확인</h2>
+                <span>개인정보를 수정하려면 현재 비밀번호를 입력해 주세요.</span>
+                <label className="mypage-profile-field">
+                  현재 비밀번호
+                  <input
+                    autoComplete="current-password"
+                    autoFocus
+                    onChange={(event) => setCurrentPassword(event.target.value)}
+                    required
+                    type="password"
+                    value={currentPassword}
+                  />
+                </label>
+                {profileError && <p className="mypage-profile-error" role="alert">{profileError}</p>}
+                <div className="mypage-modal-actions">
+                  <button type="button" onClick={closeProfileEditor} disabled={profileSaving}>취소</button>
+                  <button type="submit" className="is-primary" disabled={profileSaving}>
+                    {profileSaving ? "확인 중..." : "확인"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={saveProfile}>
+                <p>ACCOUNT</p>
+                <h2 id="mypage-profile-modal-title">개인정보 수정</h2>
+                <span>이름과 이메일을 수정하고, 필요하면 새 비밀번호를 설정하세요.</span>
+                <label className="mypage-profile-field">
+                  이름
+                  <input
+                    autoComplete="name"
+                    onChange={(event) => setProfileForm((form) => ({ ...form, name: event.target.value }))}
+                    required
+                    value={profileForm.name}
+                  />
+                </label>
+                <label className="mypage-profile-field">
+                  이메일
+                  <input
+                    autoComplete="email"
+                    onChange={(event) => setProfileForm((form) => ({ ...form, email: event.target.value }))}
+                    required
+                    type="email"
+                    value={profileForm.email}
+                  />
+                </label>
+                <div className="mypage-profile-member-type">
+                  <span>회원 유형</span>
+                  <div>
+                    <button
+                      className={profileForm.userType === "PERSONAL" ? "is-selected" : ""}
+                      onClick={() => {
+                        if (profileForm.userType !== "PERSONAL") setPendingUserType("PERSONAL");
+                      }}
+                      type="button"
+                    >
+                      개인 회원
+                    </button>
+                    <button
+                      className={profileForm.userType === "COMPANY" ? "is-selected" : ""}
+                      onClick={() => {
+                        if (profileForm.userType !== "COMPANY") setPendingUserType("COMPANY");
+                      }}
+                      type="button"
+                    >
+                      기업 회원
+                    </button>
+                  </div>
+                </div>
+                {profileForm.userType === "COMPANY" && (
+                  <label className="mypage-profile-field">
+                    소속 기업
+                    <select
+                      disabled={profileCompaniesLoading}
+                      onChange={(event) => setProfileForm((form) => ({ ...form, companyId: event.target.value }))}
+                      required
+                      value={profileForm.companyId}
+                    >
+                      <option value="">
+                        {profileCompaniesLoading ? "기업 목록을 불러오는 중..." : "소속 기업을 선택하세요"}
+                      </option>
+                      {profileCompanies.map((company) => (
+                        <option key={company.companyId} value={company.companyId}>
+                          {company.companyName}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                <label className="mypage-profile-field">
+                  새 비밀번호 <small>(변경하지 않으면 비워 두세요)</small>
+                  <input
+                    autoComplete="new-password"
+                    minLength="8"
+                    onChange={(event) => setProfileForm((form) => ({ ...form, newPassword: event.target.value }))}
+                    type="password"
+                    value={profileForm.newPassword}
+                  />
+                </label>
+                <label className="mypage-profile-field">
+                  새 비밀번호 확인
+                  <input
+                    autoComplete="new-password"
+                    minLength="8"
+                    onChange={(event) => setProfileForm((form) => ({ ...form, newPasswordConfirm: event.target.value }))}
+                    type="password"
+                    value={profileForm.newPasswordConfirm}
+                  />
+                </label>
+                {profileError && <p className="mypage-profile-error" role="alert">{profileError}</p>}
+                <div className="mypage-modal-actions">
+                  <button type="button" onClick={closeProfileEditor} disabled={profileSaving}>취소</button>
+                  <button type="submit" className="is-primary" disabled={profileSaving}>
+                    {profileSaving ? "저장 중..." : "저장"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </section>
+        </div>
+      )}
+
+      {pendingUserType && (
+        <div className="mypage-modal-backdrop mypage-confirm-backdrop" role="presentation">
+          <section
+            className="mypage-modal mypage-member-type-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mypage-member-type-title"
+          >
+            <p>MEMBERSHIP TYPE</p>
+            <h2 id="mypage-member-type-title">
+              {pendingUserType === "COMPANY" ? "기업 회원으로 변경할까요?" : "개인 회원으로 변경할까요?"}
+            </h2>
+            <span>
+              {pendingUserType === "COMPANY"
+                ? "소속 기업을 선택한 뒤 저장하면 기업 회원으로 변경됩니다."
+                : "저장하면 소속 기업 정보가 해제되고 개인 회원으로 변경됩니다."}
+            </span>
+            <div className="mypage-modal-actions">
+              <button type="button" onClick={() => setPendingUserType(null)}>취소</button>
+              <button
+                type="button"
+                className="is-primary"
+                onClick={() => {
+                  setProfileForm((form) => ({
+                    ...form,
+                    userType: pendingUserType,
+                    companyId: pendingUserType === "PERSONAL" ? "" : form.companyId,
+                  }));
+                  setPendingUserType(null);
+                }}
+              >
+                변경
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {withdrawalOpen && (
+        <div
+          className="mypage-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeWithdrawal();
+          }}
+        >
+          <section
+            className="mypage-modal mypage-withdrawal-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mypage-withdrawal-modal-title"
+          >
+            <form onSubmit={withdrawAccount}>
+              <p>ACCOUNT WITHDRAWAL</p>
+              <h2 id="mypage-withdrawal-modal-title">정말 탈퇴하시겠습니까?</h2>
+              <span>
+                관심기업, 알림 및 저장한 대응자료가 삭제됩니다. 커뮤니티 글과 댓글은 <strong>탈퇴한 사용자</strong>로 표시됩니다.
+              </span>
+              <label className="mypage-profile-field">
+                현재 비밀번호
+                <input
+                  autoComplete="current-password"
+                  autoFocus
+                  onChange={(event) => setWithdrawalPassword(event.target.value)}
+                  required
+                  type="password"
+                  value={withdrawalPassword}
+                />
+              </label>
+              {withdrawalError && <p className="mypage-profile-error" role="alert">{withdrawalError}</p>}
+              <div className="mypage-modal-actions">
+                <button type="button" onClick={closeWithdrawal} disabled={withdrawing}>취소</button>
+                <button type="submit" className="is-danger" disabled={withdrawing}>
+                  {withdrawing ? "탈퇴 처리 중..." : "탈퇴하기"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </>
   );
 }
