@@ -11,6 +11,7 @@ const healthRoutes = require("./routes/health.routes");
 const simulatorRoutes = require("./routes/simulator.routes");
 const responseDraftRoutes = require("./routes/responseDraft.routes");
 const communityRoutes = require("./routes/community.routes");
+const communityFreeRoutes = require("./routes/communityFree.routes");
 
 const {
   startWatchlistAnalysisScheduler,
@@ -35,6 +36,7 @@ app.use("/api/simulator", simulatorRoutes);
 app.use("/api", healthRoutes);
 app.use("/api/response-drafts", responseDraftRoutes);
 app.use("/api/community", communityRoutes);
+app.use("/api/community/free", communityFreeRoutes);
 
 // 프론트엔드 빌드 결과물을 이 서버에서 함께 서빙하려면 아래 주석을 해제하세요.
 // const path = require("path");
