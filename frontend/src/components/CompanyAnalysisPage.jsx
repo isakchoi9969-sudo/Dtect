@@ -83,6 +83,29 @@ function AnalysisUnavailable({ description, label = "준비 중" }) {
   );
 }
 
+function RiskAnalysisLoading() {
+  return (
+    <div className="risk-loading-scene" role="status" aria-live="polite">
+      <div className="risk-loading-orbit" aria-hidden="true">
+        <span className="risk-loading-orbit-ring" />
+        <span className="risk-loading-orbit-core">✦</span>
+        <span className="risk-loading-orbit-dot" />
+      </div>
+      <span className="risk-loading-badge">
+        분석 중<span className="risk-loading-dots" aria-hidden="true">•••</span>
+      </span>
+      <p className="risk-loading-message">
+        최근 기사와 위험 지표를 살펴보고 있습니다. 잠시만 기다려 주세요.
+      </p>
+      <div className="risk-loading-lines" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+    </div>
+  );
+}
+
 function hasPoliteAnalysisTone(text) {
   if (typeof text !== "string" || !text.trim()) return false;
   if (
@@ -1186,7 +1209,7 @@ export default function CompanyAnalysisPage() {
       });
 
     return () => controller.abort();
-  }, [selectedCompany?.name, retryCount]);
+  }, [selectedCompany?.name, selectedCompanyId, retryCount]);
 
   const retryNewsAnalysis = () => {
     setIsNewsLoading(true);
@@ -1433,10 +1456,7 @@ export default function CompanyAnalysisPage() {
                 </div>
                 {isRiskAssessmentLoading ? (
                   <div className="risk-assessment-loading">
-                    <AnalysisUnavailable
-                      label="분석 중"
-                      description="최근 기사와 위험 지표를 살펴보고 있습니다. 잠시만 기다려 주세요."
-                    />
+                    <RiskAnalysisLoading />
                   </div>
                 ) : ["ready", "llm_unavailable", "insufficient_data"].includes(
                     riskAssessment?.status,

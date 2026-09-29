@@ -31,109 +31,6 @@ const recommendedKeywords = [
   "전체",
 ];
 
-const keywordCompanies = {
-  삼성: [
-    "삼성전자",
-    "삼성SDI",
-    "삼성물산",
-    "삼성바이오로직스",
-    "삼성생명",
-    "삼성화재",
-    "삼성전기",
-    "삼성중공업",
-    "삼성엔지니어링",
-  ],
-  현대: [
-    "현대자동차",
-    "현대모비스",
-    "현대건설",
-    "현대제철",
-    "현대글로비스",
-    "현대위아",
-    "현대백화점",
-    "HD현대중공업",
-    "HD한국조선해양",
-  ],
-  카카오: ["카카오", "카카오게임즈"],
-  식품: [
-    "CJ제일제당",
-    "농심",
-    "오뚜기",
-    "하이트진로",
-    "롯데칠성음료",
-    "신세계",
-    "이마트",
-    "BGF리테일",
-    "GS리테일",
-    "삼양식품",
-  ],
-  IT: [
-    "NAVER",
-    "카카오",
-    "삼성전자",
-    "LG전자",
-    "SK하이닉스",
-    "LG유플러스",
-    "LG이노텍",
-    "LG디스플레이",
-    "SK스퀘어",
-    "두산로보틱스",
-  ],
-  반도체: ["삼성전자", "SK하이닉스", "삼성전기", "LG이노텍", "DB하이텍"],
-  바이오: [
-    "삼성바이오로직스",
-    "SK바이오팜",
-    "HLB",
-    "대웅제약",
-    "한국콜마",
-    "코스맥스",
-    "유한양행",
-  ],
-  "2차전지": [
-    "삼성SDI",
-    "LG에너지솔루션",
-    "LG화학",
-    "포스코퓨처엠",
-    "에코프로비엠",
-    "롯데에너지머티리얼즈",
-    "POSCO홀딩스",
-  ],
-  자동차: [
-    "현대자동차",
-    "현대모비스",
-    "현대위아",
-    "기아",
-    "HL만도",
-    "현대글로비스",
-    "금호타이어",
-    "한국타이어앤테크놀로지",
-  ],
-  철강: ["POSCO홀딩스", "현대제철", "고려아연", "KG스틸"],
-  조선: ["HD한국조선해양", "HD현대중공업", "삼성중공업"],
-  해운: ["HMM", "현대글로비스"],
-  항공: ["대한항공", "아시아나항공", "제주항공"],
-  화학: ["LG화학", "롯데케미칼", "금호석유화학", "OCI홀딩스", "LG생활건강"],
-  에너지: [
-    "한국전력",
-    "한국가스공사",
-    "두산에너빌리티",
-    "OCI홀딩스",
-    "POSCO홀딩스",
-  ],
-  금융: [
-    "KB금융",
-    "하나금융지주",
-    "우리금융지주",
-    "메리츠금융지주",
-    "미래에셋증권",
-    "하나금융",
-  ],
-  건설: ["현대건설", "GS건설", "삼성엔지니어링", "두산에너빌리티"],
-  유통: ["이마트", "신세계", "롯데쇼핑", "현대백화점", "BGF리테일", "GS리테일"],
-  엔터: ["하이브", "JYP Ent.", "SM", "YG PLUS", "카카오"],
-  게임: ["카카오게임즈", "펄어비스"],
-};
-
 export default function StockSearchPage() {
   const [selectedKeyword, setSelectedKeyword] = useState(null);
   const [industryCompanies, setIndustryCompanies] = useState([]);
@@ -141,16 +38,11 @@ export default function StockSearchPage() {
   const { isWatched, toggleCompany } = useWatchlist();
 
   useEffect(() => {
-    if (!selectedKeyword) {
-      setIndustryCompanies([]);
-      setIsIndustryLoading(false);
-      return undefined;
-    }
+    if (!selectedKeyword) return undefined;
 
     let isActive = true;
 
     const fetchIndustryCompanies = async () => {
-      setIsIndustryLoading(true);
       try {
         const response = selectedKeyword === "전체"
           ? await api.get("/api/company")
@@ -208,8 +100,14 @@ export default function StockSearchPage() {
     );
   };
 
+  const handleKeywordChange = (keyword) => {
+    const nextKeyword = selectedKeyword === keyword ? null : keyword;
+    setIndustryCompanies([]);
+    setIsIndustryLoading(Boolean(nextKeyword));
+    setSelectedKeyword(nextKeyword);
+  };
+
   // 다크모드 전용 색상 팔레트 (이미지와 유사하게)
-  const cardBg = isDark ? "#0f172a" : "#ffffff";
   const cardBorder = isDark ? "#2b394b" : "#dfe7f0";
   const cardBorderHover = isDark ? "#334155" : "#d1d5db";
 
@@ -217,23 +115,8 @@ export default function StockSearchPage() {
     ? "0 4px 12px rgba(0,0,0,0.3)"
     : "0 4px 12px rgba(0,0,0,0.04)";
 
-  const logoBg = isDark ? "#1e293b" : "#f9fafb";
-  const logoBorder = isDark ? "#334155" : "#f3f4f6";
-
   const textPrimary = isDark ? "#f1f5f9" : "#111827";
   const textSecondary = isDark ? "#94a3b8" : "#9ca3af";
-
-  const watchBtnBorder = (watched) =>
-    watched ? (isDark ? "#e2e8f0" : "#111827") : isDark ? "#334155" : "#e5e7eb";
-
-  const watchBtnBg = (watched) =>
-    watched ? (isDark ? "#e2e8f0" : "#111827") : isDark ? "#0f172a" : "#ffffff";
-
-  const watchBtnColor = (watched) =>
-    watched ? (isDark ? "#0f172a" : "#ffffff") : isDark ? "#94a3b8" : "#6b7280";
-
-  const watchBtnHoverBg = isDark ? "#1e293b" : "#f9fafb";
-  const watchBtnHoverBorder = isDark ? "#475569" : "#d1d5db";
 
   return (
     <div className="company-search-page">
@@ -289,11 +172,7 @@ export default function StockSearchPage() {
                 <button
                   key={keyword}
                   type="button"
-                  onClick={() =>
-                    setSelectedKeyword((currentKeyword) =>
-                      currentKeyword === keyword ? null : keyword,
-                    )
-                  }
+                  onClick={() => handleKeywordChange(keyword)}
                   style={{
                     padding: "6px 12px",
                     borderRadius: "999px",

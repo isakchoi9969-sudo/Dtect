@@ -3335,6 +3335,150 @@ button:focus-visible {
   min-height: 0 !important;
   padding: 20px 16px !important;
 }
+.risk-loading-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  box-sizing: border-box;
+  color: #526d8b;
+  text-align: center;
+}
+.risk-loading-orbit {
+  position: relative;
+  display: grid;
+  width: 78px;
+  height: 78px;
+  place-items: center;
+}
+.risk-loading-orbit-ring {
+  position: absolute;
+  inset: 0;
+  border: 3px solid #dce9f8;
+  border-top-color: #378de4;
+  border-right-color: #73b9ee;
+  border-radius: 50%;
+  animation: risk-loading-spin 2.5s linear infinite;
+}
+.risk-loading-orbit-core {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 50%;
+  background: #eaf4ff;
+  color: #287bc8;
+  font-size: 26px;
+  box-shadow: 0 0 0 5px rgba(91, 164, 232, 0.08);
+  animation: risk-loading-breathe 2.5s ease-in-out infinite;
+}
+.risk-loading-orbit-dot {
+  position: absolute;
+  top: -2px;
+  left: calc(50% - 4px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #42b9d4;
+  box-shadow: 0 0 10px rgba(66, 185, 212, 0.55);
+  transform-origin: 4px 41px;
+  animation: risk-loading-spin 2.5s linear infinite;
+}
+.risk-loading-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 27px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: #e8f3ff;
+  color: #286ba8;
+  font-size: 12px;
+  font-weight: 750;
+}
+.risk-loading-dots {
+  display: inline-block;
+  width: 20px;
+  overflow: hidden;
+  margin-left: 3px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  animation: risk-loading-dots 1.5s steps(3, end) infinite;
+}
+.risk-loading-message {
+  max-width: 460px;
+  margin: 0;
+  color: #526d8b;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.risk-loading-lines {
+  display: flex;
+  width: min(230px, 70%);
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+.risk-loading-lines span {
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7eff8;
+}
+.risk-loading-lines span:nth-child(2) { width: 78%; }
+.risk-loading-lines span:nth-child(3) { width: 56%; }
+.risk-loading-lines span::after {
+  content: "";
+  display: block;
+  width: 45%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, #8fc6f7, transparent);
+  animation: risk-loading-scan 1.8s ease-in-out infinite;
+}
+.risk-loading-lines span:nth-child(2)::after { animation-delay: 0.2s; }
+.risk-loading-lines span:nth-child(3)::after { animation-delay: 0.4s; }
+@keyframes risk-loading-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes risk-loading-breathe {
+  50% { box-shadow: 0 0 0 10px rgba(91, 164, 232, 0.13); }
+}
+@keyframes risk-loading-dots {
+  from { width: 0; }
+  to { width: 20px; }
+}
+@keyframes risk-loading-scan {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(240%); }
+}
+:root[data-theme="dark"] .risk-loading-orbit-ring {
+  border-color: #2b425c;
+  border-top-color: #79b8f3;
+  border-right-color: #4b93d2;
+}
+:root[data-theme="dark"] .risk-loading-orbit-core {
+  background: #1d3b58;
+  color: #add7ff;
+}
+:root[data-theme="dark"] .risk-loading-badge {
+  background: #234362;
+  color: #b7dcff;
+}
+:root[data-theme="dark"] .risk-loading-message { color: #b4c8df; }
+:root[data-theme="dark"] .risk-loading-lines span { background: #2d4056; }
+:root[data-theme="dark"] .risk-loading-lines span::after {
+  background: linear-gradient(90deg, transparent, #6aa9e1, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .risk-loading-orbit-ring,
+  .risk-loading-orbit-core,
+  .risk-loading-orbit-dot,
+  .risk-loading-dots,
+  .risk-loading-lines span::after { animation: none; }
+  .risk-loading-dots { width: 20px; }
+}
 .risk-sentiment-combined-card .risk-assessment-content {
   display: contents;
 }
