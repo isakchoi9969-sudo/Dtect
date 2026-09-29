@@ -1,7 +1,12 @@
 const { pool } = require("../db/pool");
-const { assessCompanyRisk } = require("../services/companyRiskAssessment.service");
+const {
+  assessCompanyRisk,
+} = require("../services/companyRiskAssessment.service");
 
-const { calculateSearchScore } = require("../services/companySearch.service");
+const {
+  calculateCompanySearchScore,
+  calculateIndustrySearchScore,
+} = require("../services/companySearch.service");
 const {
   fetchExchangeRate,
   fetchMarketIndexHistories,
@@ -23,6 +28,8 @@ const {
 const {
   saveAnalysisAndCreateAlerts,
 } = require("../services/analysisAlert.service");
+
+const MIN_COMPANY_SEARCH_SCORE = 0.4;
 
 /**
  * GET /api/company
@@ -61,12 +68,13 @@ async function getCompanies(_req, res) {
  *
  * 검색 방식
  * 1. COMPANY 전체 조회
- * 2. 검색어와 기업명 비교
+ * 2. 검색어와 기업 정보(기업명·산업·CEO·설명·종목코드) 비교
  * 3. 관련도 점수 계산
  * 4. 점수가 높은 기업부터 반환
  */
 async function searchCompany(req, res) {
   const keyword = String(req.query.keyword || "").trim();
+  const isIndustryScope = req.query.scope === "industry";
 
   if (!keyword) {
     return res.status(400).json({
@@ -80,14 +88,20 @@ async function searchCompany(req, res) {
     const [companies] = await pool.query(`
       SELECT
         COMPANY_ID AS companyId,
-        COMPANY_NAME AS companyName
+        COMPANY_NAME AS companyName,
+        STOCK_CODE AS stockCode,
+        INDUSTRY AS industry,
+        CEO_NAME AS ceoName,
+        COMPANY_INFO AS companyInfo
       FROM COMPANY
     `);
 
-    // 검색어와 기업명의 관련도 계산
+    // 산업 페이지는 산업 분류·기업 설명만, 일반 검색은 기업 전체 정보를 비교한다.
     const scoredCompanies = companies
       .map((company) => {
-        const score = calculateSearchScore(keyword, company.companyName);
+        const score = isIndustryScope
+          ? calculateIndustrySearchScore(keyword, company)
+          : calculateCompanySearchScore(keyword, company);
 
         return {
           ...company,
@@ -96,7 +110,7 @@ async function searchCompany(req, res) {
       })
 
       // 관련도가 너무 낮은 기업은 제외
-      .filter((company) => company.score >= 0.4)
+      .filter((company) => company.score >= MIN_COMPANY_SEARCH_SCORE)
 
       // 관련도가 높은 기업부터 정렬
       .sort((a, b) => b.score - a.score)
@@ -168,19 +182,26 @@ async function getCompanyRelations(req, res) {
 async function getCompanyRiskAssessment(req, res) {
   const companyId = Number(req.params.companyId);
   if (!Number.isInteger(companyId) || companyId < 1) {
-    return res.status(400).json({ success: false, message: "올바른 기업 ID가 필요합니다." });
+    return res
+      .status(400)
+      .json({ success: false, message: "올바른 기업 ID가 필요합니다." });
   }
   try {
     const result = await assessCompanyRisk({
       companyId,
       articles: req.body?.articles,
     });
-    if (!result) return res.status(404).json({ success: false, message: "기업을 찾을 수 없습니다." });
+    if (!result)
+      return res
+        .status(404)
+        .json({ success: false, message: "기업을 찾을 수 없습니다." });
     res.set("Cache-Control", "no-store");
     return res.json({ success: true, data: result });
   } catch (error) {
     console.error("종합 리스크 평가 실패:", error.message);
-    return res.status(500).json({ success: false, message: "종합 리스크를 평가하지 못했습니다." });
+    return res
+      .status(500)
+      .json({ success: false, message: "종합 리스크를 평가하지 못했습니다." });
   }
 }
 
@@ -390,6 +411,8 @@ async function getCompanyAlerts(req, res, alertType) {
          a.PREVIOUS_RATE AS previousRate,
          a.CURRENT_RATE AS currentRate,
          a.CHANGE_RATE AS changeRate,
+         a.RISK_SCORE AS riskScore,
+         a.RISK_LEVEL AS riskLevel,
          a.DETECTED_AT AS detectedAt,
          c.COMPANY_ID AS companyId,
          c.COMPANY_NAME AS companyName
@@ -402,34 +425,15 @@ async function getCompanyAlerts(req, res, alertType) {
       [req.authUserId, alertType, hours],
     );
 
-    // 화면의 위험/주의, 높음/보통 필터에 사용할 값을 함께 만듭니다.
-    const data = alerts.map((alert) => {
-      const currentRate = Number(alert.currentRate);
-
-      return {
-        ...alert,
-        currentRate,
-        previousRate:
-          alert.previousRate === null ? null : Number(alert.previousRate),
-        changeRate: alert.changeRate === null ? null : Number(alert.changeRate),
-
-        // 위험도 급상승 알림 화면용
-        riskLevel:
-          alertType === "risk_surge"
-            ? currentRate >= 80
-              ? "위험"
-              : "주의"
-            : undefined,
-
-        // 주요 이슈 발생 알림 화면용
-        severity:
-          alertType === "major_issue"
-            ? currentRate >= 80
-              ? "높음"
-              : "보통"
-            : undefined,
-      };
-    });
+    const data = alerts.map((alert) => ({
+      ...alert,
+      riskScore: Number(alert.riskScore ?? 0),
+      riskLevel: alert.riskLevel,
+      currentRate: Number(alert.currentRate),
+      previousRate:
+        alert.previousRate === null ? null : Number(alert.previousRate),
+      changeRate: alert.changeRate === null ? null : Number(alert.changeRate),
+    }));
 
     return res.json({
       success: true,

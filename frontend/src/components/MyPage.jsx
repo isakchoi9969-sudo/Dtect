@@ -26,6 +26,8 @@ function MyPage() {
   const [user, setUser] = useState(null);
   const [userLoading, setUserLoading] = useState(true);
   const [userError, setUserError] = useState("");
+  const [pendingRemoval, setPendingRemoval] = useState(null);
+  const [removing, setRemoving] = useState(false);
   // 최근 생성한 AI 대응자료 이력
   const [draftHistory, setDraftHistory] = useState([]);
   const [draftHistoryLoading, setDraftHistoryLoading] = useState(true);
@@ -36,6 +38,7 @@ function MyPage() {
   const [draftCopyNotice, setDraftCopyNotice] = useState("");
   const {
     companies,
+    toggleCompany,
     loading: favoritesLoading,
     error: favoritesError,
   } = useWatchlist();
@@ -118,6 +121,15 @@ function MyPage() {
         error.response?.data?.message || "초안을 삭제하지 못했습니다.",
       );
     }
+  };
+
+  const confirmRemoval = async () => {
+    if (!pendingRemoval) return;
+
+    setRemoving(true);
+    await toggleCompany(pendingRemoval.companyId);
+    setRemoving(false);
+    setPendingRemoval(null);
   };
 
   return (
@@ -298,39 +310,31 @@ function MyPage() {
           ) : companies.length > 0 ? (
             <div className="mypage-company-grid">
               {companies.map((company) => (
-                <article
-                  className="mypage-company-card"
-                  key={company.companyId}
-                >
-                  <div className="mypage-company-card-header">
-                    <span className="mypage-company-logo">
-                      <CompanyLogo
-                        companyName={company.companyName}
-                        size={34}
-                        visualOffset={{ x: 6, y: 8 }}
-                      />
-                    </span>
-                    <div>
-                      <strong>{company.companyName}</strong>
-                      <span>{company.industry || "업종 정보 없음"}</span>
-                    </div>
-                  </div>
-                  <dl className="mypage-company-details">
-                    <div>
-                      <dt>CEO</dt>
-                      <dd>{company.ceoName || "-"}</dd>
-                    </div>
-                    <div>
-                      <dt>종목코드</dt>
-                      <dd>{company.stockCode || "-"}</dd>
-                    </div>
-                  </dl>
+                <article className="mypage-company-card" key={company.companyId}>
                   <button
                     type="button"
-                    className="mypage-analysis-button"
+                    className="mypage-company-card-main"
                     onClick={() => openAnalysis(company.companyId)}
+                    aria-label={`${company.companyName} 기업 분석 보기`}
                   >
-                    기업 분석 보기
+                    <div className="mypage-company-card-header">
+                      <span className="mypage-company-logo">
+                        <CompanyLogo companyName={company.companyName} size={34} visualOffset={{ x: 6, y: 8 }} />
+                      </span>
+                      <div>
+                        <strong>{company.companyName}</strong>
+                        <span>{company.industry || "업종 정보 없음"}</span>
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    className="mypage-company-star is-active"
+                    onClick={() => setPendingRemoval(company)}
+                    aria-label={`${company.companyName} 관심기업 해제`}
+                    aria-pressed="true"
+                  >
+                    ★
                   </button>
                 </article>
               ))}
@@ -344,6 +348,32 @@ function MyPage() {
             </div>
           )}
         </section>
+
+        {pendingRemoval && (
+          <div className="mypage-modal-backdrop" role="presentation">
+            <section
+              className="mypage-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="mypage-remove-title"
+              aria-describedby="mypage-remove-description"
+            >
+              <p>WATCHLIST</p>
+              <h2 id="mypage-remove-title">관심기업 해제</h2>
+              <span id="mypage-remove-description">
+                <strong>{pendingRemoval.companyName}</strong>을(를) 관심기업에서 삭제할까요?
+              </span>
+              <div className="mypage-modal-actions">
+                <button type="button" onClick={() => setPendingRemoval(null)} disabled={removing}>
+                  취소
+                </button>
+                <button type="button" className="is-danger" onClick={confirmRemoval} disabled={removing}>
+                  {removing ? "삭제 중..." : "삭제"}
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
       </main>
     </>
   );

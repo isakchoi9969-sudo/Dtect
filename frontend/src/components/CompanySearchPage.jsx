@@ -4,7 +4,19 @@ import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
 import Header from "./Header";
 
-const recommendedKeywords = ["삼성", "현대", "카카오", "바이오", "2차전지"];
+const recommendedKeywords = [
+  "삼성",
+  "LG",
+  "현대",
+  "SK",
+  "롯데",
+  "카카오",
+  "2차전지",
+  "게임",
+  "금융",
+  "바이오",
+  "식품",
+];
 const LOGO_DEV_TOKEN = "pk_LmDNVeHjR3Sh2eSen5P1yA";
 
 const companyDomains = {
@@ -152,6 +164,8 @@ export default function CompanySearchPage() {
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [notice, setNotice] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [isUpdatingWatchlist, setIsUpdatingWatchlist] = useState(false);
 
   const {
     isWatched,
@@ -192,7 +206,27 @@ export default function CompanySearchPage() {
 
   const toggleWatchlist = (event, company) => {
     event.stopPropagation();
-    toggleCompany(company.companyId);
+
+    if (isWatched(company.companyId)) {
+      setPendingAction({ type: "remove", company });
+      return;
+    }
+
+    if (count >= limit) {
+      setPendingAction({ type: "limit" });
+      return;
+    }
+
+    void toggleCompany(company.companyId);
+  };
+
+  const confirmRemoval = async () => {
+    if (!pendingAction || pendingAction.type !== "remove") return;
+
+    setIsUpdatingWatchlist(true);
+    await toggleCompany(pendingAction.company.companyId);
+    setIsUpdatingWatchlist(false);
+    setPendingAction(null);
   };
 
   const openAnalysis = (company) => {
@@ -356,11 +390,12 @@ export default function CompanySearchPage() {
                         </span>
 
                         <span className="company-result-copy">
-                          <strong>{company.companyName}</strong>
-                          <em>
-                            검색 관련도 {Math.round(company.score * 100)}%
-                          </em>
-                          <span>DB에 등록된 기업입니다.</span>
+                          <strong>
+                            {company.companyName}
+                            {company.stockCode && <small>{company.stockCode}</small>}
+                          </strong>
+                          <em>{company.industry || "업종 정보 없음"}</em>
+                          <span>{company.companyInfo || "기업 정보가 준비 중입니다."}</span>
                         </span>
 
                         <span
@@ -391,7 +426,7 @@ export default function CompanySearchPage() {
                           e.currentTarget.style.transform = "scale(1)";
                         }}
                       >
-                        ★
+                        {watched ? "★" : "☆"}
                       </button>
                     </article>
                   );
@@ -406,6 +441,57 @@ export default function CompanySearchPage() {
           </section>
         )}
       </main>
+
+      {pendingAction && (
+        <div className="company-search-modal-backdrop" role="presentation">
+          <section
+            className="company-search-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="company-search-modal-title"
+            aria-describedby="company-search-modal-description"
+          >
+            <p>WATCHLIST</p>
+            {pendingAction.type === "remove" ? (
+              <>
+                <h2 id="company-search-modal-title">관심기업 해제</h2>
+                <span id="company-search-modal-description">
+                  <strong>{pendingAction.company.companyName}</strong>을(를) 관심기업에서 삭제할까요?
+                </span>
+                <div className="company-search-modal-actions">
+                  <button
+                    type="button"
+                    onClick={() => setPendingAction(null)}
+                    disabled={isUpdatingWatchlist}
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    className="is-danger"
+                    onClick={confirmRemoval}
+                    disabled={isUpdatingWatchlist}
+                  >
+                    {isUpdatingWatchlist ? "삭제 중..." : "삭제"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 id="company-search-modal-title">관심기업 한도 안내</h2>
+                <span id="company-search-modal-description">
+                  관심기업은 최대 <strong>{limit}개</strong>까지 등록할 수 있습니다.
+                </span>
+                <div className="company-search-modal-actions">
+                  <button type="button" onClick={() => setPendingAction(null)}>
+                    확인
+                  </button>
+                </div>
+              </>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }
