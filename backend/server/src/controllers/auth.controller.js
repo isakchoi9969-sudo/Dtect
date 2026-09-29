@@ -187,8 +187,8 @@ async function login(req, res) {
 async function getCurrentUser(req, res) {
   try {
     const [rows] = await pool.query(
-      `SELECT u.USER_ID, u.COMPANY_ID, u.NAME, u.EMAIL, u.USER_TYPE,
-              c.COMPANY_NAME
+      `SELECT u.USER_ID, u.COMPANY_ID, u.LOGIN_ID, u.NAME, u.EMAIL,
+              u.USER_TYPE, u.CREATED_AT, c.COMPANY_NAME
        FROM \`USER\` u
        LEFT JOIN COMPANY c ON c.COMPANY_ID = u.COMPANY_ID
        WHERE u.USER_ID = ?
@@ -205,7 +205,14 @@ async function getCurrentUser(req, res) {
       });
     }
 
-    return res.json({ success: true, user: toUserResponse(user) });
+    return res.json({
+      success: true,
+      user: {
+        ...toUserResponse(user),
+        loginId: user.LOGIN_ID,
+        createdAt: user.CREATED_AT,
+      },
+    });
   } catch (error) {
     console.error("현재 사용자 조회 오류:", error);
     return res.status(500).json({

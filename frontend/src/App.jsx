@@ -19,6 +19,7 @@ import MajorIssueAlert from "./components/MajorIssueAlert";
 import StockSearchPage from "./components/StockSearchPage";
 import CommunityPage from "./components/CommunityPage";
 import CommunityStockPage from "./components/CommunityStockPage";
+import MyPage from "./components/MyPage";
 import { WatchlistDashboard, RiskDashboard } from "./components/DashboardPages";
 import { ROUTES } from "./config/routes";
 import { api } from "./config/api";
@@ -113,6 +114,10 @@ function App() {
 
   if (pathname === ROUTES.SIGNUP) {
     return <AuthPage mode="signup" />;
+  }
+
+  if (pathname === ROUTES.MYPAGE) {
+    return <MyPage />;
   }
 
   return <LandingPage />;

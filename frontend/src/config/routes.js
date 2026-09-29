@@ -18,4 +18,5 @@
   COMMUNITY_STOCK: "/comunity/stock",
   LOGIN: "/login",
   SIGNUP: "/signup",
+  MYPAGE: "/mypage",
 };
