@@ -20,7 +20,6 @@ import StockSearchPage from "./components/StockSearchPage";
 import CommunityPage from "./components/CommunityPage";
 import CommunityStockPage from "./components/CommunityStockPage";
 import MyPage from "./components/MyPage";
-import { WatchlistDashboard, RiskDashboard } from "./components/DashboardPages";
 import { ROUTES } from "./config/routes";
 import { api } from "./config/api";
 
@@ -43,6 +42,14 @@ function LandingPage() {
   );
 }
 
+function LegacyDashboardRedirect() {
+  useEffect(() => {
+    window.location.replace(ROUTES.HOME);
+  }, []);
+
+  return null;
+}
+
 function App() {
   useEffect(() => {
     api
@@ -58,14 +65,11 @@ function App() {
   const pathname = window.location.pathname.replace(/\/$/, "") || "/";
 
   if (
-    pathname === ROUTES.DASHBOARD ||
-    pathname === ROUTES.DASHBOARD_WATCHLIST
+    pathname === "/dashboard" ||
+    pathname === "/dashboard/watchlist" ||
+    pathname === "/dashboard/issue-risk"
   ) {
-    return <WatchlistDashboard />;
-  }
-
-  if (pathname === ROUTES.DASHBOARD_ISSUE_RISK) {
-    return <RiskDashboard />;
+    return <LegacyDashboardRedirect />;
   }
 
   if (pathname === ROUTES.COMPANY_SEARCH) {

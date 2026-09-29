@@ -356,11 +356,12 @@ export default function CompanySearchPage() {
                         </span>
 
                         <span className="company-result-copy">
-                          <strong>{company.companyName}</strong>
-                          <em>
-                            검색 관련도 {Math.round(company.score * 100)}%
-                          </em>
-                          <span>DB에 등록된 기업입니다.</span>
+                          <strong>
+                            {company.companyName}
+                            {company.stockCode && <small>{company.stockCode}</small>}
+                          </strong>
+                          <em>{company.industry || "업종 정보 없음"}</em>
+                          <span>{company.companyInfo || "기업 정보가 준비 중입니다."}</span>
                         </span>
 
                         <span
@@ -391,7 +392,7 @@ export default function CompanySearchPage() {
                           e.currentTarget.style.transform = "scale(1)";
                         }}
                       >
-                        ★
+                        {watched ? "★" : "☆"}
                       </button>
                     </article>
                   );

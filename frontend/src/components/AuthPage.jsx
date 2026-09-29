@@ -91,7 +91,7 @@ function AuthPage({ mode }) {
         alert(response.data.message || "로그인 성공!");
         localStorage.setItem("isLoggedIn", "true");
 
-        window.location.href = ROUTES.DASHBOARD; // 대시보드로 이동
+        window.location.href = ROUTES.HOME; // 메인 페이지로 이동
       }
     } catch (error) {
       console.error("인증 실패:", error);

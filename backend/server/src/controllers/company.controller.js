@@ -82,7 +82,10 @@ async function searchCompany(req, res) {
     const [companies] = await pool.query(`
       SELECT
         COMPANY_ID AS companyId,
-        COMPANY_NAME AS companyName
+        COMPANY_NAME AS companyName,
+        STOCK_CODE AS stockCode,
+        INDUSTRY AS industry,
+        COMPANY_INFO AS companyInfo
       FROM COMPANY
     `);
 
