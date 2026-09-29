@@ -7,6 +7,7 @@ import { ROUTES } from "../config/routes";
 import { api } from "../config/api";
 
 import Header from "./Header";
+import CompanyLogo from "./CompanyLogo";
 
 const recommendedKeywords = [
   "삼성",
@@ -30,96 +31,6 @@ const recommendedKeywords = [
   "엔터",
   "게임",
 ];
-
-const LOGO_DEV_TOKEN = "pk_LmDNVeHjR3Sh2eSen5P1yA";
-
-const companyDomains = {
-  삼성SDI: "samsungsdi.co.kr",
-  삼성물산: "samsungcnt.com",
-  삼성바이오로직스: "samsungbiologics.com",
-  삼성생명: "samsunglife.com",
-  삼성엔지니어링: "samsungena.com",
-  삼성전기: "samsungsem.com",
-  삼성전자: "samsung.com",
-  삼성중공업: "samsungcareers.com",
-  삼성화재: "samsungfire.com",
-  HD현대중공업: "hd-hhi.com",
-  현대건설: "hdec.kr",
-  현대글로비스: "glovis.net",
-  현대모비스: "mobis.com",
-  현대백화점: "ehyundai.com",
-  현대위아: "hyundai-wia.com",
-  현대자동차: "hyundai.com",
-  현대제철: "hyundai-steel.com",
-  카카오: "kakao.com",
-  카카오게임즈: "kakaogames.com",
-  SK바이오팜: "skbp.com",
-  고려아연: "koreazinc.co.kr",
-  하이브: "hybecorp.com",
-  "JYP Ent.": "jype.com",
-  "YG PLUS": "ygplus.com",
-  SM: "smentertainment.com",
-  하이트진로: "hitejinro.com",
-  NAVER: "naver.com",
-  이마트: "emart.com",
-  금호석유화학: "recruit.kkpc.com",
-  금호타이어: "kumhotire.com",
-  미래에셋증권: "securities.miraeasset.com",
-  LG디스플레이: "lgdisplay.com",
-  LG생활건강: "lghnh.com",
-  LG에너지솔루션: "lgensol.com",
-  LG유플러스: "uplusumobile.com",
-  LG이노텍: "lginnotek.com",
-  LG전자: "lge.co.kr",
-  LG화학: "lgchem.com",
-  HMM: "hmm21.com",
-  HD한국조선해양: "hd-ksoe.com",
-  한국가스공사: "kogas.or.kr",
-  한국전력: "kepco.co.kr",
-  한국콜마: "kolmar.co.kr",
-  한국타이어앤테크놀로지: "hankooktire.com",
-  코스맥스: "cosmax.com",
-  두산에너빌리티: "doosanenerbility.com",
-  두산로보틱스: "doosanrobotics.com",
-  두산밥캣: "doosanbobcat.com",
-  롯데쇼핑: "lotteshoppingir.com",
-  롯데에너지머티리얼즈: "lotteenergymaterials.com",
-  롯데칠성음료: "company.lottechilsung.co.kr",
-  롯데케미칼: "lottechem.com",
-  CJ대한통운: "cjlogistics.com",
-  대웅제약: "daewoong.co.kr",
-  대한항공: "koreanair.com",
-  아시아나항공: "flyasiana.com",
-  제주항공: "jejuair.net",
-  OCI홀딩스: "oci-holdings.co.kr",
-  POSCO홀딩스: "posco-inc.com",
-  SK스퀘어: "sksquare.com",
-  SK하이닉스: "skhynix.com",
-  펄어비스: "pearlabyss.com",
-  BGF리테일: "bgfretail.com",
-  CJ제일제당: "cj.co.kr",
-  GS리테일: "gsretail.com",
-  CJ: "cj.net",
-  HLB: "hlbbio.co.kr",
-  HL만도: "hlmando.com",
-  에코프로비엠: "ecoprobm.com",
-  포스코퓨처엠: "poscofuturem.com",
-  하나금융: "hanafn.com",
-  하나금융지주: "hanafn.com",
-  KB금융: "kbfg.com",
-  메리츠금융지주: "meritzgroup.com",
-  우리금융: "woorifg.com",
-  우리금융지주: "woorifg.com",
-  농심: "nongshim.com",
-  오뚜기: "otoki.com",
-  신세계: "shinsegae.com",
-  GS건설: "gsenc.com",
-  기아: "kia.com",
-  DB하이텍: "dbhitek.com",
-  유한양행: "yuhan.co.kr",
-  삼양식품: "samyangfoods.com",
-  KG스틸: "kg-steel.co.kr",
-};
 
 const keywordCompanies = {
   삼성: [
@@ -224,12 +135,6 @@ const keywordCompanies = {
   게임: ["카카오게임즈", "펄어비스"],
 };
 
-const getCompanyLogo = (companyName) => {
-  const domain = companyDomains[companyName];
-  if (!domain) return null;
-  return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=128`;
-};
-
 export default function StockSearchPage() {
   const [selectedKeyword, setSelectedKeyword] = useState("삼성");
   const { isWatched, toggleWatch } = useWatchlist();
@@ -304,7 +209,6 @@ export default function StockSearchPage() {
 
   const textPrimary = isDark ? "#f1f5f9" : "#111827";
   const textSecondary = isDark ? "#94a3b8" : "#9ca3af";
-  const fallbackText = isDark ? "#f1f5f9" : "#111827";
 
   const watchBtnBorder = (watched) =>
     watched ? (isDark ? "#e2e8f0" : "#111827") : isDark ? "#334155" : "#e5e7eb";
@@ -443,7 +347,6 @@ export default function StockSearchPage() {
             }}
           >
             {companyNames.map((companyName) => {
-              const logoUrl = getCompanyLogo(companyName);
               const watched = isWatched(companyName);
 
               return (
@@ -505,57 +408,7 @@ export default function StockSearchPage() {
                         flexShrink: 0,
                       }}
                     >
-                      {logoUrl ? (
-                        <img
-                          src={logoUrl}
-                          alt={`${companyName} 로고`}
-                          style={{
-                            width: "28px",
-                            height: "28px",
-                            objectFit: "contain",
-                          }}
-                          onError={(event) => {
-                            event.currentTarget.style.display = "none";
-
-                            const fallback =
-                              event.currentTarget.nextElementSibling;
-
-                            if (fallback) fallback.style.display = "flex";
-                          }}
-                        />
-                      ) : null}
-
-                      <span
-                        style={{
-                          display: logoUrl ? "none" : "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          width: "100%",
-                          height: "100%",
-                          fontSize: "14px",
-                          fontWeight: 700,
-                          color: fallbackText,
-                        }}
-                      >
-                        {companyName.charAt(0)}
-                      </span>
-
-                      {logoUrl && (
-                        <span
-                          style={{
-                            display: "none",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: "100%",
-                            height: "100%",
-                            fontSize: "14px",
-                            fontWeight: 700,
-                            color: fallbackText,
-                          }}
-                        >
-                          {companyName.charAt(0)}
-                        </span>
-                      )}
+                      <CompanyLogo companyName={companyName} size={28} />
                     </span>
 
                     {/* 기업명 */}

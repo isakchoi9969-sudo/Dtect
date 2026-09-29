@@ -135,6 +135,9 @@ function Header() {
           {currentUser ? (
             <>
               <span className="header-user-name">{currentUser.name} 님</span>
+              <a href={ROUTES.MYPAGE} className="login-button desktop-login">
+                마이페이지
+              </a>
               <button
                 type="button"
                 className="login-button desktop-login"
@@ -198,13 +201,22 @@ function Header() {
             </div>
           ))}
           {currentUser ? (
-            <button
-              type="button"
-              className="login-button mobile-login"
-              onClick={handleLogout}
-            >
-              로그아웃
-            </button>
+            <>
+              <a
+                href={ROUTES.MYPAGE}
+                className="login-button mobile-login"
+                onClick={closeMobileMenu}
+              >
+                마이페이지
+              </a>
+              <button
+                type="button"
+                className="login-button mobile-login"
+                onClick={handleLogout}
+              >
+                로그아웃
+              </button>
+            </>
           ) : (
             <a
               href={ROUTES.LOGIN}
