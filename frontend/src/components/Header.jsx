@@ -7,7 +7,6 @@ import ThemeToggle from "./ThemeToggle";
 const copy = {
   homeLabel: "D:TECT \uba54\uc778 \ud398\uc774\uc9c0",
   primaryMenu: "\uc8fc\uc694 \uba54\ub274",
-  paidService: "\uc720\ub8cc \uc11c\ube44\uc2a4",
   login: "\ub85c\uadf8\uc778",
   openMenu: "\uba54\ub274 \uc5f4\uae30",
 };
@@ -117,9 +116,6 @@ function Header() {
               </a>
               <div className="dropdown">
                 <div className="dropdown-inner">
-                  {item.paidService && (
-                    <span className="business-badge">{copy.paidService}</span>
-                  )}
                   {item.children.map((child) => (
                     <a href={getChildHref(item, child)} key={child}>
                       {child}
@@ -184,9 +180,6 @@ function Header() {
               </button>
               {openMobileMenu === index && (
                 <div className="mobile-submenu">
-                  {item.paidService && (
-                    <span className="business-badge">{copy.paidService}</span>
-                  )}
                   {item.children.map((child) => (
                     <a
                       href={getChildHref(item, child)}
