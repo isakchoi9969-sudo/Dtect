@@ -6524,7 +6524,7 @@ button:focus-visible {
   color: #4385d6;
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: .1em;
+  letter-spacing: 0.1em;
 }
 .company-discussion-heading h3 {
   margin: 0;
@@ -6549,14 +6549,18 @@ button:focus-visible {
   text-decoration: none;
 }
 .company-discussion-heading > a:hover,
-.company-discussion-empty > a:hover { text-decoration: underline; }
+.company-discussion-empty > a:hover {
+  text-decoration: underline;
+}
 .company-discussion-list {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   justify-content: flex-start;
 }
-.company-discussion-pagination { margin-top: auto; }
+.company-discussion-pagination {
+  margin-top: auto;
+}
 .company-discussion-post {
   display: block;
   padding: 12px 0;
@@ -6564,7 +6568,9 @@ button:focus-visible {
   color: inherit;
   text-decoration: none;
 }
-.company-discussion-post:hover strong { color: #2877c7; }
+.company-discussion-post:hover strong {
+  color: #2877c7;
+}
 .company-discussion-post-meta {
   display: flex;
   align-items: center;
@@ -6573,7 +6579,9 @@ button:focus-visible {
   color: #8594a6;
   font-size: 11px;
 }
-.company-discussion-post-meta i { font-style: normal; }
+.company-discussion-post-meta i {
+  font-style: normal;
+}
 .company-discussion-post-sentiment {
   margin-left: auto;
   padding: 3px 7px;
@@ -6591,7 +6599,7 @@ button:focus-visible {
   line-height: 1.5;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: color .15s ease;
+  transition: color 0.15s ease;
 }
 .company-discussion-post-stats {
   display: block;
@@ -6618,12 +6626,25 @@ button:focus-visible {
   background: #edf6ff;
   color: #4385d6;
 }
-.company-discussion-empty > strong { color: #34516e; font-size: 13px; }
-.company-discussion-empty > p { margin: 7px 0 12px; color: #8594a6; font-size: 12px; }
+.company-discussion-empty > strong {
+  color: #34516e;
+  font-size: 13px;
+}
+.company-discussion-empty > p {
+  margin: 7px 0 12px;
+  color: #8594a6;
+  font-size: 12px;
+}
 @media (max-width: 620px) {
-  .company-discussion-panel { min-height: 260px; }
-  .company-discussion-heading h3 { font-size: 16px; }
-  .company-discussion-post strong { white-space: normal; }
+  .company-discussion-panel {
+    min-height: 260px;
+  }
+  .company-discussion-heading h3 {
+    font-size: 16px;
+  }
+  .company-discussion-post strong {
+    white-space: normal;
+  }
 }
 
 /* Company analysis: every panel and overlay follows the site theme. */
@@ -6641,48 +6662,57 @@ button:focus-visible {
   background: #0c111b;
   color: #c6d6e8 !important;
 }
-:root[data-theme="dark"] .company-analysis-detail :is(
-  .analysis-detail-header,
-  .analysis-metrics-grid > div,
-  .analysis-support-grid > div
-) {
+:root[data-theme="dark"]
+  .company-analysis-detail
+  :is(
+    .analysis-detail-header,
+    .analysis-metrics-grid > div,
+    .analysis-support-grid > div
+  ) {
   border-color: var(--analysis-card-border) !important;
   background: #141e2b !important;
   color: #e5edf8;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, .18) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18) !important;
 }
-:root[data-theme="dark"] .company-analysis-detail :is(
-  .related-company-panel,
-  .market-index-panel
-) {
+:root[data-theme="dark"]
+  .company-analysis-detail
+  :is(.related-company-panel, .market-index-panel) {
   border-color: #304158;
   background: linear-gradient(155deg, #172333, #121b28);
-  box-shadow: 0 14px 35px rgba(0, 0, 0, .25);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.25);
 }
 :root[data-theme="dark"] .related-company-panel::before {
-  background: linear-gradient(135deg, rgba(55, 106, 156, .17), transparent);
+  background: linear-gradient(135deg, rgba(55, 106, 156, 0.17), transparent);
 }
-:root[data-theme="dark"] .company-analysis-detail :is(
-  .analysis-detail-header h2,
-  .analysis-metrics-grid h3,
-  .analysis-support-grid h3,
-  .related-company-heading h2,
-  .market-index-heading h2,
-  .company-discussion-heading h3
-) {
+:root[data-theme="dark"]
+  .company-analysis-detail
+  :is(
+    .analysis-detail-header h2,
+    .analysis-metrics-grid h3,
+    .analysis-support-grid h3,
+    .related-company-heading h2,
+    .market-index-heading h2,
+    .company-discussion-heading h3
+  ) {
   color: #f2f6fc !important;
 }
 :root[data-theme="dark"] .analysis-detail-header > div:first-child {
   border-color: #35465d !important;
   background: #1c2a3b !important;
 }
-:root[data-theme="dark"] .analysis-detail-header :is(
-  h2 + span,
-  p,
-  .company-stock-change small
-),
-:root[data-theme="dark"] .risk-sentiment-combined-card > .overall-risk-assessment > :first-child > span,
-:root[data-theme="dark"] .risk-sentiment-combined-card .sentiment-summary-pane > div:first-child > span {
+:root[data-theme="dark"]
+  .analysis-detail-header
+  :is(h2 + span, p, .company-stock-change small),
+:root[data-theme="dark"]
+  .risk-sentiment-combined-card
+  > .overall-risk-assessment
+  > :first-child
+  > span,
+:root[data-theme="dark"]
+  .risk-sentiment-combined-card
+  .sentiment-summary-pane
+  > div:first-child
+  > span {
   color: #aabbd0 !important;
 }
 :root[data-theme="dark"] .company-watch-star {
@@ -6703,7 +6733,7 @@ button:focus-visible {
 :root[data-theme="dark"] .company-market-overview {
   border-color: #3a5573;
   background: linear-gradient(145deg, #1c2c40, #182436);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, .22);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
 }
 :root[data-theme="dark"] .company-stock-quote {
   border-color: #344962;
@@ -6731,11 +6761,9 @@ button:focus-visible {
 :root[data-theme="dark"] .company-stock-chart-periods button:not(.active) {
   color: #9eb1c5;
 }
-:root[data-theme="dark"] .company-analysis-detail :is(
-  .related-company-item,
-  .market-index-card,
-  .exchange-rate-card
-) {
+:root[data-theme="dark"]
+  .company-analysis-detail
+  :is(.related-company-item, .market-index-card, .exchange-rate-card) {
   border-color: #304158;
   background: #1b293a;
   color: #e5edf8;
@@ -6781,10 +6809,15 @@ button:focus-visible {
   background: #203b5e;
   color: #9ac9ff;
 }
-:root[data-theme="dark"] .risk-sentiment-combined-card > .overall-risk-assessment > :first-child {
+:root[data-theme="dark"]
+  .risk-sentiment-combined-card
+  > .overall-risk-assessment
+  > :first-child {
   background: #141e2b !important;
 }
-:root[data-theme="dark"] .risk-sentiment-combined-card > .sentiment-summary-pane {
+:root[data-theme="dark"]
+  .risk-sentiment-combined-card
+  > .sentiment-summary-pane {
   border-color: #35465d !important;
   background: linear-gradient(145deg, #1b2a3c, #182537) !important;
 }
@@ -6809,7 +6842,10 @@ button:focus-visible {
 :root[data-theme="dark"] .risk-score-status-caption,
 :root[data-theme="dark"] .risk-score-number span,
 :root[data-theme="dark"] .risk-final-evaluation-state,
-:root[data-theme="dark"] .risk-sentiment-combined-card .risk-signal-heading span,
+:root[data-theme="dark"]
+  .risk-sentiment-combined-card
+  .risk-signal-heading
+  span,
 :root[data-theme="dark"] .risk-sentiment-combined-card .risk-signal-value small,
 :root[data-theme="dark"] .sentiment-breakdown-kicker,
 :root[data-theme="dark"] .sentiment-breakdown-note {
@@ -6817,7 +6853,10 @@ button:focus-visible {
 }
 :root[data-theme="dark"] .risk-final-evaluation-header,
 :root[data-theme="dark"] .risk-score-number strong,
-:root[data-theme="dark"] .risk-sentiment-combined-card .risk-signal-row-top > span,
+:root[data-theme="dark"]
+  .risk-sentiment-combined-card
+  .risk-signal-row-top
+  > span,
 :root[data-theme="dark"] .sentiment-breakdown-summary strong,
 :root[data-theme="dark"] .sentiment-breakdown-card strong {
   color: #e4edf8;
@@ -6835,12 +6874,26 @@ button:focus-visible {
 }
 :root[data-theme="dark"] .risk-sentiment-combined-card .risk-signal-track {
   border-color: #34465c;
-  background: repeating-linear-gradient(90deg, #34465c 0, #34465c calc(10% - 2px), #1c2a3b calc(10% - 2px), #1c2a3b 10%);
+  background: repeating-linear-gradient(
+    90deg,
+    #34465c 0,
+    #34465c calc(10% - 2px),
+    #1c2a3b calc(10% - 2px),
+    #1c2a3b 10%
+  );
 }
 :root[data-theme="dark"] .risk-sentiment-combined-card .risk-signal-track i {
-  background: repeating-linear-gradient(90deg, #76a8dc 0, #76a8dc calc(10% - 2px), #1c2a3b calc(10% - 2px), #1c2a3b 10%);
+  background: repeating-linear-gradient(
+    90deg,
+    #76a8dc 0,
+    #76a8dc calc(10% - 2px),
+    #1c2a3b calc(10% - 2px),
+    #1c2a3b 10%
+  );
 }
-:root[data-theme="dark"] .risk-sentiment-combined-card .risk-signal-track.is-empty,
+:root[data-theme="dark"]
+  .risk-sentiment-combined-card
+  .risk-signal-track.is-empty,
 :root[data-theme="dark"] .sentiment-breakdown-track,
 :root[data-theme="dark"] .sentiment-composition-bar {
   background: #34465c;
@@ -6849,12 +6902,14 @@ button:focus-visible {
 :root[data-theme="dark"] .sentiment-breakdown-card strong small {
   color: #bed0e2;
 }
-:root[data-theme="dark"] .company-analysis-detail :is(
-  .related-company-info-tooltip,
-  .sentiment-info-tooltip,
-  .risk-signal-info-tooltip,
-  .company-stock-info-tooltip
-) {
+:root[data-theme="dark"]
+  .company-analysis-detail
+  :is(
+    .related-company-info-tooltip,
+    .sentiment-info-tooltip,
+    .risk-signal-info-tooltip,
+    .company-stock-info-tooltip
+  ) {
   border-color: #45607b;
   background: #203147;
   color: #c9d9e9;
@@ -6864,33 +6919,41 @@ button:focus-visible {
   border-color: #45607b;
   background: #203147;
 }
-:root[data-theme="dark"] .company-analysis-detail :is(
-  .related-company-info-tooltip strong,
-  .risk-signal-info-tooltip strong,
-  .sentiment-info-tooltip strong
-) {
+:root[data-theme="dark"]
+  .company-analysis-detail
+  :is(
+    .related-company-info-tooltip strong,
+    .risk-signal-info-tooltip strong,
+    .sentiment-info-tooltip strong
+  ) {
   color: #ecf4fd !important;
 }
-:root[data-theme="dark"] .company-analysis-detail :is(
-  .related-company-info-button,
-  .sentiment-info-button,
-  .risk-signal-info-button,
-  .company-stock-info-trigger > button
-) {
+:root[data-theme="dark"]
+  .company-analysis-detail
+  :is(
+    .related-company-info-button,
+    .sentiment-info-button,
+    .risk-signal-info-button,
+    .company-stock-info-trigger > button
+  ) {
   border-color: #527394;
   background: #263e59;
   color: #b8dbff;
 }
-:root[data-theme="dark"] .company-analysis-detail :is(
-  .related-company-tooltip-results,
-  .sentiment-info-tooltip [style*="borderTop"]
-) {
+:root[data-theme="dark"]
+  .company-analysis-detail
+  :is(
+    .related-company-tooltip-results,
+    .sentiment-info-tooltip [style*="borderTop"]
+  ) {
   border-color: #40556d !important;
 }
-:root[data-theme="dark"] .company-analysis-detail :is(
-  .related-company-tooltip-results strong,
-  .sentiment-info-tooltip [style*="color"]
-) {
+:root[data-theme="dark"]
+  .company-analysis-detail
+  :is(
+    .related-company-tooltip-results strong,
+    .sentiment-info-tooltip [style*="color"]
+  ) {
   color: #d6e5f5 !important;
 }
 :root[data-theme="dark"] .related-company-tooltip-context,
@@ -6904,7 +6967,10 @@ button:focus-visible {
   color: #b1c3d8 !important;
 }
 :root[data-theme="dark"] .risk-final-evaluation-icon,
-:root[data-theme="dark"] .risk-sentiment-combined-card .risk-final-evaluation.is-ready .risk-final-evaluation-icon {
+:root[data-theme="dark"]
+  .risk-sentiment-combined-card
+  .risk-final-evaluation.is-ready
+  .risk-final-evaluation-icon {
   background: #294562;
   color: #b9dcff;
 }
@@ -7045,11 +7111,11 @@ button:focus-visible {
 .community-watchlist-item.is-selected:hover {
   border-color: #8fbee9;
   background: #edf6ff;
-  box-shadow: 0 4px 14px rgba(48, 122, 190, .11);
+  box-shadow: 0 4px 14px rgba(48, 122, 190, 0.11);
 }
 .community-watchlist-mark {
   font-size: 12px;
-  letter-spacing: -.05em;
+  letter-spacing: -0.05em;
 }
 .community-watchlist-item .related-company-copy small {
   display: block;
@@ -7085,7 +7151,9 @@ button:focus-visible {
   font-weight: 750;
   text-decoration: none;
 }
-.community-watchlist-manage:hover { text-decoration: underline; }
+.community-watchlist-manage:hover {
+  text-decoration: underline;
+}
 .community-stock-page {
   --community-bg: #f7f9fc;
   --community-card: #fff;
@@ -7112,12 +7180,12 @@ button:focus-visible {
   color: var(--community-blue);
   font-size: 11px;
   font-weight: 850;
-  letter-spacing: .09em;
+  letter-spacing: 0.09em;
 }
 .community-stock-header h1 {
   margin: 0;
   font-size: 31px;
-  letter-spacing: -.04em;
+  letter-spacing: -0.04em;
 }
 .community-stock-header p {
   margin: 8px 0 0;
@@ -7141,7 +7209,9 @@ button:focus-visible {
   color: #fff;
   cursor: pointer;
 }
-.community-write-button.is-enabled:hover { background: #1d4ed8; }
+.community-write-button.is-enabled:hover {
+  background: #1d4ed8;
+}
 .community-board {
   grid-column: 2;
   min-width: 0;
@@ -7149,7 +7219,7 @@ button:focus-visible {
   border: 1px solid var(--community-border);
   border-radius: 16px;
   background: var(--community-card);
-  box-shadow: 0 8px 28px rgba(15,23,42,.045);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.045);
 }
 .community-board-header {
   display: flex;
@@ -7161,7 +7231,7 @@ button:focus-visible {
 .community-board-header h2 {
   margin: 0;
   font-size: 21px;
-  letter-spacing: -.025em;
+  letter-spacing: -0.025em;
 }
 .community-board-header h2 span {
   display: inline-grid;
@@ -7194,9 +7264,12 @@ button:focus-visible {
 }
 .community-search:focus-within {
   border-color: var(--community-blue);
-  box-shadow: 0 0 0 3px rgba(37,99,235,.11);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.11);
 }
-.community-search > span { margin-right: 8px; font-size: 20px; }
+.community-search > span {
+  margin-right: 8px;
+  font-size: 20px;
+}
 .community-search input {
   width: 100%;
   min-width: 0;
@@ -7207,8 +7280,12 @@ button:focus-visible {
   font: inherit;
   font-size: 13px;
 }
-.community-search input::placeholder { color: var(--community-muted); }
-.community-search input::-webkit-search-cancel-button { display: none; }
+.community-search input::placeholder {
+  color: var(--community-muted);
+}
+.community-search input::-webkit-search-cancel-button {
+  display: none;
+}
 .community-search button {
   border: 0;
   background: transparent;
@@ -7240,7 +7317,10 @@ button:focus-visible {
 }
 .community-post-row {
   display: grid;
-  grid-template-columns: minmax(100px, 145px) minmax(0, 1fr) minmax(88px, 110px) 72px;
+  grid-template-columns: minmax(100px, 145px) minmax(0, 1fr) minmax(
+      88px,
+      110px
+    ) 72px;
   align-items: center;
   gap: 20px;
   width: 100%;
@@ -7253,9 +7333,13 @@ button:focus-visible {
   text-align: left;
   cursor: pointer;
 }
-.community-post-row:last-child { border-bottom: 0; }
+.community-post-row:last-child {
+  border-bottom: 0;
+}
 .community-post-row:hover,
-.community-post-row:focus-visible { background: var(--community-hover); }
+.community-post-row:focus-visible {
+  background: var(--community-hover);
+}
 .community-post-company {
   color: var(--community-blue);
   font-size: 13px;
@@ -7269,7 +7353,9 @@ button:focus-visible {
   font-weight: 500;
   line-height: 1.5;
 }
-.community-post-copy { min-width: 0; }
+.community-post-copy {
+  min-width: 0;
+}
 .community-post-copy strong {
   display: block;
   overflow: hidden;
@@ -7290,10 +7376,21 @@ button:focus-visible {
   font-size: 12px;
   line-height: 1.5;
 }
-.community-post-stats { text-align: right; }
-.community-board-empty { padding: 72px 24px; text-align: center; }
-.community-board-empty strong { font-size: 16px; }
-.community-board-empty p { margin: 9px 0 0; color: var(--community-muted); font-size: 13px; }
+.community-post-stats {
+  text-align: right;
+}
+.community-board-empty {
+  padding: 72px 24px;
+  text-align: center;
+}
+.community-board-empty strong {
+  font-size: 16px;
+}
+.community-board-empty p {
+  margin: 9px 0 0;
+  color: var(--community-muted);
+  font-size: 13px;
+}
 .community-board-empty button {
   margin-top: 15px;
   padding: 8px 12px;
@@ -7303,7 +7400,9 @@ button:focus-visible {
   color: var(--community-blue);
   cursor: pointer;
 }
-.community-post-detail { padding: 28px 32px 34px; }
+.community-post-detail {
+  padding: 28px 32px 34px;
+}
 .community-back-button {
   margin-bottom: 30px;
   padding: 0;
@@ -7314,11 +7413,28 @@ button:focus-visible {
   font-weight: 700;
   cursor: pointer;
 }
-.community-detail-company { color: var(--community-blue); font-size: 13px; font-weight: 800; }
-.community-detail-company span { margin-left: 5px; color: var(--community-muted); font-weight: 500; }
-.community-post-detail h2 { margin: 10px 0; font-size: 24px; line-height: 1.4; }
-.community-detail-meta { color: var(--community-muted); font-size: 13px; }
-.community-detail-meta span { padding: 0 4px; }
+.community-detail-company {
+  color: var(--community-blue);
+  font-size: 13px;
+  font-weight: 800;
+}
+.community-detail-company span {
+  margin-left: 5px;
+  color: var(--community-muted);
+  font-weight: 500;
+}
+.community-post-detail h2 {
+  margin: 10px 0;
+  font-size: 24px;
+  line-height: 1.4;
+}
+.community-detail-meta {
+  color: var(--community-muted);
+  font-size: 13px;
+}
+.community-detail-meta span {
+  padding: 0 4px;
+}
 .community-detail-body {
   min-height: 160px;
   margin-top: 28px;
@@ -7329,7 +7445,11 @@ button:focus-visible {
   line-height: 1.9;
   white-space: pre-wrap;
 }
-.community-detail-footer { margin-top: 18px; color: var(--community-muted); font-size: 13px; }
+.community-detail-footer {
+  margin-top: 18px;
+  color: var(--community-muted);
+  font-size: 13px;
+}
 .community-pagination {
   display: flex;
   align-items: center;
@@ -7350,22 +7470,56 @@ button:focus-visible {
   font-weight: 700;
   cursor: pointer;
 }
-.community-pagination button:disabled { color: var(--community-muted); cursor: default; opacity: .5; }
-.community-comments { margin-top: 30px; }
-.community-comments h3 { margin: 0 0 12px; font-size: 17px; }
-.community-comments h3 span { color: var(--community-blue); }
-.community-comment-empty { padding: 20px 0; color: var(--community-muted); font-size: 13px; }
+.community-pagination button:disabled {
+  color: var(--community-muted);
+  cursor: default;
+  opacity: 0.5;
+}
+.community-comments {
+  margin-top: 30px;
+}
+.community-comments h3 {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+.community-comments h3 span {
+  color: var(--community-blue);
+}
+.community-comment-empty {
+  padding: 20px 0;
+  color: var(--community-muted);
+  font-size: 13px;
+}
 .community-comment {
   padding: 18px 0;
   border-bottom: 1px solid var(--community-border);
   font-size: 13px;
 }
-.community-comment.is-reply { padding-left: 22px; border-left: 2px solid var(--community-border); }
-.community-comment > div { display: flex; align-items: center; gap: 10px; }
+.community-comment.is-reply {
+  padding-left: 22px;
+  border-left: 2px solid var(--community-border);
+}
+.community-comment > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .community-comment time,
-.community-comment small { color: var(--community-muted); font-size: 12px; }
-.community-comment p { margin: 10px 0; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
-.community-comment-form { display: grid; gap: 10px; margin-top: 22px; }
+.community-comment small {
+  color: var(--community-muted);
+  font-size: 12px;
+}
+.community-comment p {
+  margin: 10px 0;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.community-comment-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
 .community-comment-form textarea,
 .community-compose-dialog textarea,
 .community-compose-dialog input,
@@ -7385,7 +7539,9 @@ button:focus-visible {
 .community-comment-form textarea:focus,
 .community-compose-dialog textarea:focus,
 .community-compose-dialog input:focus,
-.community-compose-dialog select:focus { border-color: var(--community-blue); }
+.community-compose-dialog select:focus {
+  border-color: var(--community-blue);
+}
 .community-comment-form > button,
 .community-compose-actions button:last-child {
   justify-self: end;
@@ -7399,11 +7555,23 @@ button:focus-visible {
   cursor: pointer;
 }
 .community-comment-form > button:disabled,
-.community-compose-actions button:disabled { cursor: default; opacity: .55; }
+.community-compose-actions button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
 .community-reply-target,
-.community-login-hint { color: var(--community-muted); font-size: 13px; }
-.community-login-hint a { color: var(--community-blue); font-weight: 700; }
-.community-inline-error { color: #c2410c; font-size: 13px; }
+.community-login-hint {
+  color: var(--community-muted);
+  font-size: 13px;
+}
+.community-login-hint a {
+  color: var(--community-blue);
+  font-weight: 700;
+}
+.community-inline-error {
+  color: #c2410c;
+  font-size: 13px;
+}
 .community-compose-backdrop {
   position: fixed;
   z-index: 1000;
@@ -7411,7 +7579,7 @@ button:focus-visible {
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(10,20,35,.6);
+  background: rgba(10, 20, 35, 0.6);
 }
 .community-compose-dialog {
   width: min(100%, 650px);
@@ -7423,15 +7591,40 @@ button:focus-visible {
   border-radius: 16px;
   background: var(--community-card);
   color: var(--community-text);
-  box-shadow: 0 24px 70px rgba(0,0,0,.25);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
 }
 .community-compose-heading,
-.community-compose-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.community-compose-heading h2 { margin: 0; font-size: 22px; }
-.community-compose-heading > button { border: 0; background: transparent; color: var(--community-muted); font-size: 24px; cursor: pointer; }
-.community-compose-dialog form { display: grid; gap: 18px; margin-top: 24px; }
-.community-compose-dialog label { display: grid; gap: 7px; font-size: 13px; font-weight: 750; }
-.community-compose-actions { justify-content: flex-end; }
+.community-compose-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.community-compose-heading h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.community-compose-heading > button {
+  border: 0;
+  background: transparent;
+  color: var(--community-muted);
+  font-size: 24px;
+  cursor: pointer;
+}
+.community-compose-dialog form {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+}
+.community-compose-dialog label {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 750;
+}
+.community-compose-actions {
+  justify-content: flex-end;
+}
 .community-compose-actions button:first-child {
   padding: 9px 15px;
   border: 1px solid var(--community-border);
@@ -7452,9 +7645,15 @@ button:focus-visible {
   font-size: 12px;
   line-height: 1.6;
 }
-.community-stock-notice strong { flex-shrink: 0; color: var(--community-text); }
+.community-stock-notice strong {
+  flex-shrink: 0;
+  color: var(--community-text);
+}
 @media (max-width: 1099px) {
-  .community-stock-main { display: block; width: min(100% - 40px, 900px); }
+  .community-stock-main {
+    display: block;
+    width: min(100% - 40px, 900px);
+  }
   .community-watchlist-sidebar {
     position: static;
     width: 100%;
@@ -7471,35 +7670,81 @@ button:focus-visible {
   .community-watchlist-item {
     flex: 0 0 205px;
   }
-  .community-stock-notice { margin-top: 20px; }
+  .community-stock-notice {
+    margin-top: 20px;
+  }
 }
 @media (max-width: 700px) {
-  .community-stock-main { width: min(100% - 28px, 600px); padding-top: 28px; }
-  .community-stock-header { align-items: start; }
-  .community-stock-header h1 { font-size: 26px; }
-  .community-write-button { padding: 9px; font-size: 11px; }
-  .community-board-header { display: block; padding: 20px 18px 14px; }
-  .community-search { margin-top: 17px; }
-  .community-sort-tabs { margin: 0 18px; }
-  .community-post-row { grid-template-columns: minmax(0, 1fr) auto; gap: 7px 12px; padding: 18px; }
-  .community-post-company { grid-column: 1; }
-  .community-post-copy { grid-column: 1 / -1; grid-row: 2; }
-  .community-post-author { grid-column: 1; grid-row: 3; }
-  .community-post-stats { grid-column: 2; grid-row: 3; }
-  .community-post-author small, .community-post-stats small { display: inline; margin-left: 6px; }
-  .community-stock-notice { display: block; }
-  .community-stock-notice strong { display: block; margin-bottom: 4px; }
+  .community-stock-main {
+    width: min(100% - 28px, 600px);
+    padding-top: 28px;
+  }
+  .community-stock-header {
+    align-items: start;
+  }
+  .community-stock-header h1 {
+    font-size: 26px;
+  }
+  .community-write-button {
+    padding: 9px;
+    font-size: 11px;
+  }
+  .community-board-header {
+    display: block;
+    padding: 20px 18px 14px;
+  }
+  .community-search {
+    margin-top: 17px;
+  }
+  .community-sort-tabs {
+    margin: 0 18px;
+  }
+  .community-post-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px 12px;
+    padding: 18px;
+  }
+  .community-post-company {
+    grid-column: 1;
+  }
+  .community-post-copy {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .community-post-author {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .community-post-stats {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .community-post-author small,
+  .community-post-stats small {
+    display: inline;
+    margin-left: 6px;
+  }
+  .community-stock-notice {
+    display: block;
+  }
+  .community-stock-notice strong {
+    display: block;
+    margin-bottom: 4px;
+  }
 }
 :root[data-theme="dark"] .community-watchlist-panel {
   border-color: #304158;
   background: linear-gradient(155deg, #172333, #121b28);
-  box-shadow: 0 14px 35px rgba(0, 0, 0, .25);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.25);
 }
 :root[data-theme="dark"] .community-watchlist-panel::before {
-  background: linear-gradient(135deg, rgba(55, 106, 156, .17), transparent);
+  background: linear-gradient(135deg, rgba(55, 106, 156, 0.17), transparent);
 }
 :root[data-theme="dark"] .community-watchlist-panel .related-company-heading h2,
-:root[data-theme="dark"] .community-watchlist-item .related-company-copy strong {
+:root[data-theme="dark"]
+  .community-watchlist-item
+  .related-company-copy
+  strong {
   color: #eef4fc;
 }
 :root[data-theme="dark"] .community-watchlist-count,
@@ -7545,4 +7790,83 @@ button:focus-visible {
 :root[data-theme="dark"] .community-watchlist-manage {
   border-top-color: #304158;
   color: #9bcaff;
+}
+
+/* =========================================
+   마이페이지 - 최근 생성한 대응자료 다크모드
+   ========================================= */
+
+/* 목록 전체 카드 */
+:root[data-theme="dark"] .mypage-draft-list {
+  border-color: #2b394b;
+  background: #111a27;
+}
+
+/* 각 대응자료 행 */
+:root[data-theme="dark"] .mypage-draft-item + .mypage-draft-item {
+  border-top-color: #2b394b;
+}
+
+:root[data-theme="dark"] .mypage-draft-summary {
+  background: #111a27;
+}
+
+:root[data-theme="dark"] .mypage-draft-summary:hover {
+  background: #172638;
+}
+
+/* 문서 유형 · 이슈명 · 산업 · 날짜 */
+:root[data-theme="dark"] .mypage-draft-type,
+:root[data-theme="dark"] .mypage-draft-arrow {
+  color: #69adff;
+}
+
+:root[data-theme="dark"] .mypage-draft-text strong {
+  color: #eef3fb;
+}
+
+:root[data-theme="dark"] .mypage-draft-text small,
+:root[data-theme="dark"] .mypage-draft-summary time {
+  color: #9dacbf;
+}
+
+/* 펼친 초안 본문 */
+:root[data-theme="dark"] .mypage-draft-detail {
+  border-top-color: #304157;
+  background: #151f2e;
+}
+
+:root[data-theme="dark"] .mypage-draft-content {
+  color: #d6e1ee;
+}
+
+/* 초안 복사 버튼 */
+:root[data-theme="dark"] .mypage-draft-copy-button {
+  border-color: #4c9cff;
+  color: #f4f8ff;
+  background: #1d4f7e;
+  font-weight: 800;
+}
+
+:root[data-theme="dark"] .mypage-draft-copy-button:hover {
+  border-color: #72afff;
+  background: #28659d;
+}
+
+/* 삭제 버튼 */
+:root[data-theme="dark"] .mypage-draft-delete-button {
+  border-color: #8d4d57;
+  color: #ffd8dc;
+  background: #4a252c;
+  font-weight: 800;
+}
+
+:root[data-theme="dark"] .mypage-draft-delete-button:hover {
+  border-color: #dd7180;
+  background: #633039;
+}
+
+/* 복사 완료 안내 */
+:root[data-theme="dark"] .mypage-draft-copy-notice {
+  color: #8fc5ff;
 }
