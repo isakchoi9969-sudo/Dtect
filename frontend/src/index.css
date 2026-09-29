@@ -502,6 +502,7 @@ button:focus-visible {
 
   font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
 
   transition: 150ms ease;
 }
@@ -517,6 +518,22 @@ button:focus-visible {
 
 .desktop-login {
   justify-self: end;
+}
+
+@media (min-width: 951px) and (max-width: 1200px) {
+  .landing-header-actions {
+    gap: clamp(4px, 0.8vw, 10px);
+  }
+
+  .header-user-name {
+    font-size: clamp(11px, 1.1vw, 13px);
+  }
+
+  .desktop-login {
+    min-height: clamp(32px, 3.4vw, 40px);
+    padding: 0 clamp(8px, 1.25vw, 20px);
+    font-size: clamp(11px, 1.1vw, 13px);
+  }
 }
 
 .login-button:hover {
@@ -4446,21 +4463,40 @@ button:focus-visible {
 .mypage-profile-grid, .mypage-company-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .mypage-profile-grid > div, .mypage-company-card { border: 1px solid #e1eaf2; border-radius: 15px; background: #fff; box-shadow: 0 2px 10px rgba(25, 63, 104, 0.025); }
 .mypage-profile-grid > div { padding: 16px 18px; }
-.mypage-profile-grid dt, .mypage-company-details dt { color: #8291a5; font-size: 11px; font-weight: 650; }
-.mypage-profile-grid dd, .mypage-company-details dd { margin: 6px 0 0; color: #354962; font-size: 14px; font-weight: 700; }
-.mypage-company-card { padding: 18px; }
+.mypage-profile-grid dt { color: #8291a5; font-size: 11px; font-weight: 650; }
+.mypage-profile-grid dd { margin: 6px 0 0; color: #354962; font-size: 14px; font-weight: 700; }
+.mypage-company-card { position: relative; width: 100%; transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+.mypage-company-card:hover { border-color: #8dbbe7; box-shadow: 0 8px 18px rgba(25, 63, 104, 0.08); transform: translateY(-2px); }
+.mypage-company-card-main { display: block; width: 100%; min-height: 88px; padding: 18px 58px 18px 18px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.mypage-company-card-main:focus-visible, .mypage-company-star:focus-visible { outline: 3px solid rgba(8, 120, 232, 0.3); outline-offset: 3px; }
 .mypage-company-card-header { display: flex; align-items: center; gap: 12px; }
 .mypage-company-logo { display: flex; width: 52px; height: 52px; min-width: 52px; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; border: 1px solid #e5e7eb; border-radius: 14px; background: #fff; color: #0878e8; font-size: 12px; font-weight: 900; }
 .mypage-company-card-header > div { min-width: 0; }
 .mypage-company-card-header strong, .mypage-company-card-header span { display: block; }
 .mypage-company-card-header strong { color: #354962; font-size: 15px; }
 .mypage-company-card-header span { margin-top: 3px; color: #4775a6; font-size: 11px; }
-.mypage-company-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 18px 0; }
-.mypage-analysis-button { width: 100%; min-height: 38px; border: 1px solid #d7e5f2; border-radius: 9px; background: #f5f9fd; color: #0878e8; font-size: 12px; font-weight: 750; cursor: pointer; }
-.mypage-analysis-button:hover { border-color: #0878e8; background: #edf6ff; }
+.mypage-company-star { position: absolute; top: 50%; right: 18px; display: grid; width: 30px; height: 30px; padding: 0; place-items: center; border: 1px solid #325978; border-radius: 9px; background: #1d3e59; color: #fff; font-size: 16px; line-height: 1; cursor: pointer; transform: translateY(-50%); }
+.mypage-company-star.is-active { color: #fff; background: #1d3e59; }
+.mypage-company-star:hover { transform: translateY(-50%) scale(1.1); }
+:root[data-theme="dark"] .mypage-company-star { border-color: #486986; background: #1c344b; color: #fff; }
+:root[data-theme="dark"] .mypage-company-star.is-active { border-color: #486986; background: #1c344b; color: #fff; }
+.mypage-modal-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; padding: 20px; place-items: center; background: rgba(9, 18, 31, 0.52); }
+.mypage-modal { width: min(100%, 360px); padding: 26px; border: 1px solid #dce8f3; border-radius: 16px; background: #fff; box-shadow: 0 24px 60px rgba(9, 18, 31, 0.24); }
+.mypage-modal > p { margin: 0 0 7px; color: #0878e8; font-size: 10px; font-weight: 850; letter-spacing: 0.15em; }
+.mypage-modal h2 { margin: 0; color: #354962; font-size: 20px; }
+.mypage-modal > span { display: block; margin-top: 11px; color: #6e7e93; font-size: 13px; line-height: 1.55; }
+.mypage-modal > span strong { color: #354962; }
+.mypage-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
+.mypage-modal-actions button { min-width: 68px; min-height: 36px; padding: 0 13px; border: 1px solid #d7e5f2; border-radius: 8px; background: #f7fafc; color: #4d6178; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.mypage-modal-actions .is-danger { border-color: #d95c69; background: #d95c69; color: #fff; }
+.mypage-modal-actions button:disabled { cursor: wait; opacity: 0.6; }
 :root[data-theme="dark"] .mypage-profile-grid > div, :root[data-theme="dark"] .mypage-company-card { border-color: #2b394b; background: #111a27; }
-:root[data-theme="dark"] .mypage-section-heading h2, :root[data-theme="dark"] .mypage-profile-grid dd, :root[data-theme="dark"] .mypage-company-details dd, :root[data-theme="dark"] .mypage-company-card-header strong { color: #e8eef8; }
-:root[data-theme="dark"] .mypage-analysis-button { border-color: #2f577d; background: #152a40; color: #8fc5ff; }
+:root[data-theme="dark"] .mypage-section-heading h2, :root[data-theme="dark"] .mypage-profile-grid dd, :root[data-theme="dark"] .mypage-company-card-header strong { color: #e8eef8; }
+:root[data-theme="dark"] .mypage-modal { border-color: #2b394b; background: #111a27; }
+:root[data-theme="dark"] .mypage-modal h2, :root[data-theme="dark"] .mypage-modal > span strong { color: #e8eef8; }
+:root[data-theme="dark"] .mypage-modal > span { color: #aab8ca; }
+:root[data-theme="dark"] .mypage-modal-actions button { border-color: #384b60; background: #1c2939; color: #dbe7f5; }
+:root[data-theme="dark"] .mypage-modal-actions .is-danger { border-color: #b84e5b; background: #b84e5b; color: #fff; }
 @media (max-width: 760px) { .mypage-profile-grid, .mypage-company-grid { grid-template-columns: 1fr; } }
 
 /* Watchlist page */

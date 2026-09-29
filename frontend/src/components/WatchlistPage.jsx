@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
+import CompanyLogo from "./CompanyLogo";
 import Header from "./Header";
 
 const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the shared Header is intentionally untouched. */
@@ -70,11 +72,6 @@ const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the 
   flex: 0 0 auto;
   align-items: baseline;
   gap: 2px;
-  padding: 10px 14px;
-  border: 1px solid rgba(15, 118, 110, 0.12);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 7px 24px rgba(23, 55, 67, 0.055);
   color: #7b8b95;
   font-size: 12px;
   font-weight: 600;
@@ -101,6 +98,7 @@ const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the 
   position: relative;
   min-width: 0;
   overflow: hidden;
+  padding: 0;
   border: 1px solid var(--watchlist-line);
   border-radius: 17px;
   background: rgba(255, 255, 255, 0.9);
@@ -123,10 +121,10 @@ const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the 
 .watchlist-card-main {
   display: flex;
   width: 100%;
-  min-height: 112px;
+  min-height: 0;
   align-items: center;
   gap: 13px;
-  padding: 17px 60px 17px 17px;
+  padding: 14px 60px 14px 17px;
   border: 0;
   background: transparent;
   color: inherit;
@@ -143,17 +141,38 @@ const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the 
 
 .watchlist-card-mark {
   display: grid;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
   place-items: center;
-  border: 1px solid rgba(15, 118, 110, 0.1);
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
   border-radius: 13px;
-  background: linear-gradient(145deg, #edf8f6, #e2f0ed);
+  background: #fff;
   color: #0878E8;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: -0.04em;
+}
+
+:root[data-theme="dark"] .watchlist-card-mark {
+  border-color: #e5e7eb;
+  background: #fff;
+  color: #0878E8;
+}
+
+:root[data-theme="dark"] .watchlist-remove {
+  border-color: #486986;
+  background: #1c344b;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .watchlist-company-title strong {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .watchlist-heading-copy h1 {
+  color: #fff;
 }
 
 .watchlist-card-copy {
@@ -254,23 +273,121 @@ const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the 
 
 .watchlist-remove {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 50%;
+  right: 18px;
   display: grid;
   width: 29px;
   height: 29px;
   place-items: center;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: #f6f8f7;
-  color: #c2a257;
+  border: 1px solid #325978;
+  border-radius: 9px;
+  background: #1d3e59;
+  color: #fff;
   cursor: pointer;
+  transform: translateY(-50%);
   transition: transform 160ms var(--watchlist-ease), color 160ms var(--watchlist-ease), background-color 160ms var(--watchlist-ease), border-color 160ms var(--watchlist-ease);
 }
 
 .watchlist-remove span {
   font-size: 14px;
   line-height: 1;
+}
+
+.watchlist-modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  padding: 20px;
+  place-items: center;
+  background: rgba(9, 18, 31, 0.52);
+}
+
+.watchlist-modal {
+  width: min(100%, 360px);
+  padding: 26px;
+  border: 1px solid #dce8f3;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(9, 18, 31, 0.24);
+}
+
+.watchlist-modal > p {
+  margin: 0 0 7px;
+  color: #0878E8;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.15em;
+}
+
+.watchlist-modal h2,
+.watchlist-modal > span strong {
+  color: #354962;
+}
+
+.watchlist-modal h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.watchlist-modal > span {
+  display: block;
+  margin-top: 11px;
+  color: #6e7e93;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.watchlist-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.watchlist-modal-actions button {
+  min-width: 68px;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid #d7e5f2;
+  border-radius: 8px;
+  background: #f7fafc;
+  color: #4d6178;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.watchlist-modal-actions .is-danger {
+  border-color: #b84e5b;
+  background: #b84e5b;
+  color: #fff;
+}
+
+.watchlist-modal-actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+:root[data-theme="dark"] .watchlist-modal {
+  border-color: #2b394b;
+  background: #111a27;
+}
+
+:root[data-theme="dark"] .watchlist-modal h2,
+:root[data-theme="dark"] .watchlist-modal > span strong {
+  color: #e8eef8;
+}
+
+:root[data-theme="dark"] .watchlist-modal > span {
+  color: #aab8ca;
+}
+
+:root[data-theme="dark"] .watchlist-modal-actions button {
+  border-color: #384b60;
+  background: #1c2939;
+  color: #dbe7f5;
 }
 
 .watchlist-error {
@@ -387,10 +504,10 @@ const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the 
   }
 
   .watchlist-remove:hover {
-    transform: rotate(-8deg) scale(1.06);
-    border-color: rgba(185, 145, 49, 0.16);
-    background: #fff7df;
-    color: #ae842a;
+    transform: translateY(-50%) scale(1.1);
+    border-color: #325978;
+    background: #1d3e59;
+    color: #fff;
   }
 
   .watchlist-empty a:hover {
@@ -404,6 +521,10 @@ const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the 
 .watchlist-remove:active,
 .watchlist-empty a:active {
   transform: scale(0.985);
+}
+
+.watchlist-remove:active {
+  transform: translateY(-50%) scale(0.985);
 }
 
 @media (min-width: 700px) {
@@ -427,15 +548,15 @@ const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the 
   }
 
   .watchlist-card-main {
-    min-height: 102px;
+    min-height: 0;
     gap: 11px;
-    padding: 14px 53px 14px 14px;
+    padding: 12px 53px 12px 14px;
   }
 
   .watchlist-card-mark {
-    width: 38px;
-    height: 38px;
-    flex-basis: 38px;
+    width: 52px;
+    height: 52px;
+    flex-basis: 52px;
     border-radius: 12px;
   }
 
@@ -458,8 +579,6 @@ const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the 
 
   .watchlist-count {
     gap: 0;
-    padding: 8px 10px;
-    border-radius: 12px;
   }
 
   .watchlist-count-value {
@@ -512,11 +631,22 @@ const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the 
 export default function WatchlistPage() {
   const { companies, toggleCompany, count, limit, loading, error } =
     useWatchlist();
+  const [pendingRemoval, setPendingRemoval] = useState(null);
+  const [removing, setRemoving] = useState(false);
 
   const openAnalysis = (company) => {
     window.location.assign(
       `${ROUTES.COMPANY_DETAIL}?companyId=${company.companyId}`,
     );
+  };
+
+  const confirmRemoval = async () => {
+    if (!pendingRemoval) return;
+
+    setRemoving(true);
+    await toggleCompany(pendingRemoval.companyId);
+    setRemoving(false);
+    setPendingRemoval(null);
   };
 
   return (
@@ -563,7 +693,11 @@ export default function WatchlistPage() {
                   aria-label={`${company.companyName} 분석 보기`}
                 >
                   <span className="watchlist-card-mark" aria-hidden="true">
-                    {company.companyName.slice(0, 2)}
+                    <CompanyLogo
+                      companyName={company.companyName}
+                      size={34}
+                      visualOffset={{ x: 0, y: -2 }}
+                    />
                   </span>
 
                   <span className="watchlist-card-copy">
@@ -596,7 +730,7 @@ export default function WatchlistPage() {
                 <button
                   aria-label={`${company.companyName} 관심기업 해제`}
                   className="watchlist-remove"
-                  onClick={() => toggleCompany(company.companyId)}
+                  onClick={() => setPendingRemoval(company)}
                   type="button"
                   title="관심기업 해제"
                 >
@@ -614,6 +748,32 @@ export default function WatchlistPage() {
             <h2>등록한 관심기업이 없습니다.</h2>
             <p>기업 검색에서 별표를 눌러 관심기업을 추가해 보세요.</p>
             <a href={ROUTES.COMPANY_SEARCH}>기업 검색하기</a>
+          </div>
+        )}
+
+        {pendingRemoval && (
+          <div className="watchlist-modal-backdrop" role="presentation">
+            <section
+              className="watchlist-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="watchlist-remove-title"
+              aria-describedby="watchlist-remove-description"
+            >
+              <p>WATCHLIST</p>
+              <h2 id="watchlist-remove-title">관심기업 해제</h2>
+              <span id="watchlist-remove-description">
+                <strong>{pendingRemoval.companyName}</strong>을(를) 관심기업에서 삭제할까요?
+              </span>
+              <div className="watchlist-modal-actions">
+                <button type="button" onClick={() => setPendingRemoval(null)} disabled={removing}>
+                  취소
+                </button>
+                <button type="button" className="is-danger" onClick={confirmRemoval} disabled={removing}>
+                  {removing ? "삭제 중..." : "삭제"}
+                </button>
+              </div>
+            </section>
           </div>
         )}
       </section>

@@ -74,9 +74,9 @@ function Header() {
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 0)
       return ROUTES.COMPANY_SEARCH;
     if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 1)
-      return ROUTES.COMPANY_WATCHLIST;
-    if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 2)
       return ROUTES.STOCK_SEARCH;
+    if (item.href === ROUTES.COMPANY_ANALYSIS && childIndex === 2)
+      return ROUTES.COMPANY_WATCHLIST;
 
     if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 0)
       return ROUTES.CASE_SIMULATOR;
