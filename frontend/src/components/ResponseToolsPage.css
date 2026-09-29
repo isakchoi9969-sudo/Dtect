@@ -646,3 +646,56 @@
     transform: rotate(360deg);
   }
 }
+
+/* 생성 결과의 복사·재생성 버튼 */
+.draft-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.draft-action-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #bcd8f4;
+  border-radius: 7px;
+  background: #fff;
+  color: #176fc5;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.draft-action-button:hover {
+  background: #e8f3ff;
+}
+
+.draft-action-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* 다시 생성 버튼은 주요 행동으로 표시 */
+.draft-regenerate-button {
+  border-color: #1779df;
+  background: #1779df;
+  color: #fff;
+}
+
+.draft-regenerate-button:hover {
+  background: #0968c9;
+}
+
+.draft-action-notice,
+.draft-regenerate-guide {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+
+.draft-action-notice {
+  color: #176fc5;
+}
+
+.draft-regenerate-guide {
+  color: #728198;
+}
