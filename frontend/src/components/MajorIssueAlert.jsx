@@ -5,10 +5,6 @@ import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
 import Header from "./Header";
 
-function severityClass(level) {
-  return level === "낮음" ? "safe" : level === "보통" ? "caution" : "danger";
-}
-
 function formatTime(isoString) {
   if (!isoString) return "-";
   const date = new Date(isoString);

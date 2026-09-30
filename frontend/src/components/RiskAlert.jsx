@@ -42,7 +42,30 @@ export default function RiskSurgeAlertPage() {
   };
 
   useEffect(() => {
-    void fetchAlerts();
+    let isActive = true;
+
+    const loadInitialAlerts = async () => {
+      try {
+        const response = await api.get("/api/company/risk-surge", {
+          params: { hours: 24 },
+        });
+        if (isActive) setAlerts(response.data.data || []);
+      } catch (error) {
+        console.error("위험도 급상승 알림 조회 실패:", error);
+        if (isActive) {
+          setAlerts([]);
+          setNotice("위험도 급상승 알림을 불러오는 중 오류가 발생했습니다.");
+        }
+      } finally {
+        if (isActive) setLoading(false);
+      }
+    };
+
+    void loadInitialAlerts();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const openAnalysis = (company) => {

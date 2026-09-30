@@ -19,6 +19,7 @@ const {
   splitGroupsBySemanticSimilarity,
 } = require("./simulatorClustering.service");
 const { buildSimulatorResponse } = require("./simulatorResponse.service");
+const { buildCaseTitle } = require("./simulatorCaseTitle.service");
 const {
   scoreCaseGroups,
   selectTopSimilarCases,
@@ -193,11 +194,12 @@ function buildIssueSearchQueries(title, content, majorCategory, minorCategory) {
 }
 
 /** Chroma 뉴스 군집을 DB 저장 없이도 화면에 표시할 수 있는 동적 사례로 변환한다. */
-function buildDynamicCaseGroups(groups) {
+function buildDynamicCaseGroups(groups, options = {}) {
   return groups.map((group) => ({
     ...group,
     caseId: null,
     issueId: null,
+    caseTitle: buildCaseTitle(group, options),
     issueName: group.representativeTitle,
     description: `${group.companyName} 관련 기사 ${group.articleCount}건이 ${group.startDate}부터 ${group.lastDate}까지 확인된 동적 과거 사례 후보입니다.`,
   }));
@@ -276,7 +278,8 @@ async function getStoredCaseFallbackGroups(
       storedArticleCount: storedCase.issueArticleCount,
       storedRiskType: storedCase.caseRiskType || storedCase.issueRiskType,
       representativeNewsId: newsIds[0] ?? null,
-      representativeTitle: storedCase.issueName,
+      representativeTitle: storedCase.representativeTitle || storedCase.issueName,
+      representativeUrl: storedCase.representativeUrl || null,
       semanticSimilarity,
       matchMethod: "category",
     }];
@@ -350,7 +353,10 @@ async function simulateSimilarCases(
     };
   }
   const scoredDynamicGroups = scoreCaseGroups(
-    removeDuplicateDynamicGroups(buildDynamicCaseGroups(validationResult.groups)),
+    removeDuplicateDynamicGroups(buildDynamicCaseGroups(validationResult.groups, {
+      majorCategory,
+      minorCategory,
+    })),
     { currentIndustry, currentDate },
   );
   const selectedGroups = selectTopSimilarCases(scoredDynamicGroups);

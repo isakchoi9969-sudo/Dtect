@@ -328,6 +328,7 @@ function buildIssueCentroids(groups, embeddingsByNewsId) {
       representativeNewsId: representative.article.newsId,
       representativeDate: representative.article.publishedAt,
       representativeTitle: representative.article.title,
+      representativeUrl: representative.article.articleUrl || null,
       representativeCentroidSimilarity: representative.centroidSimilarity,
     }];
   });

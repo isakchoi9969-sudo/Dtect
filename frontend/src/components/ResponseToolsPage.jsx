@@ -2,7 +2,7 @@
 import Header from "./Header";
 import { ROUTES } from "../config/routes";
 import { CASE_TYPE_OPTIONS } from "../data/caseTypeOptions";
-import { fetchSimilarCases } from "../services/simulatorApi";
+import { fetchCaseSummary, fetchSimilarCases } from "../services/simulatorApi";
 import "./ResponseToolsPage.css";
 import "./CaseSimulator.css";
 import { api } from "../config/api";
@@ -41,6 +41,12 @@ function formatDate(value) {
 
 function formatIncidentDate(startDate) {
   return startDate ? formatDate(startDate) : "정보 준비 중";
+}
+
+function getCaseSummaryKey(similarCase) {
+  return similarCase.caseId
+    ? `case-${similarCase.caseId}`
+    : `news-${similarCase.representativeNewsId || similarCase.caseTitle}`;
 }
 
 function CurrentIssueContext({
@@ -138,6 +144,10 @@ function SimulatorContent({
   onSelect,
   showDetails,
   onShowDetails,
+  caseSummaries,
+  summaryLoadingKey,
+  summaryErrors,
+  onRequestSummary,
   errorMessage,
   displayValue,
   displayIncidentDate,
@@ -177,8 +187,59 @@ function SimulatorContent({
   const renderCaseDetails = (similarCase) => (
     <div className="tool-card simulation-result">
       <span>SIMILAR CASE</span>
-      <h2>{similarCase.issueName}</h2>
-      <p>{similarCase.description}</p>
+      <h2>{similarCase.caseTitle || similarCase.issueName}</h2>
+      <section className="ai-case-summary" aria-live="polite">
+        <span>AI CASE SUMMARY</span>
+        {(() => {
+          const summaryKey = getCaseSummaryKey(similarCase);
+          const summary = caseSummaries[summaryKey];
+          const error = summaryErrors[summaryKey];
+          const isLoading = summaryLoadingKey === summaryKey;
+
+          if (summary) {
+            const sections = [
+              ["사건 개요", [summary.overview]],
+              ["발생 원인", summary.confirmed_causes],
+              ["당시 대응", summary.actions_taken],
+              ["향후 대응", summary.recommended_actions],
+              ["확인 필요", summary.uncertainties],
+            ].filter(([, items]) => items?.filter(Boolean).length > 0);
+
+            return (
+              <div className="ai-case-summary-content">
+                {sections.map(([heading, items]) => (
+                  <div key={heading}>
+                    <strong>{heading}</strong>
+                    <ul>
+                      {items.filter(Boolean).map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+
+          return (
+            <>
+              <p>
+                사건 개요, 발생 원인, 당시 대응과 향후 대응을 기사 근거로
+                정리합니다.
+              </p>
+              {error && <p className="ai-case-summary-error">{error}</p>}
+              <button
+                type="button"
+                className="case-summary-trigger"
+                onClick={() => onRequestSummary(similarCase)}
+                disabled={isLoading || similarCase.sourceArticles?.length === 0}
+              >
+                {isLoading ? "AI 사건 요약 생성 중…" : "AI 사건 요약 보기"}
+              </button>
+            </>
+          );
+        })()}
+      </section>
       <button
         type="button"
         className="case-detail-trigger"
@@ -230,7 +291,17 @@ function SimulatorContent({
           </div>
           <div className="representative-news">
             <span>대표기사</span>
-            <strong>{displayValue(similarCase.representativeTitle)}</strong>
+            {similarCase.representativeUrl ? (
+              <a
+                href={similarCase.representativeUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {displayValue(similarCase.representativeTitle)}
+              </a>
+            ) : (
+              <strong>{displayValue(similarCase.representativeTitle)}</strong>
+            )}
           </div>
         </>
       )}
@@ -253,7 +324,7 @@ function SimulatorContent({
                 onClick={() => onSelect(index)}
                 aria-pressed={selectedCase === index}
               >
-                <span>{item.issueName}</span>
+                <span>{item.caseTitle || item.issueName}</span>
                 <i aria-hidden="true">›</i>
               </button>
             </div>
@@ -273,6 +344,9 @@ function ResponseToolsPage({ mode }) {
   const [similarCases, setSimilarCases] = useState([]);
   const [caseLoadStatus, setCaseLoadStatus] = useState("idle");
   const [caseError, setCaseError] = useState("");
+  const [caseSummaries, setCaseSummaries] = useState({});
+  const [summaryLoadingKey, setSummaryLoadingKey] = useState("");
+  const [summaryErrors, setSummaryErrors] = useState({});
   const [document, setDocument] = useState(documents[0]);
 
   // 실제 DB 산업명으로 시작합니다.
@@ -425,13 +499,58 @@ function ResponseToolsPage({ mode }) {
       );
       setSelectedCase(0);
       setIsCaseDetailVisible(false);
+      setCaseSummaries({});
+      setSummaryErrors({});
       setCaseLoadStatus("success");
     } catch (error) {
       setSimilarCases([]);
-      setCaseError(error.message || "유사 사례를 불러오지 못했습니다.");
+      setCaseError(
+        error.response?.data?.message
+          || error.message
+          || "유사 사례를 불러오지 못했습니다.",
+      );
       setCaseLoadStatus("error");
     }
   }, [caseType, currentIssue]);
+
+  const requestCaseSummary = useCallback(async (similarCase) => {
+    const summaryKey = getCaseSummaryKey(similarCase);
+    if (caseSummaries[summaryKey] || summaryLoadingKey === summaryKey) return;
+
+    if (!similarCase.sourceArticles?.length) {
+      setSummaryErrors((previous) => ({
+        ...previous,
+        [summaryKey]: "요약에 사용할 기사 정보가 없습니다.",
+      }));
+      return;
+    }
+
+    setSummaryLoadingKey(summaryKey);
+    setSummaryErrors((previous) => ({ ...previous, [summaryKey]: "" }));
+    try {
+      const response = await fetchCaseSummary({
+        caseTitle: similarCase.caseTitle || similarCase.issueName,
+        companyName: similarCase.companyName,
+        articles: similarCase.sourceArticles,
+      });
+      if (!response.success || !response.summary) {
+        throw new Error(response.message || "AI 사건 요약을 생성하지 못했습니다.");
+      }
+      setCaseSummaries((previous) => ({
+        ...previous,
+        [summaryKey]: response.summary,
+      }));
+    } catch (error) {
+      setSummaryErrors((previous) => ({
+        ...previous,
+        [summaryKey]: error.response?.data?.message
+          || error.message
+          || "AI 사건 요약을 생성하지 못했습니다.",
+      }));
+    } finally {
+      setSummaryLoadingKey((current) => current === summaryKey ? "" : current);
+    }
+  }, [caseSummaries, summaryLoadingKey]);
 
   const changeMode = (next) => {
     setActiveMode(next);
@@ -500,6 +619,10 @@ function ResponseToolsPage({ mode }) {
               onShowDetails={() =>
                 setIsCaseDetailVisible((visible) => !visible)
               }
+              caseSummaries={caseSummaries}
+              summaryLoadingKey={summaryLoadingKey}
+              summaryErrors={summaryErrors}
+              onRequestSummary={requestCaseSummary}
               errorMessage={caseError}
               displayValue={displayValue}
               displayIncidentDate={formatIncidentDate}

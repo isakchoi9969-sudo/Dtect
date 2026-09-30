@@ -136,6 +136,16 @@ async function generateRiskAssessment(payload) {
   }
 }
 
+/** 선택한 과거 사건의 기사 근거 기반 요약을 생성한다. */
+async function generateCaseSummary(payload) {
+  const response = await axios.post(
+    `${aiServerUrl}/api/ai/case-summary`,
+    payload,
+    { timeout: 60000 },
+  );
+  return response.data;
+}
+
 module.exports = {
   analyzeSentiments,
   mergeSimilarNewsMatches,
@@ -145,4 +155,5 @@ module.exports = {
   getIssueEmbedding,
   generateResponseDraft, // 대응자료 생성 함수 내보내기
   generateRiskAssessment,
+  generateCaseSummary,
 };
