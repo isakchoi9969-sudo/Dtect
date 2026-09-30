@@ -1,9 +1,14 @@
 // src/config/api.js
 import axios from "axios";
 
-// Node API 서버 주소를 한 곳에서 관리한다.
-// AI 서버(6000)가 아니라 프런트가 호출하는 백엔드 API 서버(기본 3000)로 연결한다.
+// 현재 접속한 호스트를 기준으로 백엔드 주소를 자동 설정한다.
+// localhost로 접속하면 localhost:3000,
+// IP로 접속하면 해당 IP:3000으로 연결한다.
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ??
+  `http://${window.location.hostname}:3000`;
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000",
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });

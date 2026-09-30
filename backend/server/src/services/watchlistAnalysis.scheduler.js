@@ -3,6 +3,7 @@ const { pool } = require("../db/pool");
 const { analyzeCompanyNews } = require("./newsAnalysis.service");
 const { assessCompanyRisk } = require("./companyRiskAssessment.service");
 const { saveAnalysisAndCreateAlerts } = require("./analysisAlert.service");
+const { sendRiskSurgeAlertEmail } = require("./emailAlert.service");
 
 let isRunning = false;
 
@@ -33,7 +34,7 @@ async function runWatchlistAnalysisJob() {
     for (const company of companies) {
       try {
         // 1. 최신 뉴스 수집 및 감성 분석
-        const analysis = await analyzeCompanyNews(company.companyName, 1, 100);
+        const analysis = await analyzeCompanyNews(company.companyName, 1, 40);
 
         // 2. 감성·추이·이슈를 반영한 실제 종합 리스크 평가
         const assessment = await assessCompanyRisk({
@@ -67,15 +68,21 @@ async function runWatchlistAnalysisJob() {
         const analyzedCount = analysis.analyzed_count ?? 0;
         const analyzedAt = analysis.analyzed_at;
 
+        // 관심기업을 등록한 사용자와 회원가입 이메일을 함께 조회합니다.
         const [users] = await pool.query(
-          `SELECT USER_ID AS userId
-           FROM FAVORITE_COMPANY
-           WHERE COMPANY_ID = ?`,
+          `SELECT
+            f.USER_ID AS userId,
+            u.NAME AS userName,
+            u.EMAIL AS email
+          FROM FAVORITE_COMPANY f
+          JOIN \`USER\` u ON u.USER_ID = f.USER_ID
+          WHERE f.COMPANY_ID = ?`,
           [company.companyId],
         );
 
         for (const user of users) {
-          await saveAnalysisAndCreateAlerts({
+          // DB에 분석 이력과 알림을 저장한 결과를 받습니다.
+          const result = await saveAnalysisAndCreateAlerts({
             userId: user.userId,
             companyId: company.companyId,
             riskSignalRate,
@@ -84,6 +91,43 @@ async function runWatchlistAnalysisJob() {
             analyzedCount,
             analyzedAt,
           });
+
+          // 실제로 새 위험도 급상승 알림이 생성됐을 때만 메일을 보냅니다.
+          if (result.createdAlerts.includes("risk_surge")) {
+            try {
+              await sendRiskSurgeAlertEmail({
+                to: user.email,
+                userName: user.userName,
+                companyName: company.companyName,
+                riskLevel,
+                riskScore,
+                detectedAt: analyzedAt,
+              });
+
+              // 메일을 성공적으로 보낸 알림에만 발송 시각을 기록합니다.
+              await pool.query(
+                `UPDATE COMPANY_ALERT
+                 SET EMAIL_SENT_AT = NOW()
+                 WHERE USER_ID = ?
+                   AND COMPANY_ID = ?
+                   AND ALERT_TYPE = 'risk_surge'
+                   AND EMAIL_SENT_AT IS NULL
+                 ORDER BY ALERT_ID DESC
+                 LIMIT 1`,
+                [user.userId, company.companyId],
+              );
+
+              console.log(
+                `[알림 메일 발송 완료] ${company.companyName} → ${user.email}`,
+              );
+            } catch (error) {
+              // 메일 발송 실패가 정기 분석을 중단시키지 않도록 처리합니다.
+              console.error(
+                `[알림 메일 발송 실패] ${company.companyName} → ${user.email}:`,
+                error.message,
+              );
+            }
+          }
         }
 
         console.log(
@@ -106,15 +150,16 @@ async function runWatchlistAnalysisJob() {
 }
 
 function startWatchlistAnalysisScheduler() {
+  // 10분마다 실행
   cron.schedule(
-    "0 * * * *",
+    "*/10 * * * *",
     () => {
       void runWatchlistAnalysisJob();
     },
     { timezone: "Asia/Seoul" },
   );
 
-  console.log("[관심기업 정기 분석] 매시간 정각 자동 실행 등록 완료");
+  console.log("[관심기업 정기 분석] 10분마다 자동 실행 등록 완료");
 }
 
 module.exports = {

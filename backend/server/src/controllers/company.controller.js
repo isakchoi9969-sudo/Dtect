@@ -412,6 +412,7 @@ async function getCompanyAlerts(req, res, alertType) {
   const hours = Math.min(Math.max(requestedHours, 1), 168);
 
   try {
+    // 메일 발송 완료 시각도 알림 목록에 전달합니다.
     const [alerts] = await pool.query(
       `SELECT
          a.ALERT_ID AS alertId,
@@ -421,6 +422,7 @@ async function getCompanyAlerts(req, res, alertType) {
          a.RISK_SCORE AS riskScore,
          a.RISK_LEVEL AS riskLevel,
          a.DETECTED_AT AS detectedAt,
+         a.EMAIL_SENT_AT AS emailSentAt, 
          c.COMPANY_ID AS companyId,
          c.COMPANY_NAME AS companyName
        FROM COMPANY_ALERT a
