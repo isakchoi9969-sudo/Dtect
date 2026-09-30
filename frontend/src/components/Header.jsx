@@ -3,6 +3,7 @@ import { navigationItems } from "../data/landingData";
 import { ROUTES } from "../config/routes";
 import { api } from "../config/api";
 import ThemeToggle from "./ThemeToggle";
+import RiskSurgeToast from "./RiskSurgeToast";
 
 const copy = {
   homeLabel: "D:TECT \uba54\uc778 \ud398\uc774\uc9c0",
@@ -112,7 +113,10 @@ function Header() {
         <nav className="desktop-nav" aria-label={copy.primaryMenu}>
           {navigationItems.map((item) => (
             <div className="nav-item" key={item.title}>
-              <a href={getChildHref(item, item.children[0])} className="nav-link">
+              <a
+                href={getChildHref(item, item.children[0])}
+                className="nav-link"
+              >
                 {item.title}
               </a>
               <div className="dropdown">
@@ -243,6 +247,9 @@ function Header() {
           )}
         </div>
       </div>
+
+      {/* 로그인한 사용자가 사이트를 이용 중일 때 새 위험도 알림을 확인합니다. */}
+      <RiskSurgeToast enabled={Boolean(currentUser)} />
     </header>
   );
 }

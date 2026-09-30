@@ -74,15 +74,6 @@ export default function RiskSurgeAlertPage() {
                 종합 리스크가 높음 이상인 관심기업을 알려드립니다.
               </p>
             </div>
-
-            <button
-              type="button"
-              className="risk-refresh-btn"
-              onClick={fetchAlerts}
-              disabled={loading}
-            >
-              {loading ? "불러오는 중..." : "새로고침"}
-            </button>
           </div>
         </section>
 
@@ -103,9 +94,26 @@ export default function RiskSurgeAlertPage() {
               </span>
             </div>
 
-            <small>
-              관심기업 {count}/{limit}
-            </small>
+            <div className="risk-alert-heading-actions">
+              {/* 등록한 관심기업 수 */}
+              <small>
+                관심기업 {count}/{limit}
+              </small>
+
+              {/* 페이지에 오래 머문 뒤 새 알림을 다시 확인하는 버튼 */}
+              <button
+                type="button"
+                className={`risk-refresh-btn ${loading ? "is-loading" : ""}`}
+                onClick={fetchAlerts}
+                disabled={loading}
+              >
+                <span className="risk-refresh-icon" aria-hidden="true">
+                  ↻
+                </span>
+
+                {loading ? "새 알림 확인 중..." : "새 알림 확인"}
+              </button>
+            </div>
           </div>
 
           {loading ? (
@@ -147,6 +155,13 @@ export default function RiskSurgeAlertPage() {
                           <br />
                           감지 시각 {formatTime(item.detectedAt)}
                         </span>
+
+                        {/* 메일 발송이 완료된 알림에만 표시합니다. */}
+                        {item.emailSentAt && (
+                          <span className="risk-mail-sent">
+                            ✉ 회원가입 이메일로 알림을 발송했습니다.
+                          </span>
+                        )}
                       </span>
 
                       <span className="company-result-arrow">›</span>
