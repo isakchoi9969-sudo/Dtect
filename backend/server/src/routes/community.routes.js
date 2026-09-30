@@ -28,7 +28,7 @@ const postColumns = `
   p.POST_ID AS id, p.COMPANY_ID AS companyId,
   c.COMPANY_NAME AS company, c.STOCK_CODE AS code,
   p.USER_ID AS authorId,
-  CASE WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자'
+  CASE WHEN u.USER_ID IS NULL THEN '탈퇴한 사용자입니다'
        ELSE COALESCE(NULLIF(u.NICKNAME, ''), u.NAME, CONCAT('회원 #', p.USER_ID)) END AS author,
   p.TITLE AS title, p.VIEW_COUNT AS views, p.CREATED_AT AS createdAt,
   (SELECT COUNT(*) FROM COMMUNITY_COMMENT cm
@@ -176,7 +176,7 @@ router.get("/posts/:postId/comments", async (req, res) => {
     );
     const [items] = await pool.query(
       `SELECT cm.COMMENT_ID AS id, cm.POST_ID AS postId, cm.USER_ID AS authorId,
-              CASE WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자'
+              CASE WHEN u.USER_ID IS NULL THEN '탈퇴한 사용자입니다'
                    ELSE COALESCE(NULLIF(u.NICKNAME, ''), u.NAME, CONCAT('회원 #', cm.USER_ID)) END AS author,
               cm.PARENT_COMMENT_ID AS parentCommentId,
               cm.CONTENT AS content, cm.CREATED_AT AS createdAt

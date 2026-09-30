@@ -536,8 +536,8 @@ async function updateCurrentUser(req, res) {
 
 /**
  * DELETE /api/auth/me
- * 현재 비밀번호를 확인한 뒤 개인정보를 제거하고 계정을 탈퇴 상태로 전환한다.
- * 커뮤니티 글·댓글은 USER_ID를 보존해 "탈퇴한 사용자"로 표시한다.
+ * 현재 비밀번호를 확인한 뒤 계정과 개인 데이터를 실제 삭제한다.
+ * 커뮤니티 글·댓글은 DB의 ON DELETE SET NULL 규칙에 따라 내용만 보존한다.
  */
 async function withdrawCurrentUser(req, res) {
   const currentPassword = String(req.body?.currentPassword || "");
@@ -567,26 +567,23 @@ async function withdrawCurrentUser(req, res) {
       });
     }
 
-    const withdrawalSuffix = `${req.authUserId}_${Date.now()}`;
-    const withdrawnLoginId = `withdrawn_${withdrawalSuffix}`;
-    const withdrawnEmail = `withdrawn_${withdrawalSuffix}@deleted.invalid`;
-    const withdrawnPassword = await bcrypt.hash(
-      `withdrawn-${withdrawalSuffix}-${Math.random()}`,
-      10,
-    );
-
     await connection.beginTransaction();
+    // 외래키가 없는 개인 이력은 먼저 직접 제거한다.
     await connection.query("DELETE FROM COMPANY_ALERT WHERE USER_ID = ?", [req.authUserId]);
     await connection.query("DELETE FROM COMPANY_ANALYSIS_SNAPSHOT WHERE USER_ID = ?", [req.authUserId]);
     await connection.query("DELETE FROM FAVORITE_COMPANY WHERE USER_ID = ?", [req.authUserId]);
     await connection.query("DELETE FROM RESPONSE_DRAFT_HISTORY WHERE USER_ID = ?", [req.authUserId]);
-    await connection.query(
-      `UPDATE \`USER\`
-       SET LOGIN_ID = ?, EMAIL = ?, NAME = '탈퇴한 사용자', PASSWORD = ?,
-           USER_TYPE = 'PERSONAL', COMPANY_ID = NULL
-       WHERE USER_ID = ?`,
-      [withdrawnLoginId, withdrawnEmail, withdrawnPassword, req.authUserId],
+
+    // 관심기업·알림·저장 사례 등 CASCADE 대상은 DB가 함께 삭제한다.
+    // 커뮤니티 글·댓글은 USER_ID만 NULL이 되고 내용은 남는다.
+    const [deleteResult] = await connection.query(
+      "DELETE FROM `USER` WHERE USER_ID = ?",
+      [req.authUserId],
     );
+
+    if (deleteResult.affectedRows !== 1) {
+      throw new Error("삭제할 회원 정보를 찾을 수 없습니다.");
+    }
     await connection.commit();
 
     res.clearCookie("dtect_auth", {
