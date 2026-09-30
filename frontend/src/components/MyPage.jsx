@@ -4,6 +4,7 @@ import { ROUTES } from "../config/routes";
 import { useWatchlist } from "../hooks/useWatchlist";
 import CompanyLogo from "./CompanyLogo";
 import Header from "./Header";
+import { deleteSavedCase, fetchSavedCases } from "../services/savedCaseApi";
 
 const userTypeLabels = {
   PERSONAL: "개인 회원",
@@ -51,8 +52,9 @@ function MyPage() {
   const [draftHistory, setDraftHistory] = useState([]);
   const [draftHistoryLoading, setDraftHistoryLoading] = useState(true);
   const [draftHistoryError, setDraftHistoryError] = useState("");
-  // USER_SAVED_CASE API가 연결되면 이 목록에 사용자별 저장 사례를 채웁니다.
-  const [savedCases] = useState([]);
+  const [savedCases, setSavedCases] = useState([]);
+  const [savedCasesLoading, setSavedCasesLoading] = useState(true);
+  const [savedCasesError, setSavedCasesError] = useState("");
 
   // 현재 펼쳐서 보고 있는 초안의 ID
   const [expandedDraftId, setExpandedDraftId] = useState(null);
@@ -83,6 +85,25 @@ function MyPage() {
       .finally(() => setUserLoading(false));
 
     return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    fetchSavedCases()
+      .then((response) => {
+        if (active) setSavedCases(response.savedCases || []);
+      })
+      .catch((error) => {
+        if (active && error.name !== "CanceledError") {
+          setSavedCasesError("저장한 과거 사례를 불러오지 못했습니다.");
+        }
+      })
+      .finally(() => {
+        if (active) setSavedCasesLoading(false);
+      });
+
+    return () => { active = false; };
   }, []);
 
   // 로그인 사용자의 최근 생성 이력 5건을 불러옵니다.
@@ -151,6 +172,17 @@ function MyPage() {
     await toggleCompany(pendingRemoval.companyId);
     setRemoving(false);
     setPendingRemoval(null);
+  };
+
+  const removeSavedCase = async (savedCaseId) => {
+    if (!window.confirm("저장한 과거 사례를 삭제하시겠습니까?")) return;
+
+    try {
+      await deleteSavedCase(savedCaseId);
+      setSavedCases((previous) => previous.filter((item) => item.savedCaseId !== savedCaseId));
+    } catch (error) {
+      window.alert(error.response?.data?.message || "저장한 과거 사례를 삭제하지 못했습니다.");
+    }
   };
 
   const openProfileEditor = () => {
@@ -431,7 +463,10 @@ function MyPage() {
             <h2 id="mypage-saved-cases-title">저장한 과거 사례</h2>
           </div>
 
-          {savedCases.length > 0 ? (
+          {savedCasesError && <p className="watchlist-error" role="alert">{savedCasesError}</p>}
+          {savedCasesLoading ? (
+            <div className="watchlist-loading" role="status">저장한 과거 사례를 불러오는 중입니다.</div>
+          ) : savedCases.length > 0 ? (
             <div className="mypage-saved-case-list">
               {savedCases.map((item) => (
                 <article className="mypage-saved-case-item" key={item.savedCaseId}>
@@ -457,7 +492,7 @@ function MyPage() {
                         대표기사 보기
                       </a>
                     )}
-                    <button type="button">저장 취소</button>
+                    <button type="button" onClick={() => removeSavedCase(item.savedCaseId)}>저장 취소</button>
                   </div>
                 </article>
               ))}

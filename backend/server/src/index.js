@@ -10,6 +10,7 @@ const companyRoutes = require("./routes/company.routes");
 const healthRoutes = require("./routes/health.routes");
 const simulatorRoutes = require("./routes/simulator.routes");
 const responseDraftRoutes = require("./routes/responseDraft.routes");
+const savedCaseRoutes = require("./routes/savedCase.routes");
 const communityRoutes = require("./routes/community.routes");
 const communityFreeRoutes = require("./routes/communityFree.routes");
 
@@ -53,6 +54,7 @@ app.use("/api/favorite-company", favoriteCompanyRoutes);
 app.use("/api/simulator", simulatorRoutes);
 app.use("/api", healthRoutes);
 app.use("/api/response-drafts", responseDraftRoutes);
+app.use("/api/saved-cases", savedCaseRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/community/free", communityFreeRoutes);
 

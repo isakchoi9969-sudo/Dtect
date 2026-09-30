@@ -3,6 +3,11 @@ import Header from "./Header";
 import { ROUTES } from "../config/routes";
 import { CASE_TYPE_OPTIONS } from "../data/caseTypeOptions";
 import { fetchCaseSummary, fetchSimilarCases } from "../services/simulatorApi";
+import {
+  deleteSavedCaseByKey,
+  fetchSavedCaseStatus,
+  saveHistoricalCase,
+} from "../services/savedCaseApi";
 import "./ResponseToolsPage.css";
 import "./CaseSimulator.css";
 import { api } from "../config/api";
@@ -150,6 +155,8 @@ function SimulatorContent({
   pendingUnsaveCase,
   onCancelUnsave,
   onConfirmUnsave,
+  saveLoadingKey,
+  saveError,
   caseSummaries,
   summaryLoadingKey,
   summaryErrors,
@@ -203,7 +210,8 @@ function SimulatorContent({
           className={isSaved ? "case-save-toggle saved" : "case-save-toggle"}
           onClick={() => isSaved
             ? onRequestUnsave(similarCase)
-            : onSaveCase(savedCaseKey)}
+            : onSaveCase(similarCase)}
+          disabled={saveLoadingKey === savedCaseKey}
           aria-label={isSaved ? "내 사례 저장 취소" : "내 사례에 저장"}
           aria-pressed={isSaved}
           title={isSaved ? "내 사례 저장 취소" : "내 사례에 저장"}
@@ -212,6 +220,7 @@ function SimulatorContent({
         </button>
       </div>
       <h2>{similarCase.caseTitle || similarCase.issueName}</h2>
+      {saveError && <p className="ai-case-summary-error">{saveError}</p>}
       <section className="ai-case-summary" aria-live="polite">
         <span>AI CASE SUMMARY</span>
         {(() => {
@@ -376,7 +385,9 @@ function SimulatorContent({
           </p>
           <div className="case-unsave-modal-actions">
             <button type="button" onClick={onCancelUnsave}>취소</button>
-            <button type="button" onClick={onConfirmUnsave}>저장 취소</button>
+            <button type="button" onClick={onConfirmUnsave} disabled={saveLoadingKey === getCaseSummaryKey(pendingUnsaveCase)}>
+              {saveLoadingKey === getCaseSummaryKey(pendingUnsaveCase) ? "처리 중…" : "저장 취소"}
+            </button>
           </div>
         </section>
       </div>
@@ -395,6 +406,8 @@ function ResponseToolsPage({ mode }) {
   const [caseError, setCaseError] = useState("");
   const [savedCaseKeys, setSavedCaseKeys] = useState(() => new Set());
   const [pendingUnsaveCase, setPendingUnsaveCase] = useState(null);
+  const [saveLoadingKey, setSaveLoadingKey] = useState("");
+  const [saveError, setSaveError] = useState("");
   const [caseSummaries, setCaseSummaries] = useState({});
   const [summaryLoadingKey, setSummaryLoadingKey] = useState("");
   const [summaryErrors, setSummaryErrors] = useState({});
@@ -545,16 +558,25 @@ function ResponseToolsPage({ mode }) {
         throw new Error(response.message || "유사 사례를 불러오지 못했습니다.");
       }
 
-      setSimilarCases(
-        Array.isArray(response.similarCases) ? response.similarCases : [],
-      );
+      const cases = Array.isArray(response.similarCases) ? response.similarCases : [];
+      setSimilarCases(cases);
       setSelectedCase(0);
       setIsCaseDetailVisible(false);
       setCaseSummaries({});
       setSummaryErrors({});
       setSavedCaseKeys(new Set());
       setPendingUnsaveCase(null);
+      setSaveError("");
       setCaseLoadStatus("success");
+
+      // 검색 결과가 이미 저장된 사례인지 DB에서 확인해 하트를 정확히 표시합니다.
+      fetchSavedCaseStatus(cases.map(getCaseSummaryKey))
+        .then((savedResponse) => {
+          if (savedResponse.success) {
+            setSavedCaseKeys(new Set(savedResponse.caseKeys || []));
+          }
+        })
+        .catch(() => setSavedCaseKeys(new Set()));
     } catch (error) {
       setSimilarCases([]);
       setCaseError(
@@ -568,14 +590,15 @@ function ResponseToolsPage({ mode }) {
 
   const requestCaseSummary = useCallback(async (similarCase) => {
     const summaryKey = getCaseSummaryKey(similarCase);
-    if (caseSummaries[summaryKey] || summaryLoadingKey === summaryKey) return;
+    if (caseSummaries[summaryKey]) return caseSummaries[summaryKey];
+    if (summaryLoadingKey === summaryKey) return null;
 
     if (!similarCase.sourceArticles?.length) {
       setSummaryErrors((previous) => ({
         ...previous,
         [summaryKey]: "요약에 사용할 기사 정보가 없습니다.",
       }));
-      return;
+      return null;
     }
 
     setSummaryLoadingKey(summaryKey);
@@ -593,6 +616,7 @@ function ResponseToolsPage({ mode }) {
         ...previous,
         [summaryKey]: response.summary,
       }));
+      return response.summary;
     } catch (error) {
       setSummaryErrors((previous) => ({
         ...previous,
@@ -600,29 +624,64 @@ function ResponseToolsPage({ mode }) {
           || error.message
           || "AI 사건 요약을 생성하지 못했습니다.",
       }));
+      return null;
     } finally {
       setSummaryLoadingKey((current) => current === summaryKey ? "" : current);
     }
   }, [caseSummaries, summaryLoadingKey]);
 
-  const saveCase = useCallback((caseKey) => {
-    setSavedCaseKeys((previous) => {
-      const next = new Set(previous);
-      next.add(caseKey);
-      return next;
-    });
-  }, []);
+  const saveCase = useCallback(async (similarCase) => {
+    const caseKey = getCaseSummaryKey(similarCase);
+    setSaveLoadingKey(caseKey);
+    setSaveError("");
+    try {
+      // 기존에 화면에서 생성한 요약을 재사용하고, 없을 때만 LLM을 호출합니다.
+      const aiSummary = caseSummaries[caseKey] || await requestCaseSummary(similarCase);
+      if (!aiSummary) throw new Error("AI 사건 요약을 만든 뒤 저장할 수 있습니다.");
 
-  const confirmUnsaveCase = useCallback(() => {
+      const response = await saveHistoricalCase({
+        caseId: similarCase.caseId,
+        caseTitle: similarCase.caseTitle || similarCase.issueName,
+        companyName: similarCase.companyName,
+        industry: similarCase.industry,
+        riskType: similarCase.riskType,
+        startDate: similarCase.startDate,
+        durationDays: similarCase.durationDays,
+        articleCount: similarCase.articleCount,
+        representativeNewsId: similarCase.representativeNewsId,
+        representativeTitle: similarCase.representativeTitle,
+        representativeUrl: similarCase.representativeUrl,
+        aiSummary,
+        articles: similarCase.sourceArticles,
+      });
+      if (!response.success) throw new Error(response.message || "과거 사례를 저장하지 못했습니다.");
+      setSavedCaseKeys((previous) => new Set([...previous, caseKey]));
+    } catch (error) {
+      setSaveError(error.response?.data?.message || error.message || "과거 사례를 저장하지 못했습니다.");
+    } finally {
+      setSaveLoadingKey("");
+    }
+  }, [caseSummaries, requestCaseSummary]);
+
+  const confirmUnsaveCase = useCallback(async () => {
     if (!pendingUnsaveCase) return;
 
     const caseKey = getCaseSummaryKey(pendingUnsaveCase);
-    setSavedCaseKeys((previous) => {
-      const next = new Set(previous);
-      next.delete(caseKey);
-      return next;
-    });
-    setPendingUnsaveCase(null);
+    setSaveLoadingKey(caseKey);
+    setSaveError("");
+    try {
+      await deleteSavedCaseByKey(caseKey);
+      setSavedCaseKeys((previous) => {
+        const next = new Set(previous);
+        next.delete(caseKey);
+        return next;
+      });
+      setPendingUnsaveCase(null);
+    } catch (error) {
+      setSaveError(error.response?.data?.message || "저장한 과거 사례를 삭제하지 못했습니다.");
+    } finally {
+      setSaveLoadingKey("");
+    }
   }, [pendingUnsaveCase]);
 
   const changeMode = (next) => {
@@ -698,6 +757,8 @@ function ResponseToolsPage({ mode }) {
               pendingUnsaveCase={pendingUnsaveCase}
               onCancelUnsave={() => setPendingUnsaveCase(null)}
               onConfirmUnsave={confirmUnsaveCase}
+              saveLoadingKey={saveLoadingKey}
+              saveError={saveError}
               caseSummaries={caseSummaries}
               summaryLoadingKey={summaryLoadingKey}
               summaryErrors={summaryErrors}
