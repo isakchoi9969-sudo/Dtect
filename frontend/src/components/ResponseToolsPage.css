@@ -841,6 +841,7 @@
 /* 9. 시뮬레이터 내부 상세 카드 */
 :root[data-theme="dark"] .case-option,
 :root[data-theme="dark"] .case-options button,
+:root[data-theme="dark"] .ai-case-summary,
 :root[data-theme="dark"] .case-detail-grid > div,
 :root[data-theme="dark"] .representative-news {
   border-color: #304157;
@@ -861,14 +862,28 @@
 }
 
 :root[data-theme="dark"] .case-detail-grid strong,
-:root[data-theme="dark"] .representative-news strong {
+:root[data-theme="dark"] .representative-news strong,
+:root[data-theme="dark"] .representative-news a {
   color: #e8eef8;
+}
+
+:root[data-theme="dark"] .ai-case-summary > p {
+  color: #c6d6e8;
+}
+
+:root[data-theme="dark"] .ai-case-summary-content strong {
+  color: #e8eef8;
+}
+
+:root[data-theme="dark"] .ai-case-summary-content ul {
+  color: #c6d6e8;
 }
 
 /* 10. 보조 버튼 */
 :root[data-theme="dark"] .reference-toggle-button,
 :root[data-theme="dark"] .draft-action-button,
-:root[data-theme="dark"] .case-detail-trigger {
+:root[data-theme="dark"] .case-detail-trigger,
+:root[data-theme="dark"] .case-summary-trigger {
   border-color: #355776;
   color: #9dcbff;
   background: #152a40;
@@ -876,7 +891,8 @@
 
 :root[data-theme="dark"] .reference-toggle-button:hover,
 :root[data-theme="dark"] .draft-action-button:hover,
-:root[data-theme="dark"] .case-detail-trigger:hover {
+:root[data-theme="dark"] .case-detail-trigger:hover,
+:root[data-theme="dark"] .case-summary-trigger:hover:not(:disabled) {
   background: #1c3655;
 }
 

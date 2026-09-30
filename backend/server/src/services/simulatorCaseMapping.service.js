@@ -40,9 +40,15 @@ const SELECT_STORED_CASE_ARTICLES = `
     company.COMPANY_NAME AS companyName,
     company.INDUSTRY AS industry,
     issueNews.NEWS_ID AS newsId
+    , news.TITLE AS articleTitle
+    , news.CONTENT AS articleContent
+    , news.ORIGINAL_URL AS articleUrl
+    , newsPreprocess.CLEAN_CONTENT AS cleanArticleContent
   FROM CRISIS_CASE crisisCase
   JOIN ISSUE issueTable ON issueTable.ISSUE_ID = crisisCase.ISSUE_ID
   JOIN ISSUE_NEWS issueNews ON issueNews.ISSUE_ID = issueTable.ISSUE_ID
+  JOIN NEWS news ON news.NEWS_ID = issueNews.NEWS_ID
+  LEFT JOIN NEWS_PREPROCESS newsPreprocess ON newsPreprocess.NEWS_ID = news.NEWS_ID
   JOIN COMPANY company ON company.COMPANY_ID = crisisCase.COMPANY_ID
   ORDER BY crisisCase.CASE_ID ASC, issueNews.NEWS_ID ASC
 `;
@@ -97,10 +103,24 @@ async function getStoredCaseArticleIndex() {
     const caseId = Number(row.caseId);
     let storedCase = storedCases.get(caseId);
     if (!storedCase) {
-      storedCase = { ...toStoredCase(row), newsIds: new Set() };
+      storedCase = {
+        ...toStoredCase(row),
+        newsIds: new Set(),
+        articles: [],
+        representativeTitle: row.articleTitle || row.issueName || null,
+        representativeUrl: row.articleUrl || null,
+      };
       storedCases.set(caseId, storedCase);
     }
     storedCase.newsIds.add(Number(row.newsId));
+    storedCase.articles.push({
+      newsId: Number(row.newsId),
+      title: row.articleTitle || "",
+      content: row.articleContent || "",
+      cleanContent: row.cleanArticleContent || row.articleContent || "",
+      articleUrl: row.articleUrl || null,
+      publishedAt: row.issueStartDate || "",
+    });
   }
 
   for (const storedCase of storedCases.values()) {

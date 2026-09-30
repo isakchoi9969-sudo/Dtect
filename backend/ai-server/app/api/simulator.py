@@ -69,6 +69,11 @@ def search_similar_news(
         matches = find_similar_news(payload.title, payload.content)
     except FileNotFoundError as error:
         raise simulator_data_unavailable(error) from error
+    except Exception as error:
+        raise HTTPException(
+            status_code=503,
+            detail=f"시뮬레이터 벡터 검색을 준비하지 못했습니다: {error}",
+        ) from error
     return SimilarNewsSearchResponse(
         results=[
             SimilarNewsItem(news_id=match.news_id, similarity=match.similarity)
@@ -88,6 +93,11 @@ def get_similar_news_embeddings(
         embeddings_by_news_id = get_news_embeddings(payload.news_ids)
     except FileNotFoundError as error:
         raise simulator_data_unavailable(error) from error
+    except Exception as error:
+        raise HTTPException(
+            status_code=503,
+            detail=f"시뮬레이터 임베딩을 불러오지 못했습니다: {error}",
+        ) from error
     return NewsEmbeddingsResponse(
         results=[
             NewsEmbeddingItem(news_id=news_id, embedding=embedding)
@@ -107,5 +117,10 @@ def embed_current_issue(
         embedding = encode_query(payload.title, payload.content)
     except FileNotFoundError as error:
         raise simulator_data_unavailable(error) from error
+    except Exception as error:
+        raise HTTPException(
+            status_code=503,
+            detail=f"시뮬레이터 쿼리 임베딩을 만들지 못했습니다: {error}",
+        ) from error
 
     return CurrentIssueEmbeddingResponse(embedding=embedding)
