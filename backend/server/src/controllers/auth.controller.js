@@ -11,11 +11,32 @@ const authCookieOptions = {
   path: "/",
 };
 
+const NICKNAME_PATTERN = /^[가-힣A-Za-z0-9 ]{2,20}$/;
+
+/** 가입·중복확인에서 같은 규칙을 사용하도록 닉네임을 정규화하고 검증한다. */
+function validateNickname(value) {
+  const nickname = String(value || "").trim();
+
+  if (!nickname) {
+    return { valid: false, message: "닉네임을 입력해 주세요." };
+  }
+
+  if (!NICKNAME_PATTERN.test(nickname) || !nickname.replace(/ /g, "")) {
+    return {
+      valid: false,
+      message: "닉네임은 한글, 영문, 숫자, 띄어쓰기만 사용해 2~20자로 입력해 주세요.",
+    };
+  }
+
+  return { valid: true, nickname };
+}
+
 function toUserResponse(user) {
   return {
     id: user.USER_ID,
     email: user.EMAIL,
     name: user.NAME,
+    nickname: user.NICKNAME || null,
     userType: user.USER_TYPE,
     companyId: user.COMPANY_ID,
     companyName: user.COMPANY_NAME || null,
@@ -30,6 +51,7 @@ async function signup(req, res) {
   const {
     loginId,
     name,
+    nickname,
     email,
     password,
     passwordConfirm,
@@ -37,19 +59,27 @@ async function signup(req, res) {
     companyId = "NONE",
   } = req.body || {};
 
-  if (!loginId || !name || !email || !password || !passwordConfirm) {
+  if (!loginId || !name || !nickname || !email || !password || !passwordConfirm) {
     return res.status(422).json({
       success: false,
-      message: "아이디, 이름, 이메일, 비밀번호를 모두 입력해 주세요.",
+      message: "아이디, 이름, 닉네임, 이메일, 비밀번호를 모두 입력해 주세요.",
     });
   }
 
   const normalizedLoginId = String(loginId).trim();
+  const nicknameValidation = validateNickname(nickname);
 
   if (!/^[A-Za-z0-9]{4,20}$/.test(normalizedLoginId)) {
     return res.status(422).json({
       success: false,
       message: "아이디는 영문과 숫자로 4~20자 입력해 주세요.",
+    });
+  }
+
+  if (!nicknameValidation.valid) {
+    return res.status(422).json({
+      success: false,
+      message: nicknameValidation.message,
     });
   }
 
@@ -114,6 +144,19 @@ async function signup(req, res) {
       });
     }
 
+    // 중복확인 버튼을 거쳤더라도 가입 직전에 다시 확인해 동시 가입을 막습니다.
+    const [duplicateNicknames] = await pool.query(
+      "SELECT USER_ID FROM `USER` WHERE NICKNAME = ? LIMIT 1",
+      [nicknameValidation.nickname],
+    );
+
+    if (duplicateNicknames.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: "이미 사용 중인 닉네임입니다.",
+      });
+    }
+
     const [duplicateEmails] = await pool.query(
       "SELECT USER_ID FROM `USER` WHERE EMAIL = ? LIMIT 1",
       [email],
@@ -130,9 +173,9 @@ async function signup(req, res) {
 
     await pool.query(
       `INSERT INTO \`USER\`
-       (LOGIN_ID, PASSWORD, NAME, EMAIL, USER_TYPE, COMPANY_ID)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [normalizedLoginId, hashedPassword, name, email, userType, companyIdToSave],
+       (LOGIN_ID, PASSWORD, NAME, NICKNAME, EMAIL, USER_TYPE, COMPANY_ID)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [normalizedLoginId, hashedPassword, name, nicknameValidation.nickname, email, userType, companyIdToSave],
     );
 
     return res.json({
@@ -143,6 +186,12 @@ async function signup(req, res) {
     console.error("회원가입 처리 오류:", error);
 
     if (error.code === "ER_DUP_ENTRY") {
+      if (String(error.message || "").includes("UK_USER_NICKNAME")) {
+        return res.status(409).json({
+          success: false,
+          message: "이미 사용 중인 닉네임입니다.",
+        });
+      }
       return res.status(409).json({
         success: false,
         message: "이미 사용 중인 아이디 또는 이메일입니다.",
@@ -152,6 +201,51 @@ async function signup(req, res) {
     return res.status(500).json({
       success: false,
       message: "회원가입 처리 중 오류가 발생했습니다.",
+    });
+  }
+}
+
+/**
+ * GET /api/auth/nickname-availability?nickname=...
+ * 회원가입 화면에서 사용할 닉네임 형식·중복 확인 API
+ */
+async function checkNicknameAvailability(req, res) {
+  const validation = validateNickname(req.query?.nickname);
+
+  if (!validation.valid) {
+    return res.status(422).json({
+      success: false,
+      available: false,
+      message: validation.message,
+    });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      "SELECT USER_ID FROM `USER` WHERE NICKNAME = ? LIMIT 1",
+      [validation.nickname],
+    );
+
+    if (rows.length > 0) {
+      return res.json({
+        success: true,
+        available: false,
+        message: "이미 사용 중인 닉네임입니다.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      available: true,
+      nickname: validation.nickname,
+      message: "사용 가능한 닉네임입니다.",
+    });
+  } catch (error) {
+    console.error("닉네임 중복 확인 오류:", error.message);
+    return res.status(500).json({
+      success: false,
+      available: false,
+      message: "닉네임 중복을 확인하지 못했습니다.",
     });
   }
 }
@@ -172,7 +266,7 @@ async function login(req, res) {
 
   try {
     const [rows] = await pool.query(
-      `SELECT USER_ID, COMPANY_ID, LOGIN_ID, PASSWORD, NAME, EMAIL, USER_TYPE, CREATED_AT
+      `SELECT USER_ID, COMPANY_ID, LOGIN_ID, PASSWORD, NAME, NICKNAME, EMAIL, USER_TYPE, CREATED_AT
        FROM \`USER\`
        WHERE LOGIN_ID = ?
        LIMIT 1`,
@@ -221,7 +315,7 @@ async function login(req, res) {
 async function getCurrentUser(req, res) {
   try {
     const [rows] = await pool.query(
-      `SELECT u.USER_ID, u.COMPANY_ID, u.LOGIN_ID, u.NAME, u.EMAIL,
+      `SELECT u.USER_ID, u.COMPANY_ID, u.LOGIN_ID, u.NAME, u.NICKNAME, u.EMAIL,
               u.USER_TYPE, u.CREATED_AT, c.COMPANY_NAME
        FROM \`USER\` u
        LEFT JOIN COMPANY c ON c.COMPANY_ID = u.COMPANY_ID
@@ -412,7 +506,7 @@ async function updateCurrentUser(req, res) {
     }
 
     const [updatedRows] = await pool.query(
-      `SELECT u.USER_ID, u.COMPANY_ID, u.LOGIN_ID, u.NAME, u.EMAIL,
+      `SELECT u.USER_ID, u.COMPANY_ID, u.LOGIN_ID, u.NAME, u.NICKNAME, u.EMAIL,
               u.USER_TYPE, u.CREATED_AT, c.COMPANY_NAME
        FROM \`USER\` u
        LEFT JOIN COMPANY c ON c.COMPANY_ID = u.COMPANY_ID
@@ -530,6 +624,7 @@ function logout(_req, res) {
 
 module.exports = {
   signup,
+  checkNicknameAvailability,
   login,
   getCurrentUser,
   verifyCurrentPassword,

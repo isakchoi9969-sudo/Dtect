@@ -29,7 +29,7 @@ const postColumns = `
   c.COMPANY_NAME AS company, c.STOCK_CODE AS code,
   p.USER_ID AS authorId,
   CASE WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자'
-       ELSE CONCAT('회원 #', p.USER_ID) END AS author,
+       ELSE COALESCE(NULLIF(u.NICKNAME, ''), u.NAME, CONCAT('회원 #', p.USER_ID)) END AS author,
   p.TITLE AS title, p.VIEW_COUNT AS views, p.CREATED_AT AS createdAt,
   (SELECT COUNT(*) FROM COMMUNITY_COMMENT cm
    WHERE cm.POST_ID = p.POST_ID AND cm.STATUS = 'ACTIVE') AS comments
@@ -177,7 +177,7 @@ router.get("/posts/:postId/comments", async (req, res) => {
     const [items] = await pool.query(
       `SELECT cm.COMMENT_ID AS id, cm.POST_ID AS postId, cm.USER_ID AS authorId,
               CASE WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자'
-                   ELSE CONCAT('회원 #', cm.USER_ID) END AS author,
+                   ELSE COALESCE(NULLIF(u.NICKNAME, ''), u.NAME, CONCAT('회원 #', cm.USER_ID)) END AS author,
               cm.PARENT_COMMENT_ID AS parentCommentId,
               cm.CONTENT AS content, cm.CREATED_AT AS createdAt
        FROM COMMUNITY_COMMENT cm

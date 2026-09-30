@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   signup,
+  checkNicknameAvailability,
   login,
   getCurrentUser,
   verifyCurrentPassword,
@@ -13,6 +14,7 @@ const { requireAuth } = require("../middlewares/auth.middleware");
 const router = express.Router();
 
 router.post("/signup", signup);
+router.get("/nickname-availability", checkNicknameAvailability);
 router.post("/login", login);
 router.get("/me", requireAuth, getCurrentUser);
 router.post("/verify-password", requireAuth, verifyCurrentPassword);

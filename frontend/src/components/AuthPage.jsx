@@ -33,6 +33,9 @@ function AuthPage({ mode }) {
   const [companyId, setCompanyId] = useState("NONE");
   const [isCompaniesLoading, setIsCompaniesLoading] = useState(isSignup);
   const [companiesError, setCompaniesError] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [nicknameStatus, setNicknameStatus] = useState("idle");
+  const [nicknameMessage, setNicknameMessage] = useState("");
 
   useEffect(() => {
     if (!isSignup) return undefined;
@@ -63,10 +66,48 @@ function AuthPage({ mode }) {
     return () => controller.abort();
   }, [isSignup]);
 
+  const handleNicknameChange = (event) => {
+    setNickname(event.target.value);
+    setNicknameStatus("idle");
+    setNicknameMessage("");
+  };
+
+  const checkNicknameAvailability = async () => {
+    const normalizedNickname = nickname.trim();
+
+    if (!normalizedNickname) {
+      setNicknameStatus("unavailable");
+      setNicknameMessage("닉네임을 입력해 주세요.");
+      return;
+    }
+
+    setNicknameStatus("checking");
+    setNicknameMessage("");
+    try {
+      const response = await api.get("/api/auth/nickname-availability", {
+        params: { nickname: normalizedNickname },
+      });
+      setNicknameStatus(response.data.available ? "available" : "unavailable");
+      setNicknameMessage(response.data.message);
+      if (response.data.available) {
+        window.alert("사용 가능한 닉네임입니다.");
+      }
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      setNicknameStatus("unavailable");
+      setNicknameMessage(message);
+    }
+  };
+
   // 🔌 백엔드로 데이터 전송 로직 ----------------------------------
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (isSubmitting) return;
+
+    if (isSignup && nicknameStatus !== "available") {
+      alert("닉네임 중복 확인을 완료해 주세요.");
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -324,6 +365,34 @@ function AuthPage({ mode }) {
             )}
             {isSignup && (
               <label>
+                닉네임
+                <span className="nickname-check-field">
+                  <input
+                    type="text"
+                    name="nickname"
+                    value={nickname}
+                    onChange={handleNicknameChange}
+                    placeholder="한글, 영문, 숫자, 띄어쓰기 2~20자"
+                    minLength="2"
+                    maxLength="20"
+                    pattern="[가-힣A-Za-z0-9 ]+"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={checkNicknameAvailability}
+                    disabled={nicknameStatus === "checking"}
+                  >
+                    {nicknameStatus === "checking" ? "확인 중" : "중복 확인"}
+                  </button>
+                </span>
+                <small className={`nickname-check-message ${nicknameStatus}`}>
+                  {nicknameMessage || "커뮤니티에서 사용할 표시 이름입니다. 중복 확인 후 가입할 수 있습니다."}
+                </small>
+              </label>
+            )}
+            {isSignup && (
+              <label>
                 아이디
                 <input
                   type="text"
@@ -460,8 +529,9 @@ function AuthPage({ mode }) {
             )}
             <button
               className="auth-submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || (isSignup && nicknameStatus !== "available")}
               type="submit"
+              title={isSignup && nicknameStatus !== "available" ? "닉네임 중복 확인을 완료해 주세요." : undefined}
             >
               {isSubmitting
                 ? "처리 중..."

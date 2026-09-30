@@ -1951,6 +1951,36 @@ button:focus-visible {
 .company-field-help {
   margin-top: -2px;
 }
+.nickname-check-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+.nickname-check-field button {
+  min-width: 78px;
+  height: 51px;
+  padding: 0 12px;
+  border: 1px solid #a9cff8;
+  border-radius: 9px;
+  color: #1676dc;
+  background: #f4f9ff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+.nickname-check-field button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.nickname-check-message {
+  margin-top: -2px;
+  color: #778294;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+.nickname-check-message.available { color: #16803c; }
+.nickname-check-message.unavailable { color: #c2410c; }
 .password-field {
   position: relative;
   display: block;
