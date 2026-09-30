@@ -16,3 +16,17 @@ export async function fetchSimilarCases({
 
   return data;
 }
+
+/** 선택한 사례의 요약을 요청한다. 서버는 저장된 결과가 있으면 재사용한다. */
+export async function fetchCaseSummary({
+  caseTitle,
+  companyName,
+  articles,
+}) {
+  const { data } = await api.post("/api/simulator/cases/summary", {
+    caseTitle,
+    companyName,
+    articles,
+  });
+  return data;
+}

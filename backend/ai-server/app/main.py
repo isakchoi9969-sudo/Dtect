@@ -30,6 +30,7 @@ from app.api.simulator import router as simulator_router
 # 대응자료 생성 API 라우터
 from app.api.response_draft import router as response_draft_router
 from app.api.risk_assessment import router as risk_assessment_router
+from app.api.case_summary import router as case_summary_router
 
 AI_ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 SHARED_ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
@@ -75,6 +76,7 @@ app.include_router(sentiment_router)
 app.include_router(simulator_router)
 app.include_router(response_draft_router)  # 대응자료 생성 API 등록
 app.include_router(risk_assessment_router)
+app.include_router(case_summary_router)
 
 
 @app.get("/api/ai/health")

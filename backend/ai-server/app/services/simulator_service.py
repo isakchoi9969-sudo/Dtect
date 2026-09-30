@@ -25,11 +25,13 @@ def build_query_text(title: str, content: str) -> str:
 
 @lru_cache(maxsize=1)
 def get_embedding_model():
-    """BGE-M3를 최초 검색 시 한 번만 로드하고 이후 재사용한다."""
+    """BGE-M3를 로컬 캐시에서만 한 번 로드하고 이후 재사용한다."""
     from sentence_transformers import SentenceTransformer
 
     settings = get_simulator_settings()
-    return SentenceTransformer(settings.model_name)
+    # 실행 환경에 이미 내려받은 모델을 사용한다. 검색 요청마다 Hugging Face에
+    # 메타데이터를 확인하러 가면 네트워크 정책에 따라 시뮬레이터 전체가 실패한다.
+    return SentenceTransformer(settings.model_name, local_files_only=True)
 
 
 @lru_cache(maxsize=1)
