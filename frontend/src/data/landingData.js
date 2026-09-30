@@ -12,7 +12,7 @@ export const navigationItems = [
   {
     title: "커뮤니티",
     href: "/comunity",
-    children: ["이모저모", "종목 토론방"],
+    children: ["자유게시판", "종목 토론방", "기업 신소식", "기업 홍보·채용"],
   },
   {
     title: "알림",

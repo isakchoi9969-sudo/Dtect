@@ -96,6 +96,12 @@ function Header() {
     if (item.href === ROUTES.COMUNITY && childIndex === 1)
       return ROUTES.COMMUNITY_STOCK;
 
+    if (item.href === ROUTES.COMUNITY && childIndex === 2)
+      return ROUTES.COMMUNITY_NEWS;
+
+    if (item.href === ROUTES.COMUNITY && childIndex === 3)
+      return ROUTES.COMMUNITY_COMPANY_HUB;
+
     return item.href;
   };
 
