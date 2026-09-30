@@ -867,6 +867,45 @@
   color: #e8eef8;
 }
 
+:root[data-theme="dark"] .case-save-toggle {
+  border-color: #355776;
+  color: #9dacbf;
+  background: #151f2e;
+}
+
+:root[data-theme="dark"] .case-save-toggle:hover,
+:root[data-theme="dark"] .case-save-toggle.saved {
+  border-color: #3d76a8;
+  color: #8fc5ff;
+  background: #152a40;
+}
+
+:root[data-theme="dark"] .case-unsave-modal {
+  border-color: #304157;
+  background: #111a27;
+}
+
+:root[data-theme="dark"] .case-unsave-modal h3,
+:root[data-theme="dark"] .case-unsave-modal p strong {
+  color: #e8eef8;
+}
+
+:root[data-theme="dark"] .case-unsave-modal p {
+  color: #c6d6e8;
+}
+
+:root[data-theme="dark"] .case-unsave-modal-actions button {
+  border-color: #355776;
+  color: #c6d6e8;
+  background: #152a40;
+}
+
+:root[data-theme="dark"] .case-unsave-modal-actions button:last-child {
+  border-color: #a44d57;
+  color: #fff;
+  background: #a44d57;
+}
+
 :root[data-theme="dark"] .ai-case-summary > p {
   color: #c6d6e8;
 }
