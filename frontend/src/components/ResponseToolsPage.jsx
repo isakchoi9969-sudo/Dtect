@@ -144,6 +144,12 @@ function SimulatorContent({
   onSelect,
   showDetails,
   onShowDetails,
+  savedCaseKeys,
+  onSaveCase,
+  onRequestUnsave,
+  pendingUnsaveCase,
+  onCancelUnsave,
+  onConfirmUnsave,
   caseSummaries,
   summaryLoadingKey,
   summaryErrors,
@@ -184,9 +190,27 @@ function SimulatorContent({
     );
   }
 
-  const renderCaseDetails = (similarCase) => (
+  const renderCaseDetails = (similarCase) => {
+    const savedCaseKey = getCaseSummaryKey(similarCase);
+    const isSaved = savedCaseKeys.has(savedCaseKey);
+
+    return (
     <div className="tool-card simulation-result">
-      <span>SIMILAR CASE</span>
+      <div className="similar-case-label">
+        <span>SIMILAR CASE</span>
+        <button
+          type="button"
+          className={isSaved ? "case-save-toggle saved" : "case-save-toggle"}
+          onClick={() => isSaved
+            ? onRequestUnsave(similarCase)
+            : onSaveCase(savedCaseKey)}
+          aria-label={isSaved ? "내 사례 저장 취소" : "내 사례에 저장"}
+          aria-pressed={isSaved}
+          title={isSaved ? "내 사례 저장 취소" : "내 사례에 저장"}
+        >
+          <span aria-hidden="true">{isSaved ? "♥" : "♡"}</span>
+        </button>
+      </div>
       <h2>{similarCase.caseTitle || similarCase.issueName}</h2>
       <section className="ai-case-summary" aria-live="polite">
         <span>AI CASE SUMMARY</span>
@@ -306,11 +330,13 @@ function SimulatorContent({
         </>
       )}
     </div>
-  );
+    );
+  };
 
   const selectedSimilarCase = cases[selectedCase] || cases[0];
 
   return (
+    <>
     <section className="tool-grid">
       <div className="tool-card case-library-card">
         <span>CASE LIBRARY</span>
@@ -333,6 +359,29 @@ function SimulatorContent({
       </div>
       {renderCaseDetails(selectedSimilarCase)}
     </section>
+    {pendingUnsaveCase && (
+      <div className="case-unsave-modal-backdrop" role="presentation">
+        <section
+          className="case-unsave-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="case-unsave-title"
+        >
+          <h3 id="case-unsave-title">저장한 과거 사례를 취소할까요?</h3>
+          <p>
+            <strong>
+              {pendingUnsaveCase.caseTitle || pendingUnsaveCase.issueName}
+            </strong>
+            가 마이페이지의 저장 목록에서 삭제됩니다.
+          </p>
+          <div className="case-unsave-modal-actions">
+            <button type="button" onClick={onCancelUnsave}>취소</button>
+            <button type="button" onClick={onConfirmUnsave}>저장 취소</button>
+          </div>
+        </section>
+      </div>
+    )}
+    </>
   );
 }
 function ResponseToolsPage({ mode }) {
@@ -344,6 +393,8 @@ function ResponseToolsPage({ mode }) {
   const [similarCases, setSimilarCases] = useState([]);
   const [caseLoadStatus, setCaseLoadStatus] = useState("idle");
   const [caseError, setCaseError] = useState("");
+  const [savedCaseKeys, setSavedCaseKeys] = useState(() => new Set());
+  const [pendingUnsaveCase, setPendingUnsaveCase] = useState(null);
   const [caseSummaries, setCaseSummaries] = useState({});
   const [summaryLoadingKey, setSummaryLoadingKey] = useState("");
   const [summaryErrors, setSummaryErrors] = useState({});
@@ -501,6 +552,8 @@ function ResponseToolsPage({ mode }) {
       setIsCaseDetailVisible(false);
       setCaseSummaries({});
       setSummaryErrors({});
+      setSavedCaseKeys(new Set());
+      setPendingUnsaveCase(null);
       setCaseLoadStatus("success");
     } catch (error) {
       setSimilarCases([]);
@@ -551,6 +604,26 @@ function ResponseToolsPage({ mode }) {
       setSummaryLoadingKey((current) => current === summaryKey ? "" : current);
     }
   }, [caseSummaries, summaryLoadingKey]);
+
+  const saveCase = useCallback((caseKey) => {
+    setSavedCaseKeys((previous) => {
+      const next = new Set(previous);
+      next.add(caseKey);
+      return next;
+    });
+  }, []);
+
+  const confirmUnsaveCase = useCallback(() => {
+    if (!pendingUnsaveCase) return;
+
+    const caseKey = getCaseSummaryKey(pendingUnsaveCase);
+    setSavedCaseKeys((previous) => {
+      const next = new Set(previous);
+      next.delete(caseKey);
+      return next;
+    });
+    setPendingUnsaveCase(null);
+  }, [pendingUnsaveCase]);
 
   const changeMode = (next) => {
     setActiveMode(next);
@@ -619,6 +692,12 @@ function ResponseToolsPage({ mode }) {
               onShowDetails={() =>
                 setIsCaseDetailVisible((visible) => !visible)
               }
+              savedCaseKeys={savedCaseKeys}
+              onSaveCase={saveCase}
+              onRequestUnsave={setPendingUnsaveCase}
+              pendingUnsaveCase={pendingUnsaveCase}
+              onCancelUnsave={() => setPendingUnsaveCase(null)}
+              onConfirmUnsave={confirmUnsaveCase}
               caseSummaries={caseSummaries}
               summaryLoadingKey={summaryLoadingKey}
               summaryErrors={summaryErrors}

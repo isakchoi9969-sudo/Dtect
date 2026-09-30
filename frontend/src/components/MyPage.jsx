@@ -51,6 +51,8 @@ function MyPage() {
   const [draftHistory, setDraftHistory] = useState([]);
   const [draftHistoryLoading, setDraftHistoryLoading] = useState(true);
   const [draftHistoryError, setDraftHistoryError] = useState("");
+  // USER_SAVED_CASE API가 연결되면 이 목록에 사용자별 저장 사례를 채웁니다.
+  const [savedCases] = useState([]);
 
   // 현재 펼쳐서 보고 있는 초안의 ID
   const [expandedDraftId, setExpandedDraftId] = useState(null);
@@ -416,6 +418,56 @@ function MyPage() {
               <h2>아직 생성한 대응자료가 없습니다.</h2>
               <p>대응자료 생성에서 AI 초안을 만들면 최근 이력이 표시됩니다.</p>
               <a href={ROUTES.RESPONSE_GENERATOR}>대응자료 생성하기</a>
+            </div>
+          )}
+        </section>
+
+        <section
+          className="mypage-section"
+          aria-labelledby="mypage-saved-cases-title"
+        >
+          <div className="mypage-section-heading">
+            <p>SAVED CASES</p>
+            <h2 id="mypage-saved-cases-title">저장한 과거 사례</h2>
+          </div>
+
+          {savedCases.length > 0 ? (
+            <div className="mypage-saved-case-list">
+              {savedCases.map((item) => (
+                <article className="mypage-saved-case-item" key={item.savedCaseId}>
+                  <div className="mypage-saved-case-heading">
+                    <span aria-hidden="true">♥</span>
+                    <div>
+                      <h3>{item.caseTitle}</h3>
+                      <p>
+                        {[item.riskType, formatDate(item.startDate), item.articleCount && `관련 기사 ${item.articleCount}건`]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                  </div>
+                  {item.aiSummary?.overview && (
+                    <p className="mypage-saved-case-preview">
+                      {item.aiSummary.overview}
+                    </p>
+                  )}
+                  <div className="mypage-saved-case-actions">
+                    {item.representativeUrl && (
+                      <a href={item.representativeUrl} target="_blank" rel="noreferrer">
+                        대표기사 보기
+                      </a>
+                    )}
+                    <button type="button">저장 취소</button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="watchlist-empty mypage-saved-case-empty">
+              <span aria-hidden="true">♡</span>
+              <h2>아직 저장한 과거 사례가 없습니다.</h2>
+              <p>과거사례 시뮬레이터에서 하트를 눌러 관심 사건을 저장해 보세요.</p>
+              <a href={ROUTES.CASE_SIMULATOR}>과거사례 시뮬레이터로 이동</a>
             </div>
           )}
         </section>
