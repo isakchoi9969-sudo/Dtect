@@ -38,7 +38,9 @@ function validCategory(value) {
 
 const postSelect = `
   p.FREE_POST_ID AS id, p.USER_ID AS authorId,
-  CONCAT('회원 #', p.USER_ID) AS author, p.CATEGORY AS category,
+  CASE WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자'
+       ELSE COALESCE(NULLIF(u.NICKNAME, ''), u.NAME, CONCAT('회원 #', p.USER_ID)) END AS author,
+  p.CATEGORY AS category,
   p.TITLE AS title, p.VIEW_COUNT AS views, p.CREATED_AT AS createdAt,
   p.UPDATED_AT AS updatedAt,
   (SELECT COUNT(*) FROM COMMUNITY_FREE_COMMENT cm
@@ -73,7 +75,9 @@ router.get("/posts", async (req, res) => {
   if (!order) return res.status(400).json({ message: "정렬 방식이 올바르지 않습니다." });
 
   try {
-    const filter = `FROM COMMUNITY_FREE_POST p WHERE ${where.join(" AND ")}`;
+    const filter = `FROM COMMUNITY_FREE_POST p
+      LEFT JOIN \`USER\` u ON u.USER_ID = p.USER_ID
+      WHERE ${where.join(" AND ")}`;
     const [[count]] = await pool.query(`SELECT COUNT(*) AS total ${filter}`, params);
     const [items] = await pool.query(
       `SELECT ${postSelect}, LEFT(p.CONTENT, 240) AS preview ${filter}
@@ -126,6 +130,7 @@ router.get("/posts/:postId", async (req, res) => {
     const [[post]] = await pool.query(
       `SELECT ${postSelect}, p.CONTENT AS body
        FROM COMMUNITY_FREE_POST p
+       LEFT JOIN \`USER\` u ON u.USER_ID = p.USER_ID
        WHERE p.FREE_POST_ID = ? AND p.STATUS = 'ACTIVE'`,
       [postId],
     );
@@ -233,38 +238,43 @@ router.get("/posts/:postId/comments", async (req, res) => {
       [postId],
     );
     if (!post) return res.status(404).json({ message: "게시글을 찾을 수 없습니다." });
-    const visibleRoots = `FREE_POST_ID = ? AND PARENT_FREE_COMMENT_ID IS NULL
-      AND (STATUS = 'ACTIVE' OR (STATUS = 'DELETED' AND EXISTS (
+    const visibleRoots = `cm.FREE_POST_ID = ? AND cm.PARENT_FREE_COMMENT_ID IS NULL
+      AND (cm.STATUS = 'ACTIVE' OR (cm.STATUS = 'DELETED' AND EXISTS (
         SELECT 1 FROM COMMUNITY_FREE_COMMENT child
-        WHERE child.PARENT_FREE_COMMENT_ID = COMMUNITY_FREE_COMMENT.FREE_COMMENT_ID
+        WHERE child.PARENT_FREE_COMMENT_ID = cm.FREE_COMMENT_ID
           AND child.STATUS = 'ACTIVE')))`;
     const [[count]] = await pool.query(
       "SELECT COUNT(*) AS total FROM COMMUNITY_FREE_COMMENT WHERE FREE_POST_ID = ? AND STATUS = 'ACTIVE'",
       [postId],
     );
     const [[rootCount]] = await pool.query(
-      `SELECT COUNT(*) AS total FROM COMMUNITY_FREE_COMMENT WHERE ${visibleRoots}`,
+      `SELECT COUNT(*) AS total FROM COMMUNITY_FREE_COMMENT cm WHERE ${visibleRoots}`,
       [postId],
     );
     const [roots] = await pool.query(
-      "SELECT FREE_COMMENT_ID AS id, FREE_POST_ID AS postId, USER_ID AS authorId, " +
-        "CASE WHEN STATUS = 'DELETED' THEN '삭제된 회원' ELSE CONCAT('회원 #', USER_ID) END AS author, " +
-        "PARENT_FREE_COMMENT_ID AS parentCommentId, " +
-        "CASE WHEN STATUS = 'DELETED' THEN '삭제된 댓글입니다.' ELSE CONTENT END AS content, " +
-        "STATUS AS status, CREATED_AT AS createdAt, UPDATED_AT AS updatedAt " +
-        "FROM COMMUNITY_FREE_COMMENT WHERE " + visibleRoots +
-        " ORDER BY CREATED_AT DESC, FREE_COMMENT_ID DESC LIMIT ? OFFSET ?",
+      "SELECT cm.FREE_COMMENT_ID AS id, cm.FREE_POST_ID AS postId, cm.USER_ID AS authorId, " +
+        "CASE WHEN cm.STATUS = 'DELETED' THEN '삭제된 회원' " +
+        "WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자' " +
+        "ELSE COALESCE(NULLIF(u.NICKNAME, ''), u.NAME, CONCAT('회원 #', cm.USER_ID)) END AS author, " +
+        "cm.PARENT_FREE_COMMENT_ID AS parentCommentId, " +
+        "CASE WHEN cm.STATUS = 'DELETED' THEN '삭제된 댓글입니다.' ELSE cm.CONTENT END AS content, " +
+        "cm.STATUS AS status, cm.CREATED_AT AS createdAt, cm.UPDATED_AT AS updatedAt " +
+        "FROM COMMUNITY_FREE_COMMENT cm LEFT JOIN `USER` u ON u.USER_ID = cm.USER_ID WHERE " + visibleRoots +
+        " ORDER BY cm.CREATED_AT DESC, cm.FREE_COMMENT_ID DESC LIMIT ? OFFSET ?",
       [postId, pageSize, offset],
     );
     let items = roots;
     if (roots.length) {
       const [replies] = await pool.query(
-        `SELECT FREE_COMMENT_ID AS id, FREE_POST_ID AS postId, USER_ID AS authorId,
-                CONCAT('회원 #', USER_ID) AS author, PARENT_FREE_COMMENT_ID AS parentCommentId,
-                CONTENT AS content, STATUS AS status, CREATED_AT AS createdAt, UPDATED_AT AS updatedAt
-         FROM COMMUNITY_FREE_COMMENT
-         WHERE PARENT_FREE_COMMENT_ID IN (?) AND STATUS = 'ACTIVE'
-         ORDER BY CREATED_AT ASC, FREE_COMMENT_ID ASC`,
+        `SELECT cm.FREE_COMMENT_ID AS id, cm.FREE_POST_ID AS postId, cm.USER_ID AS authorId,
+                CASE WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자'
+                     ELSE COALESCE(NULLIF(u.NICKNAME, ''), u.NAME, CONCAT('회원 #', cm.USER_ID)) END AS author,
+                cm.PARENT_FREE_COMMENT_ID AS parentCommentId,
+                cm.CONTENT AS content, cm.STATUS AS status, cm.CREATED_AT AS createdAt, cm.UPDATED_AT AS updatedAt
+         FROM COMMUNITY_FREE_COMMENT cm
+         LEFT JOIN \`USER\` u ON u.USER_ID = cm.USER_ID
+         WHERE cm.PARENT_FREE_COMMENT_ID IN (?) AND cm.STATUS = 'ACTIVE'
+         ORDER BY cm.CREATED_AT ASC, cm.FREE_COMMENT_ID ASC`,
         [roots.map((root) => root.id)],
       );
       const repliesByParent = new Map();
