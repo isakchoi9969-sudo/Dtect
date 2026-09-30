@@ -38,7 +38,7 @@ function validCategory(value) {
 
 const postSelect = `
   p.FREE_POST_ID AS id, p.USER_ID AS authorId,
-  CASE WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자'
+  CASE WHEN u.USER_ID IS NULL THEN '탈퇴한 사용자입니다'
        ELSE COALESCE(NULLIF(u.NICKNAME, ''), u.NAME, CONCAT('회원 #', p.USER_ID)) END AS author,
   p.CATEGORY AS category,
   p.TITLE AS title, p.VIEW_COUNT AS views, p.CREATED_AT AS createdAt,
@@ -254,7 +254,7 @@ router.get("/posts/:postId/comments", async (req, res) => {
     const [roots] = await pool.query(
       "SELECT cm.FREE_COMMENT_ID AS id, cm.FREE_POST_ID AS postId, cm.USER_ID AS authorId, " +
         "CASE WHEN cm.STATUS = 'DELETED' THEN '삭제된 회원' " +
-        "WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자' " +
+        "WHEN u.USER_ID IS NULL THEN '탈퇴한 사용자입니다' " +
         "ELSE COALESCE(NULLIF(u.NICKNAME, ''), u.NAME, CONCAT('회원 #', cm.USER_ID)) END AS author, " +
         "cm.PARENT_FREE_COMMENT_ID AS parentCommentId, " +
         "CASE WHEN cm.STATUS = 'DELETED' THEN '삭제된 댓글입니다.' ELSE cm.CONTENT END AS content, " +
@@ -267,7 +267,7 @@ router.get("/posts/:postId/comments", async (req, res) => {
     if (roots.length) {
       const [replies] = await pool.query(
         `SELECT cm.FREE_COMMENT_ID AS id, cm.FREE_POST_ID AS postId, cm.USER_ID AS authorId,
-                CASE WHEN u.USER_ID IS NULL OR u.LOGIN_ID LIKE 'withdrawn_%' THEN '탈퇴한 사용자'
+                CASE WHEN u.USER_ID IS NULL THEN '탈퇴한 사용자입니다'
                      ELSE COALESCE(NULLIF(u.NICKNAME, ''), u.NAME, CONCAT('회원 #', cm.USER_ID)) END AS author,
                 cm.PARENT_FREE_COMMENT_ID AS parentCommentId,
                 cm.CONTENT AS content, cm.STATUS AS status, cm.CREATED_AT AS createdAt, cm.UPDATED_AT AS updatedAt
