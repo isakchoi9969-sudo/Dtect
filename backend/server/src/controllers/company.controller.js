@@ -1,6 +1,35 @@
 const { pool } = require("../db/pool");
+const {
+  assessCompanyRisk,
+} = require("../services/companyRiskAssessment.service");
 
-const { calculateSearchScore } = require("../services/companySearch.service");
+const {
+  calculateCompanySearchScore,
+  calculateIndustrySearchScore,
+} = require("../services/companySearch.service");
+const {
+  fetchExchangeRate,
+  fetchMarketIndexHistories,
+  fetchMarketIndices,
+  fetchStockChart,
+  fetchStockQuote,
+} = require("../services/stockQuote.service");
+const {
+  ABSOLUTE_MIN_RESULTS,
+  LOOKBACK_DAYS,
+  MAX_RESULTS,
+  MIN_EXPANDED_ARTICLES,
+  MIN_ARTICLES,
+  MIN_PRESS_COUNT,
+  MIN_TARGET_RESULTS,
+  getRelatedCompanies,
+} = require("../services/relatedCompany.service");
+
+const {
+  saveAnalysisAndCreateAlerts,
+} = require("../services/analysisAlert.service");
+
+const MIN_COMPANY_SEARCH_SCORE = 0.4;
 
 /**
  * GET /api/company
@@ -39,12 +68,13 @@ async function getCompanies(_req, res) {
  *
  * 검색 방식
  * 1. COMPANY 전체 조회
- * 2. 검색어와 기업명 비교
+ * 2. 검색어와 기업 정보(기업명·산업·CEO·설명·종목코드) 비교
  * 3. 관련도 점수 계산
  * 4. 점수가 높은 기업부터 반환
  */
 async function searchCompany(req, res) {
   const keyword = String(req.query.keyword || "").trim();
+  const isIndustryScope = req.query.scope === "industry";
 
   if (!keyword) {
     return res.status(400).json({
@@ -58,14 +88,20 @@ async function searchCompany(req, res) {
     const [companies] = await pool.query(`
       SELECT
         COMPANY_ID AS companyId,
-        COMPANY_NAME AS companyName
+        COMPANY_NAME AS companyName,
+        STOCK_CODE AS stockCode,
+        INDUSTRY AS industry,
+        CEO_NAME AS ceoName,
+        COMPANY_INFO AS companyInfo
       FROM COMPANY
     `);
 
-    // 검색어와 기업명의 관련도 계산
+    // 산업 페이지는 산업 분류·기업 설명만, 일반 검색은 기업 전체 정보를 비교한다.
     const scoredCompanies = companies
       .map((company) => {
-        const score = calculateSearchScore(keyword, company.companyName);
+        const score = isIndustryScope
+          ? calculateIndustrySearchScore(keyword, company)
+          : calculateCompanySearchScore(keyword, company);
 
         return {
           ...company,
@@ -74,7 +110,7 @@ async function searchCompany(req, res) {
       })
 
       // 관련도가 너무 낮은 기업은 제외
-      .filter((company) => company.score >= 0.4)
+      .filter((company) => company.score >= MIN_COMPANY_SEARCH_SCORE)
 
       // 관련도가 높은 기업부터 정렬
       .sort((a, b) => b.score - a.score)
@@ -96,7 +132,348 @@ async function searchCompany(req, res) {
   }
 }
 
+/** GET /api/company/:companyId/related */
+async function getCompanyRelations(req, res) {
+  const companyId = Number(req.params.companyId);
+
+  if (!Number.isInteger(companyId) || companyId < 1) {
+    return res.status(400).json({
+      success: false,
+      message: "올바른 기업 ID가 필요합니다.",
+    });
+  }
+
+  try {
+    const liveArticles = Array.isArray(req.body?.articles)
+      ? req.body.articles.slice(0, 100)
+      : [];
+    const result = await getRelatedCompanies(companyId, liveArticles);
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "기업을 찾을 수 없습니다.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: result.companies,
+      mode: result.mode,
+      criteria: {
+        lookbackDays: LOOKBACK_DAYS,
+        minimumArticles: MIN_ARTICLES,
+        minimumPressCount: MIN_PRESS_COUNT,
+        expandedMinimumArticles: MIN_EXPANDED_ARTICLES,
+        absoluteMinimumResults: ABSOLUTE_MIN_RESULTS,
+        minimumTargetResults: MIN_TARGET_RESULTS,
+        maximumResults: MAX_RESULTS,
+      },
+    });
+  } catch (error) {
+    console.error("연관기업 조회 실패:", error);
+    return res.status(500).json({
+      success: false,
+      message: "연관기업을 불러오지 못했습니다.",
+    });
+  }
+}
+
+/** POST /api/company/:companyId/risk-assessment */
+async function getCompanyRiskAssessment(req, res) {
+  const companyId = Number(req.params.companyId);
+  if (!Number.isInteger(companyId) || companyId < 1) {
+    return res
+      .status(400)
+      .json({ success: false, message: "올바른 기업 ID가 필요합니다." });
+  }
+  try {
+    const result = await assessCompanyRisk({
+      companyId,
+      articles: req.body?.articles,
+    });
+    if (!result)
+      return res
+        .status(404)
+        .json({ success: false, message: "기업을 찾을 수 없습니다." });
+    res.set("Cache-Control", "no-store");
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    console.error("종합 리스크 평가 실패:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "종합 리스크를 평가하지 못했습니다." });
+  }
+}
+
+/** GET /api/company/:companyId/quote */
+async function getCompanyQuote(req, res) {
+  const companyId = Number(req.params.companyId);
+
+  if (!Number.isInteger(companyId) || companyId < 1) {
+    return res.status(400).json({
+      success: false,
+      message: "올바른 기업 ID가 필요합니다.",
+    });
+  }
+
+  try {
+    const [companies] = await pool.query(
+      `
+        SELECT
+          COMPANY_NAME AS companyName,
+          STOCK_CODE AS stockCode
+        FROM COMPANY
+        WHERE COMPANY_ID = ?
+        LIMIT 1
+      `,
+      [companyId],
+    );
+    const company = companies[0];
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: "기업을 찾을 수 없습니다.",
+      });
+    }
+
+    if (!/^\d{6}$/.test(String(company.stockCode || ""))) {
+      return res.json({
+        success: true,
+        data: null,
+        message: "조회 가능한 국내 상장 종목코드가 없습니다.",
+      });
+    }
+
+    const quote = await fetchStockQuote(company.stockCode);
+    res.set("Cache-Control", "no-store");
+    return res.json({
+      success: true,
+      data: quote,
+    });
+  } catch (error) {
+    console.error("기업 실시간 시세 조회 실패:", error.message);
+    return res.status(502).json({
+      success: false,
+      message: "현재 주가를 불러오지 못했습니다.",
+    });
+  }
+}
+
+/** GET /api/company/:companyId/quote-history?period=1d|7d|1m */
+async function getCompanyQuoteHistory(req, res) {
+  const companyId = Number(req.params.companyId);
+  const period = String(req.query.period || "1d").toLowerCase();
+
+  if (!Number.isInteger(companyId) || companyId < 1) {
+    return res.status(400).json({
+      success: false,
+      message: "올바른 기업 ID가 필요합니다.",
+    });
+  }
+
+  if (!["1d", "7d", "1m"].includes(period)) {
+    return res.status(400).json({
+      success: false,
+      message: "조회 기간은 1d, 7d, 1m 중 하나여야 합니다.",
+    });
+  }
+
+  try {
+    const [companies] = await pool.query(
+      `
+        SELECT STOCK_CODE AS stockCode
+        FROM COMPANY
+        WHERE COMPANY_ID = ?
+        LIMIT 1
+      `,
+      [companyId],
+    );
+    const company = companies[0];
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: "기업을 찾을 수 없습니다.",
+      });
+    }
+
+    if (!/^\d{6}$/.test(String(company.stockCode || ""))) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const points = await fetchStockChart(company.stockCode, period);
+    res.set("Cache-Control", "no-store");
+    return res.json({
+      success: true,
+      data: points,
+      period,
+    });
+  } catch (error) {
+    console.error("기업 주가 차트 조회 실패:", error.message);
+    return res.status(502).json({
+      success: false,
+      message: "주가 그래프를 불러오지 못했습니다.",
+    });
+  }
+}
+
+/** GET /api/company/market-indices */
+async function getMarketIndices(_req, res) {
+  try {
+    const [indices, histories, exchangeRate] = await Promise.all([
+      fetchMarketIndices(),
+      fetchMarketIndexHistories(),
+      fetchExchangeRate(),
+    ]);
+    const historyByCode = new Map(
+      histories.map((history) => [history.code, history.points]),
+    );
+    res.set("Cache-Control", "no-store");
+    return res.json({
+      success: true,
+      data: indices.map((index) => ({
+        ...index,
+        history: historyByCode.get(index.code) || [],
+      })),
+      exchangeRate,
+    });
+  } catch (error) {
+    console.error("시장 지수 조회 실패:", error.message);
+    return res.status(502).json({
+      success: false,
+      message: "시장 지수와 환율을 불러오지 못했습니다.",
+    });
+  }
+}
+
+/**
+ * POST /api/company/:companyId/analysis-snapshots
+ *
+ * 기업 분석 완료 후 호출됩니다.
+ * 관심기업일 때만 분석 이력과 알림을 저장합니다.
+ */
+async function saveCompanyAnalysisSnapshot(req, res) {
+  const companyId = Number(req.params.companyId);
+  const riskSignalRate = Number(req.body?.riskSignalRate ?? 0);
+  const riskScore = Number(req.body?.riskScore);
+  const riskLevel = req.body?.riskLevel;
+  const analyzedCount = Number(req.body?.analyzedCount || 0);
+  const analyzedAt = req.body?.analyzedAt || new Date().toISOString();
+
+  if (!Number.isInteger(companyId) || companyId < 1) {
+    return res.status(400).json({
+      success: false,
+      message: "올바른 기업 ID가 필요합니다.",
+    });
+  }
+
+  if (!Number.isFinite(riskScore) || riskScore < 0 || riskScore > 100) {
+    return res.status(400).json({
+      success: false,
+      message: "종합 리스크 점수는 0~100 사이여야 합니다.",
+    });
+  }
+
+  if (!["낮음", "주의", "높음", "심각"].includes(riskLevel)) {
+    return res.status(400).json({
+      success: false,
+      message: "올바른 위험 단계가 필요합니다.",
+    });
+  }
+
+  try {
+    const data = await saveAnalysisAndCreateAlerts({
+      userId: req.authUserId,
+      companyId,
+      riskSignalRate,
+      riskScore,
+      riskLevel,
+      analyzedCount,
+      analyzedAt,
+    });
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    console.error("분석 이력 저장 실패:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "분석 이력을 저장하지 못했습니다.",
+    });
+  }
+}
+
+/**
+ * 알림 종류별 조회 공통 함수
+ */
+async function getCompanyAlerts(req, res, alertType) {
+  const requestedHours = Number(req.query.hours || 24);
+  const hours = Math.min(Math.max(requestedHours, 1), 168);
+
+  try {
+    const [alerts] = await pool.query(
+      `SELECT
+         a.ALERT_ID AS alertId,
+         a.PREVIOUS_RATE AS previousRate,
+         a.CURRENT_RATE AS currentRate,
+         a.CHANGE_RATE AS changeRate,
+         a.RISK_SCORE AS riskScore,
+         a.RISK_LEVEL AS riskLevel,
+         a.DETECTED_AT AS detectedAt,
+         c.COMPANY_ID AS companyId,
+         c.COMPANY_NAME AS companyName
+       FROM COMPANY_ALERT a
+       JOIN COMPANY c ON c.COMPANY_ID = a.COMPANY_ID
+       WHERE a.USER_ID = ?
+         AND a.ALERT_TYPE = ?
+         AND a.DETECTED_AT >= DATE_SUB(NOW(), INTERVAL ? HOUR)
+       ORDER BY a.DETECTED_AT DESC`,
+      [req.authUserId, alertType, hours],
+    );
+
+    const data = alerts.map((alert) => ({
+      ...alert,
+      riskScore: Number(alert.riskScore ?? 0),
+      riskLevel: alert.riskLevel,
+      currentRate: Number(alert.currentRate),
+      previousRate:
+        alert.previousRate === null ? null : Number(alert.previousRate),
+      changeRate: alert.changeRate === null ? null : Number(alert.changeRate),
+    }));
+
+    return res.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("알림 조회 실패:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "알림을 불러오지 못했습니다.",
+    });
+  }
+}
+
+function getRiskSurgeAlerts(req, res) {
+  return getCompanyAlerts(req, res, "risk_surge");
+}
+
+function getMajorIssueAlerts(req, res) {
+  return getCompanyAlerts(req, res, "major_issue");
+}
+
 module.exports = {
+  getCompanyQuote,
+  getCompanyRiskAssessment,
+  getCompanyQuoteHistory,
+  getCompanyRelations,
   getCompanies,
+  getMarketIndices,
   searchCompany,
+  // 알림 기능
+  saveCompanyAnalysisSnapshot,
+  getRiskSurgeAlerts,
+  getMajorIssueAlerts,
 };

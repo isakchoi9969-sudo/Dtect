@@ -16,7 +16,10 @@ import ResponseToolsPage from "./components/ResponseToolsPage";
 import CompanyAnalysisPage from "./components/CompanyAnalysisPage";
 import RiskAlert from "./components/RiskAlert";
 import MajorIssueAlert from "./components/MajorIssueAlert";
-import { WatchlistDashboard, RiskDashboard } from "./components/DashboardPages";
+import StockSearchPage from "./components/StockSearchPage";
+import CommunityPage from "./components/CommunityPage";
+import CommunityStockPage from "./components/CommunityStockPage";
+import MyPage from "./components/MyPage";
 import { ROUTES } from "./config/routes";
 import { api } from "./config/api";
 
@@ -39,6 +42,14 @@ function LandingPage() {
   );
 }
 
+function LegacyDashboardRedirect() {
+  useEffect(() => {
+    window.location.replace(ROUTES.HOME);
+  }, []);
+
+  return null;
+}
+
 function App() {
   useEffect(() => {
     api
@@ -54,18 +65,19 @@ function App() {
   const pathname = window.location.pathname.replace(/\/$/, "") || "/";
 
   if (
-    pathname === ROUTES.DASHBOARD ||
-    pathname === ROUTES.DASHBOARD_WATCHLIST
+    pathname === "/dashboard" ||
+    pathname === "/dashboard/watchlist" ||
+    pathname === "/dashboard/issue-risk"
   ) {
-    return <WatchlistDashboard />;
-  }
-
-  if (pathname === ROUTES.DASHBOARD_ISSUE_RISK) {
-    return <RiskDashboard />;
+    return <LegacyDashboardRedirect />;
   }
 
   if (pathname === ROUTES.COMPANY_SEARCH) {
     return <CompanySearchPage />;
+  }
+
+  if (pathname === ROUTES.STOCK_SEARCH) {
+    return <StockSearchPage />;
   }
 
   if (pathname === ROUTES.RISK_ALERT) {
@@ -84,6 +96,14 @@ function App() {
     return <CompanyAnalysisPage />;
   }
 
+  if (pathname === ROUTES.COMUNITY) {
+    return <CommunityPage />;
+  }
+
+  if (pathname === ROUTES.COMMUNITY_STOCK) {
+    return <CommunityStockPage />;
+  }
+
   if (pathname === ROUTES.CASE_SIMULATOR) {
     return <ResponseToolsPage mode="simulator" />;
   }
@@ -98,6 +118,10 @@ function App() {
 
   if (pathname === ROUTES.SIGNUP) {
     return <AuthPage mode="signup" />;
+  }
+
+  if (pathname === ROUTES.MYPAGE) {
+    return <MyPage />;
   }
 
   return <LandingPage />;

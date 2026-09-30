@@ -85,13 +85,13 @@ function AuthPage({ mode }) {
       } else {
         // 2️⃣ 로그인 요청
         const response = await api.post("/api/auth/login", {
-          email: data.email,
+          loginId: data.loginId,
           password: data.password,
         });
         alert(response.data.message || "로그인 성공!");
         localStorage.setItem("isLoggedIn", "true");
 
-        window.location.href = ROUTES.DASHBOARD; // 대시보드로 이동
+        window.location.href = ROUTES.HOME; // 메인 페이지로 이동
       }
     } catch (error) {
       console.error("인증 실패:", error);
@@ -323,6 +323,21 @@ function AuthPage({ mode }) {
               </label>
             )}
             {isSignup && (
+              <label>
+                아이디
+                <input
+                  type="text"
+                  name="loginId"
+                  placeholder="영문, 숫자 4~20자"
+                  autoComplete="username"
+                  minLength="4"
+                  maxLength="20"
+                  pattern="[A-Za-z0-9]+"
+                  required
+                />
+              </label>
+            )}
+            {isSignup && (
               <fieldset className="member-type-field">
                 <legend>회원 유형</legend>
                 <div className="member-type-options">
@@ -380,12 +395,12 @@ function AuthPage({ mode }) {
               </label>
             )}
             <label>
-              이메일
+              {isSignup ? "이메일" : "아이디"}
               <input
-                type="email"
-                name="email"
-                placeholder="name@company.com"
-                autoComplete="email"
+                type={isSignup ? "email" : "text"}
+                name={isSignup ? "email" : "loginId"}
+                placeholder={isSignup ? "name@company.com" : "아이디를 입력하세요"}
+                autoComplete={isSignup ? "email" : "username"}
                 required
               />
             </label>

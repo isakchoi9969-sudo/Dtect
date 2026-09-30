@@ -1,8 +1,5 @@
 ﻿export const ROUTES = {
   HOME: "/",
-  DASHBOARD: "/dashboard",
-  DASHBOARD_WATCHLIST: "/dashboard/watchlist",
-  DASHBOARD_ISSUE_RISK: "/dashboard/issue-risk",
   COMPANY_ANALYSIS: "/company-analysis",
   COMPANY_DETAIL: "/company-analysis/company",
   COMPANY_WATCHLIST: "/company-analysis/watchlist",
@@ -13,6 +10,10 @@
   RISK_ALERT: "/alerts/risk-alert",
   MAJOR_ISSUE_ALERT: "/alerts/major-issue",
   COMPANY_SEARCH: "/company-analysis/search",
+  STOCK_SEARCH: "/stock-search",
+  COMUNITY: "/comunity",
+  COMMUNITY_STOCK: "/comunity/stock",
   LOGIN: "/login",
   SIGNUP: "/signup",
+  MYPAGE: "/mypage",
 };

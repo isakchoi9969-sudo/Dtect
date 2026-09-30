@@ -276,6 +276,77 @@
   font-weight: bold;
 }
 
+/* 참고 기사 전체 영역 */
+.reference-articles {
+  margin-top: 22px;
+  padding-top: 15px;
+  border-top: 1px solid #cfe0f2;
+}
+
+/* 참고 기사 3건 보기 버튼 */
+.reference-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  color: #1779df;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+/* 펼쳤을 때 나타나는 기사 목록 */
+.reference-article-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reference-article-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 12px;
+  border: 1px solid #d7e5f3;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.reference-article-list li div {
+  min-width: 0;
+}
+
+.reference-article-list strong,
+.reference-article-list span {
+  display: block;
+}
+
+.reference-article-list strong {
+  overflow: hidden;
+  color: #334155;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reference-article-list span {
+  margin-top: 4px;
+  color: #8290a2;
+  font-size: 11px;
+}
+
+.reference-article-list a {
+  flex: 0 0 auto;
+  color: #1779df;
+  font-size: 12px;
+  font-weight: 750;
+}
+
 /* 산업과 이슈 선택 영역을 2열로 배치합니다. */
 .generator-selection-grid {
   display: grid;
@@ -523,4 +594,295 @@
   font-size: 11px;
   font-style: normal;
   font-weight: 500;
+}
+
+.issue-load-error {
+  margin: 10px 0 0;
+  color: #c2410c;
+  font-size: 12px;
+}
+
+.risk-reason {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 10px 0 0;
+  color: #718095;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.risk-reason b {
+  flex: 0 0 auto;
+  color: #4d6680;
+  font-size: 11px;
+}
+
+/* 버튼 안에서 로딩 표시와 문구를 한 줄로 정렬 */
+.primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 생성 중인 버튼임을 마우스 커서로도 전달 */
+.primary-action.is-loading {
+  cursor: wait;
+}
+
+/* 흰색 원형 로딩 표시 */
+.generate-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: generate-spin 0.7s linear infinite;
+}
+
+@keyframes generate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 생성 결과의 복사·재생성 버튼 */
+.draft-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.draft-action-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #bcd8f4;
+  border-radius: 7px;
+  background: #fff;
+  color: #176fc5;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.draft-action-button:hover {
+  background: #e8f3ff;
+}
+
+.draft-action-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* 다시 생성 버튼은 주요 행동으로 표시 */
+.draft-regenerate-button {
+  border-color: #1779df;
+  background: #1779df;
+  color: #fff;
+}
+
+.draft-regenerate-button:hover {
+  background: #0968c9;
+}
+
+.draft-action-notice,
+.draft-regenerate-guide {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+
+.draft-action-notice {
+  color: #176fc5;
+}
+
+.draft-regenerate-guide {
+  color: #728198;
+}
+
+/* =========================================
+   AI 대응센터 다크모드
+   과거 사례 시뮬레이터 + 대응자료 생성 공통 적용
+   ========================================= */
+
+/* 1. 페이지 배경과 기본 제목 */
+:root[data-theme="dark"] .response-page {
+  color: #e8eef8;
+  background: #0c111b; /* 메인·알림 화면과 같은 배경 */
+}
+
+:root[data-theme="dark"] .response-main h1,
+:root[data-theme="dark"] .tool-card h2,
+:root[data-theme="dark"] .step-heading h2,
+:root[data-theme="dark"] .issue-insight-header h3,
+:root[data-theme="dark"] .current-issue-context h2,
+:root[data-theme="dark"] .draft-content {
+  color: #e8eef8;
+}
+
+/* 2. 설명·보조 문구 */
+:root[data-theme="dark"] .response-description,
+:root[data-theme="dark"] .generator-card-header p,
+:root[data-theme="dark"] .step-heading > p,
+:root[data-theme="dark"] .document-guide,
+:root[data-theme="dark"] .risk-reason,
+:root[data-theme="dark"] .draft-regenerate-guide,
+:root[data-theme="dark"] .current-issue-context p {
+  color: #9dacbf;
+}
+
+/* 3. 탭 */
+:root[data-theme="dark"] .response-tabs {
+  border-bottom-color: #2b394b;
+}
+
+:root[data-theme="dark"] .response-tabs button {
+  color: #9dacbf;
+}
+
+:root[data-theme="dark"] .response-tabs button.active {
+  color: #69adff;
+}
+
+/* 4. 카드 영역 */
+:root[data-theme="dark"] .tool-card,
+:root[data-theme="dark"] .issue-insight-card,
+:root[data-theme="dark"] .current-issue-context,
+:root[data-theme="dark"] .case-status {
+  border-color: #2b394b;
+  background: #111a27;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+}
+
+/* 5. 입력 라벨 */
+:root[data-theme="dark"] .generator-card label,
+:root[data-theme="dark"] .field-label,
+:root[data-theme="dark"] .risk-reason b,
+:root[data-theme="dark"] .current-issue-context label,
+:root[data-theme="dark"] .case-type-selectors > span,
+:root[data-theme="dark"] .case-type-selectors label {
+  color: #c6d6e8;
+}
+
+/* 6. input, select, textarea */
+:root[data-theme="dark"] .generator-card select,
+:root[data-theme="dark"] .generator-card textarea,
+:root[data-theme="dark"] .current-issue-context input,
+:root[data-theme="dark"] .current-issue-context textarea,
+:root[data-theme="dark"] .case-type-selectors select {
+  border-color: #304157;
+  color: #e8eef8;
+  background: #151f2e;
+}
+
+:root[data-theme="dark"] .generator-card select:disabled,
+:root[data-theme="dark"] .case-type-selectors select:disabled {
+  color: #7f8fa4;
+  background: #121a27;
+}
+
+/* 7. 이슈 분석 카드 */
+:root[data-theme="dark"] .issue-insight-card > p {
+  color: #b6c5d7;
+}
+
+/* 이슈 분석 카드 내부의 산업·기사 수·기간 영역 */
+:root[data-theme="dark"] .insight-metrics {
+  overflow: hidden;
+  border: 1px solid #304157;
+  border-radius: 8px;
+  background: #151f2e; /* 기존 흰색 배경 제거 */
+}
+
+/* 각 항목 사이 구분선 */
+:root[data-theme="dark"] .insight-metrics div + div {
+  border-left-color: #304157;
+}
+
+/* '대상 산업', '관련 기사' 같은 항목명 */
+:root[data-theme="dark"] .insight-metrics span {
+  color: #8fa6bf;
+}
+
+/* 실제 분석 결과값 */
+:root[data-theme="dark"] .insight-metrics strong {
+  color: #f1f6fd;
+  font-weight: 750;
+}
+
+:root[data-theme="dark"] .keyword-tags span,
+:root[data-theme="dark"] .step-heading b {
+  color: #8fc5ff;
+  background: #193756;
+}
+
+/* 8. 생성 결과와 참고 기사 */
+:root[data-theme="dark"] .generated-draft {
+  background: #152a40;
+}
+
+:root[data-theme="dark"] .generated-draft p,
+:root[data-theme="dark"] .draft-content p,
+:root[data-theme="dark"] .reference-article-list span {
+  color: #c6d6e8;
+}
+
+:root[data-theme="dark"] .draft-content h3,
+:root[data-theme="dark"] .generated-draft b,
+:root[data-theme="dark"] .reference-article-list strong {
+  color: #8fc5ff;
+}
+
+:root[data-theme="dark"] .reference-article-list li {
+  border-color: #304157;
+  background: #151f2e;
+}
+
+/* 9. 시뮬레이터 내부 상세 카드 */
+:root[data-theme="dark"] .case-option,
+:root[data-theme="dark"] .case-options button,
+:root[data-theme="dark"] .case-detail-grid > div,
+:root[data-theme="dark"] .representative-news {
+  border-color: #304157;
+  color: #dce6f5;
+  background: #151f2e;
+}
+
+:root[data-theme="dark"] .case-options button.selected,
+:root[data-theme="dark"] .case-option:has(button.selected) {
+  border-color: #3d76a8;
+  color: #8fc5ff;
+  background: #152a40;
+}
+
+:root[data-theme="dark"] .case-detail-grid span,
+:root[data-theme="dark"] .representative-news span {
+  color: #9dacbf;
+}
+
+:root[data-theme="dark"] .case-detail-grid strong,
+:root[data-theme="dark"] .representative-news strong {
+  color: #e8eef8;
+}
+
+/* 10. 보조 버튼 */
+:root[data-theme="dark"] .reference-toggle-button,
+:root[data-theme="dark"] .draft-action-button,
+:root[data-theme="dark"] .case-detail-trigger {
+  border-color: #355776;
+  color: #9dcbff;
+  background: #152a40;
+}
+
+:root[data-theme="dark"] .reference-toggle-button:hover,
+:root[data-theme="dark"] .draft-action-button:hover,
+:root[data-theme="dark"] .case-detail-trigger:hover {
+  background: #1c3655;
+}
+
+/* 오류 안내 */
+:root[data-theme="dark"] .case-status-error {
+  border-color: #7a424b;
+  color: #ffb5b9;
+  background: #2a171d;
 }

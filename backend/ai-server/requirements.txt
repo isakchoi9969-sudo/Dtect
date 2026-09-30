@@ -8,6 +8,9 @@ torch>=2.4,<3
 
 chromadb==1.5.9
 sentence-transformers==6.1.0
+# Windows 애플리케이션 제어 정책에서 1.9.x 네이티브 DLL이 차단되므로
+# 검증된 wheel 버전을 고정한다.
+scikit-learn==1.7.2
 
 pandas>=2.0.0,<3
 openai>=1.0.0
