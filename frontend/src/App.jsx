@@ -19,6 +19,8 @@ import MajorIssueAlert from "./components/MajorIssueAlert";
 import StockSearchPage from "./components/StockSearchPage";
 import CommunityPage from "./components/CommunityPage";
 import CommunityStockPage from "./components/CommunityStockPage";
+import CommunityNewsPage from "./components/CommunityNewsPage";
+import CommunityCompanyHubPage from "./components/CommunityCompanyHubPage";
 import MyPage from "./components/MyPage";
 import { ROUTES } from "./config/routes";
 import { api } from "./config/api";
@@ -102,6 +104,14 @@ function App() {
 
   if (pathname === ROUTES.COMMUNITY_STOCK) {
     return <CommunityStockPage />;
+  }
+
+  if (pathname === ROUTES.COMMUNITY_NEWS) {
+    return <CommunityNewsPage />;
+  }
+
+  if (pathname === ROUTES.COMMUNITY_COMPANY_HUB) {
+    return <CommunityCompanyHubPage />;
   }
 
   if (pathname === ROUTES.CASE_SIMULATOR) {

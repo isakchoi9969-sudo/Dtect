@@ -13,6 +13,8 @@
   STOCK_SEARCH: "/stock-search",
   COMUNITY: "/comunity",
   COMMUNITY_STOCK: "/comunity/stock",
+  COMMUNITY_NEWS: "/comunity/news",
+  COMMUNITY_COMPANY_HUB: "/comunity/company-hub",
   LOGIN: "/login",
   SIGNUP: "/signup",
   MYPAGE: "/mypage",
