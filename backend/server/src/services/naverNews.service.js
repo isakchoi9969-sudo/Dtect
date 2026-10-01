@@ -305,6 +305,8 @@ async function fetchAndPrepareNews(query, page = 1) {
 
 module.exports = {
   NewsServiceError,
+  cleanNaverText,
+  fetchNaverNews,
   fetchAndPrepareNews,
   calculatePercentages,
   countKeywordOccurrences,

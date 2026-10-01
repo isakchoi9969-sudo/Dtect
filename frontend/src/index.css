@@ -7031,6 +7031,13 @@ button:focus-visible {
 .company-news-industries button.is-active { border-color: #2563eb; color: #fff; background: #2563eb; }
 .company-news-count { margin: 22px 0 10px; color: #71839a; font-size: 12px; }
 .company-news-grid { display: grid; grid-template-columns: 1fr; border-top: 1px solid #dce5f0; }
+.company-news-loading, .company-news-state { display: grid; min-height: 270px; place-content: center; justify-items: center; gap: 11px; padding: 30px; color: #52667f; text-align: center; }
+.company-news-loading strong, .company-news-state strong { color: #142b47; font-size: 15px; }
+.company-news-loading p, .company-news-state p { max-width: 360px; margin: 0; color: #71839a; font-size: 12px; line-height: 1.7; }
+.company-news-loading-orbit { width: 38px; height: 38px; border: 4px solid #dcecff; border-top-color: #2563eb; border-radius: 50%; animation: company-news-spin .8s linear infinite; }
+.company-news-state button { margin-top: 5px; padding: 9px 12px; border: 1px solid #2563eb; border-radius: 7px; color: #fff; background: #2563eb; cursor: pointer; font: inherit; font-size: 12px; font-weight: 800; }
+.company-news-empty { margin: 0; padding: 42px 20px; color: #71839a; font-size: 13px; text-align: center; }
+@keyframes company-news-spin { to { transform: rotate(360deg); } }
 .company-news-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; min-height: 82px; padding: 17px 20px; border-bottom: 1px solid #dce5f0; color: #142b47; }
 .company-news-card:hover { background: #f6f9ff; }
 .company-news-card-industry { width: fit-content; padding: 4px 7px; border-radius: 5px; color: #2563eb; background: #eaf3ff; font-size: 10px; font-weight: 850; }
@@ -7080,6 +7087,9 @@ button:focus-visible {
 :root[data-theme="dark"] .community-shared-heading p,
 :root[data-theme="dark"] .company-news-feed-heading p,
 :root[data-theme="dark"] .company-news-count,
+:root[data-theme="dark"] .company-news-loading p,
+:root[data-theme="dark"] .company-news-state p,
+:root[data-theme="dark"] .company-news-empty,
 :root[data-theme="dark"] .company-news-card-meta,
 :root[data-theme="dark"] .company-board-write-guide,
 :root[data-theme="dark"] .company-board-row-copy em,
@@ -7118,6 +7128,8 @@ button:focus-visible {
 :root[data-theme="dark"] .company-board-row-copy small { color: #78b7ff; }
 :root[data-theme="dark"] .company-board-detail h2,
 :root[data-theme="dark"] .company-news-feed-heading h2,
+:root[data-theme="dark"] .company-news-loading strong,
+:root[data-theme="dark"] .company-news-state strong,
 :root[data-theme="dark"] .company-board-list-heading h2,
 :root[data-theme="dark"] .community-shared-heading h1,
 :root[data-theme="dark"] .company-board-compose h2 { color: #e7effa; }

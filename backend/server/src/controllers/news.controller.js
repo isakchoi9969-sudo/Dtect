@@ -2,6 +2,10 @@ const { getIndustryIssues } = require("../services/industryIssue.service");
 
 const { NewsServiceError } = require("../services/naverNews.service");
 const { analyzeCompanyNews } = require("../services/newsAnalysis.service");
+const {
+  CommunityNewsServiceError,
+  getCachedCommunityNewsSnapshot,
+} = require("../services/communityNews.service");
 
 /**
  * GET /api/news?query=카카오
@@ -66,7 +70,45 @@ async function getIndustryIssueList(req, res) {
   }
 }
 
+// GET /api/news/community/all
+// 커뮤니티 최초 진입 시 9개 산업 결과를 한 번에 반환한다.
+async function getAllCommunityNews(req, res) {
+  try {
+    const { snapshot, cached, cachedAt } = await getCachedCommunityNewsSnapshot();
+
+    return res.json({
+      success: true,
+      cached,
+      cachedAt,
+      all: {
+        items: snapshot.allItems,
+        ...snapshot.allMetadata,
+      },
+      industries: Object.fromEntries(
+        Object.entries(snapshot.itemsByIndustry).map(([industry, items]) => [
+          industry,
+          {
+            items,
+            ...snapshot.industryMetadata[industry],
+          },
+        ]),
+      ),
+    });
+  } catch (error) {
+    if (error instanceof CommunityNewsServiceError) {
+      return res.status(502).json({ success: false, message: error.message });
+    }
+
+    console.error("커뮤니티 산업 뉴스 조회 오류:", error);
+    return res.status(500).json({
+      success: false,
+      message: "산업 뉴스를 불러오지 못했습니다.",
+    });
+  }
+}
+
 module.exports = {
   getCompanyNews,
   getIndustryIssueList,
+  getAllCommunityNews,
 };
