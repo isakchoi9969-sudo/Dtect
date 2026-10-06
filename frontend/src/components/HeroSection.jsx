@@ -330,16 +330,16 @@ function HeroSection() {
 
             <div className="dashboard-content">
               <div className="dashboard-card dashboard-card-main">
-                <div className="dashboard-label">Major Issue</div>
+                <div className="dashboard-label">Risk Signal</div>
                 <p className="dashboard-issue">
-                  주요 기업 관련 이슈가
+                  기업 리스크 신호가
                   <br />
                   새롭게 감지되었습니다.
                 </p>
                 <p className="dashboard-meta">
                   News · Market · Social · 12 min ago
                 </p>
-                <span className="dashboard-tag">ISSUE DETECTED</span>
+                <span className="dashboard-tag">RISK DETECTED</span>
               </div>
 
               <div className="dashboard-card">

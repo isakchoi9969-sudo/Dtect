@@ -7,17 +7,12 @@ export const navigationItems = [
   {
     title: "AI 대응센터",
     href: "/response-center",
-    children: ["과거 사례 시뮬레이터", "대응자료 생성"],
+    children: ["과거 사례 시뮬레이터", "대응자료 생성", "위험도 급상승 알림"],
   },
   {
     title: "커뮤니티",
     href: "/comunity",
     children: ["자유게시판", "종목 토론방", "기업 신소식", "기업 홍보·채용"],
-  },
-  {
-    title: "알림",
-    href: "/alerts",
-    children: ["위험도 급상승 알림", "주요 이슈 발생 알림"],
   },
 ];
 

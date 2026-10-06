@@ -83,11 +83,8 @@ function Header() {
       return ROUTES.CASE_SIMULATOR;
     if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 1)
       return ROUTES.RESPONSE_GENERATOR;
-
-    if (item.href === ROUTES.ALERTS && childIndex === 0)
+    if (item.href === ROUTES.RESPONSE_CENTER && childIndex === 2)
       return ROUTES.RISK_ALERT;
-    if (item.href === ROUTES.ALERTS && childIndex === 1)
-      return ROUTES.MAJOR_ISSUE_ALERT;
 
     // 커뮤니티
     if (item.href === ROUTES.COMUNITY && childIndex === 0)

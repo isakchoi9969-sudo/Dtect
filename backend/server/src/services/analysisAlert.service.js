@@ -1,8 +1,5 @@
 const { pool } = require("../db/pool");
 
-// 종합 리스크 75점 이상(심각)이면 주요 이슈 알림
-const MAJOR_RISK_SCORE_THRESHOLD = 75;
-
 // 직전 분석보다 종합 리스크가 10점 이상 오르면 급상승 알림
 const RISK_SURGE_THRESHOLD = 10;
 
@@ -81,31 +78,6 @@ async function saveAnalysisAndCreateAlerts({
   );
 
   const createdAlerts = [];
-
-  // 심각 단계가 새로 감지된 경우
-  if (
-    currentScore >= MAJOR_RISK_SCORE_THRESHOLD &&
-    (previousScore === null || previousScore < MAJOR_RISK_SCORE_THRESHOLD)
-  ) {
-    await pool.query(
-      `INSERT INTO COMPANY_ALERT
-        (USER_ID, COMPANY_ID, ALERT_TYPE, PREVIOUS_RATE, CURRENT_RATE, CHANGE_RATE,
-         RISK_SCORE, RISK_LEVEL, DETECTED_AT)
-       VALUES (?, ?, 'major_issue', ?, ?, ?, ?, ?, ?)`,
-      [
-        userId,
-        companyId,
-        previousScore,
-        currentScore,
-        changeScore,
-        currentScore,
-        riskLevel,
-        toMysqlDateTime(analyzedAt),
-      ],
-    );
-
-    createdAlerts.push("major_issue");
-  }
 
   // 높음 이상이면서 직전보다 10점 이상 상승한 경우
   if (

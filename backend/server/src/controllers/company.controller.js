@@ -462,10 +462,6 @@ function getRiskSurgeAlerts(req, res) {
   return getCompanyAlerts(req, res, "risk_surge");
 }
 
-function getMajorIssueAlerts(req, res) {
-  return getCompanyAlerts(req, res, "major_issue");
-}
-
 module.exports = {
   getCompanyQuote,
   getCompanyRiskAssessment,
@@ -477,5 +473,4 @@ module.exports = {
   // 알림 기능
   saveCompanyAnalysisSnapshot,
   getRiskSurgeAlerts,
-  getMajorIssueAlerts,
 };

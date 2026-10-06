@@ -17,7 +17,6 @@
 - `frontend/src/components/ResponseToolsPage.jsx`
 - `frontend/src/components/CaseSimulator.css`
 - `frontend/src/components/CompanyAnalysisPage.jsx`
-- `frontend/src/components/MajorIssueAlert.jsx`
 - `frontend/src/components/RiskAlert.jsx`
 - `frontend/src/hooks/useWatchlist.js`
 
@@ -83,6 +82,6 @@ UI만 준비된 상태다. `similarCases`는 임시 배열이고, `caseLoadStatu
 
 ## 별도 보류 항목
 
-- `risk-surge`, `major-issue` 알림 API는 프런트 호출만 있고 Node endpoint가 없다. 현재는 보류한다.
+- 위험도 급상승 알림은 `/api/company/risk-surge` API로 제공하며, 주요 이슈 발생 알림 기능은 폐기했다.
 - 대시보드 목업 데이터와 React Router 전환은 시뮬레이터 구현 이후로 미룬다.
 - 운영 인증 비밀값 강제, DB 포트 기본값 통일, 테스트 추가는 배포 전 정리한다.

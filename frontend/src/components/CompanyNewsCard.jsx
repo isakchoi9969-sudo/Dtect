@@ -1,9 +1,21 @@
-/** API 뉴스 데이터에 맞춘 최소 정보형 카드입니다. */
+function formatPublishedAt(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "발행일 미상";
+
+  return date.toLocaleString("ko-KR", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** 커뮤니티 뉴스 API의 최소 정보형 기사 카드입니다. */
 export default function CompanyNewsCard({ news }) {
   return (
     <a
       className="company-news-card"
-      href={news.url}
+      href={news.link || news.url}
       target="_blank"
       rel="noreferrer"
       aria-label={`${news.title} 원문 보기`}
@@ -11,9 +23,8 @@ export default function CompanyNewsCard({ news }) {
       <span className="company-news-card-industry">{news.industry}</span>
       <strong>{news.title}</strong>
       <div className="company-news-card-meta">
-        <span>{news.company}</span>
-        <span>{news.press}</span>
-        <time>{news.publishedAt}</time>
+        <span>{news.source || news.press}</span>
+        <time>{formatPublishedAt(news.publishedAt)}</time>
       </div>
     </a>
   );
