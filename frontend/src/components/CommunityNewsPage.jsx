@@ -37,12 +37,14 @@ export default function CommunityNewsPage() {
   const [isNewsLoading, setIsNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState("");
   const [reloadCount, setReloadCount] = useState(0);
+  const [patentSnapshot, setPatentSnapshot] = useState(null);
+  const [isPatentLoading, setIsPatentLoading] = useState(false);
+  const [patentError, setPatentError] = useState("");
+  const [patentReloadCount, setPatentReloadCount] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    setIsNewsLoading(true);
-    setNewsError("");
     api
       .get("/api/news/community/all", { signal: controller.signal })
       .then((response) => {
@@ -62,15 +64,34 @@ export default function CommunityNewsPage() {
     return () => controller.abort();
   }, [reloadCount]);
 
+  useEffect(() => {
+    if (selectedIndustry !== "특허" || patentSnapshot) return undefined;
+    const controller = new AbortController();
+    api.get("/api/news/community/patents", { signal: controller.signal })
+      .then((response) => {
+        if (!controller.signal.aborted) setPatentSnapshot(response.data);
+      })
+      .catch((error) => {
+        if (error.code === "ERR_CANCELED" || controller.signal.aborted) return;
+        setPatentError(error.response?.data?.message || "특허 뉴스를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsPatentLoading(false);
+      });
+    return () => controller.abort();
+  }, [selectedIndustry, patentReloadCount, patentSnapshot]);
+
   const selectedNews = useMemo(() => {
+    if (selectedIndustry === "특허") return patentSnapshot?.items || [];
     if (!snapshot) return [];
-    if (selectedIndustry === "특허") return [];
     return selectedIndustry === "전체"
       ? snapshot.all?.items || []
       : snapshot.industries?.[selectedIndustry]?.items || [];
-  }, [selectedIndustry, snapshot]);
+  }, [selectedIndustry, snapshot, patentSnapshot]);
   const returnedCount =
-    selectedIndustry === "전체"
+    selectedIndustry === "특허"
+      ? patentSnapshot?.returnedCount ?? selectedNews.length
+      : selectedIndustry === "전체"
       ? snapshot?.all?.returnedCount ?? selectedNews.length
       : snapshot?.industries?.[selectedIndustry]?.returnedCount ??
         selectedNews.length;
@@ -81,6 +102,10 @@ export default function CommunityNewsPage() {
   );
 
   const selectIndustry = (industry) => {
+    if (industry === "특허" && !patentSnapshot) {
+      setIsPatentLoading(true);
+      setPatentError("");
+    }
     setSelectedIndustry(industry);
     setPage(1);
   };
@@ -99,13 +124,17 @@ export default function CommunityNewsPage() {
           </div>
           <p>산업별 최신 기업·기술·사업 동향을 확인하세요.</p>
         </div>
-        {isNewsLoading ? (
+        {selectedIndustry !== "특허" && isNewsLoading ? (
           <CommunityNewsLoader />
-        ) : newsError ? (
+        ) : selectedIndustry !== "특허" && newsError ? (
           <div className="company-news-state" role="alert">
             <strong>뉴스를 불러오지 못했습니다.</strong>
             <p>{newsError}</p>
-            <button type="button" onClick={() => setReloadCount((count) => count + 1)}>
+            <button type="button" onClick={() => {
+              setIsNewsLoading(true);
+              setNewsError("");
+              setReloadCount((count) => count + 1);
+            }}>
               다시 불러오기
             </button>
           </div>
@@ -124,19 +153,40 @@ export default function CommunityNewsPage() {
             </button>
           ))}
         </div>
-        {selectedIndustry === "특허" ? (
+        {selectedIndustry === "특허" && isPatentLoading ? (
           <div className="company-news-state" role="status">
-            <strong>특허 정보를 준비하고 있습니다.</strong>
-            <p>특허 전용 API 연결 후 출원·등록 정보를 제공할 예정입니다.</p>
+            <strong>2026년 특허 뉴스를 불러오고 있습니다.</strong>
+            <p>신규 출원·등록 보도를 확인하고 있습니다.</p>
+          </div>
+        ) : selectedIndustry === "특허" && patentError ? (
+          <div className="company-news-state" role="alert">
+            <strong>특허 뉴스를 불러오지 못했습니다.</strong>
+            <p>{patentError}</p>
+            <button type="button" onClick={() => {
+              setPatentSnapshot(null);
+              setIsPatentLoading(true);
+              setPatentError("");
+              setPatentReloadCount((count) => count + 1);
+            }}>다시 불러오기</button>
           </div>
         ) : (
           <>
-            <p className="company-news-count">{selectedIndustry} · {returnedCount}건</p>
+            <p className="company-news-count">
+              {selectedIndustry === "특허" ? "2026년 신규 특허 출원·등록 뉴스" : selectedIndustry} · {returnedCount}건
+              {selectedIndustry === "특허" && totalPages > 0 && ` · ${page}/${totalPages}페이지 · 페이지당 25건`}
+            </p>
+            {selectedIndustry === "특허" && (
+              <p className="company-news-count">
+                기사 발행일 기준입니다. 분쟁·침해 관련 보도는 제외하며, 특허청의 공식 등록 목록과는 다를 수 있습니다.
+              </p>
+            )}
             <div className="company-news-grid">
               {currentNews.map((news) => <CompanyNewsCard key={news.link} news={news} />)}
               {currentNews.length === 0 && (
                 <p className="company-news-empty">
-                  현재 조건에서 확인된 뉴스가 없습니다.
+                  {selectedIndustry === "특허"
+                    ? "2026년 발행된 신규 특허 출원·등록 보도를 찾지 못했습니다."
+                    : "현재 조건에서 확인된 뉴스가 없습니다."}
                 </p>
               )}
             </div>
