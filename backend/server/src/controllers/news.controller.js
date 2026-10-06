@@ -6,6 +6,10 @@ const {
   CommunityNewsServiceError,
   getCachedCommunityNewsSnapshot,
 } = require("../services/communityNews.service");
+const {
+  CommunityPatentNewsServiceError,
+  getCachedCommunityPatentNews,
+} = require("../services/communityPatentNews.service");
 
 /**
  * GET /api/news?query=카카오
@@ -107,8 +111,27 @@ async function getAllCommunityNews(req, res) {
   }
 }
 
+// GET /api/news/community/patents
+// 2026년 발행된 신규 특허 출원·등록 보도만 별도로 조회한다.
+async function getCommunityPatentNews(req, res) {
+  try {
+    const { snapshot, cached, cachedAt } = await getCachedCommunityPatentNews();
+    return res.json({ success: true, cached, cachedAt, ...snapshot });
+  } catch (error) {
+    if (error instanceof CommunityPatentNewsServiceError) {
+      return res.status(502).json({ success: false, message: error.message });
+    }
+    console.error("커뮤니티 특허 뉴스 조회 오류:", error);
+    return res.status(500).json({
+      success: false,
+      message: "특허 뉴스를 불러오지 못했습니다.",
+    });
+  }
+}
+
 module.exports = {
   getCompanyNews,
   getIndustryIssueList,
   getAllCommunityNews,
+  getCommunityPatentNews,
 };
