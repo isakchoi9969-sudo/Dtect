@@ -149,7 +149,7 @@ export default function StockSearchPage() {
           <p style={{ color: "#6b7280", fontSize: "14px", lineHeight: 1.5 }}>
             관심 있는 산업 분야를 선택하면
             <br />
-            관련 기업을 확인하고 주요 이슈를 분석할 수 있습니다.
+            관련 기업을 확인하고 리스크 신호를 분석할 수 있습니다.
           </p>
         </section>
 

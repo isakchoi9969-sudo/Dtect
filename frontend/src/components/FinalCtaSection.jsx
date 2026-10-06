@@ -371,7 +371,7 @@ function FinalCtaSection() {
           </h2>
 
           <p className="cta-description">
-            관심 기업을 등록하고 주요 이슈와 리스크를 한눈에 확인하세요.
+            관심 기업을 등록하고 리스크 신호와 위험도를 한눈에 확인하세요.
             <br />
             D:TECT가 복잡한 기업 데이터를 빠르게 정리합니다.
           </p>

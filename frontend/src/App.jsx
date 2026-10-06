@@ -15,7 +15,6 @@ import WatchlistPage from "./components/WatchlistPage";
 import ResponseToolsPage from "./components/ResponseToolsPage";
 import CompanyAnalysisPage from "./components/CompanyAnalysisPage";
 import RiskAlert from "./components/RiskAlert";
-import MajorIssueAlert from "./components/MajorIssueAlert";
 import StockSearchPage from "./components/StockSearchPage";
 import CommunityPage from "./components/CommunityPage";
 import CommunityStockPage from "./components/CommunityStockPage";
@@ -52,6 +51,14 @@ function LegacyDashboardRedirect() {
   return null;
 }
 
+function LegacyRouteRedirect({ to }) {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+
+  return null;
+}
+
 function App() {
   useEffect(() => {
     api
@@ -82,12 +89,12 @@ function App() {
     return <StockSearchPage />;
   }
 
-  if (pathname === ROUTES.RISK_ALERT) {
-    return <RiskAlert />;
+  if (pathname === ROUTES.LEGACY_RISK_ALERT) {
+    return <LegacyRouteRedirect to={ROUTES.RISK_ALERT} />;
   }
 
-  if (pathname === ROUTES.MAJOR_ISSUE_ALERT) {
-    return <MajorIssueAlert />;
+  if (pathname === ROUTES.RISK_ALERT) {
+    return <RiskAlert />;
   }
 
   if (pathname === ROUTES.COMPANY_WATCHLIST) {
