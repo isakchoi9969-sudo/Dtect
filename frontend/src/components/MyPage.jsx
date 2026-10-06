@@ -3,6 +3,7 @@ import { api } from "../config/api";
 import { ROUTES } from "../config/routes";
 import { useWatchlist } from "../hooks/useWatchlist";
 import CompanyLogo from "./CompanyLogo";
+import CompanyVerificationModal from "./CompanyVerificationModal";
 import Header from "./Header";
 import { deleteSavedCase, fetchSavedCases } from "../services/savedCaseApi";
 
@@ -42,6 +43,9 @@ function MyPage() {
   const [profileCompanies, setProfileCompanies] = useState([]);
   const [profileCompaniesLoading, setProfileCompaniesLoading] = useState(false);
   const [pendingUserType, setPendingUserType] = useState(null);
+  const [companyVerificationOpen, setCompanyVerificationOpen] = useState(false);
+  const [companyVerificationContext, setCompanyVerificationContext] = useState({ companyId: "", email: "" });
+  const [verifiedCompanyIdentity, setVerifiedCompanyIdentity] = useState(null);
   const [withdrawalOpen, setWithdrawalOpen] = useState(false);
   const [withdrawalPassword, setWithdrawalPassword] = useState("");
   const [withdrawalError, setWithdrawalError] = useState("");
@@ -196,6 +200,11 @@ function MyPage() {
       companyId: user?.companyId ? String(user.companyId) : "",
     });
     setProfileError("");
+    setVerifiedCompanyIdentity(
+      user?.userType === "COMPANY"
+        ? { companyId: String(user.companyId || ""), email: user.email || "" }
+        : null,
+    );
     setProfileModalStep("verify");
     setProfileCompaniesLoading(true);
     api
@@ -232,6 +241,17 @@ function MyPage() {
 
   const saveProfile = async (event) => {
     event.preventDefault();
+
+    if (
+      profileForm.userType === "COMPANY" &&
+      (!verifiedCompanyIdentity ||
+        verifiedCompanyIdentity.companyId !== String(profileForm.companyId) ||
+        verifiedCompanyIdentity.email !== profileForm.email)
+    ) {
+      setProfileError("기업 또는 이메일을 변경하려면 기업 인증을 완료해 주세요.");
+      return;
+    }
+
     setProfileSaving(true);
     setProfileError("");
 
@@ -263,6 +283,18 @@ function MyPage() {
   const openWithdrawalFromProfileEditor = () => {
     closeProfileEditor();
     openWithdrawal();
+  };
+
+  const openCompanyVerification = (companyId = profileForm.companyId) => {
+    setCompanyVerificationContext({ companyId, email: profileForm.email });
+    setCompanyVerificationOpen(true);
+  };
+
+  const completeCompanyVerification = ({ companyId, email }) => {
+    setProfileForm((form) => ({ ...form, userType: "COMPANY", companyId, email }));
+    setVerifiedCompanyIdentity({ companyId: String(companyId), email });
+    setPendingUserType(null);
+    setCompanyVerificationOpen(false);
   };
 
   const closeWithdrawal = () => {
@@ -678,7 +710,7 @@ function MyPage() {
                     <button
                       className={profileForm.userType === "COMPANY" ? "is-selected" : ""}
                       onClick={() => {
-                        if (profileForm.userType !== "COMPANY") setPendingUserType("COMPANY");
+                        if (profileForm.userType !== "COMPANY") openCompanyVerification();
                       }}
                       type="button"
                     >
@@ -691,7 +723,7 @@ function MyPage() {
                     소속 기업
                     <select
                       disabled={profileCompaniesLoading}
-                      onChange={(event) => setProfileForm((form) => ({ ...form, companyId: event.target.value }))}
+                      onChange={(event) => openCompanyVerification(event.target.value)}
                       required
                       value={profileForm.companyId}
                     >
@@ -786,6 +818,16 @@ function MyPage() {
           </section>
         </div>
       )}
+
+      <CompanyVerificationModal
+        open={companyVerificationOpen}
+        companies={profileCompanies}
+        companiesLoading={profileCompaniesLoading}
+        initialCompanyId={companyVerificationContext.companyId}
+        initialEmail={companyVerificationContext.email}
+        onCancel={() => setCompanyVerificationOpen(false)}
+        onVerified={completeCompanyVerification}
+      />
 
       {withdrawalOpen && (
         <div

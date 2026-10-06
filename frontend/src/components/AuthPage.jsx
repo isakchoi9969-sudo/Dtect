@@ -4,6 +4,7 @@ import { ROUTES } from "../config/routes";
 //    - baseURL 이 한 곳(api.js)에만 있으므로 포트가 바뀌어도 여기는 안 건드려도 된다.
 //    - "http://localhost:3000" 하드코딩이 파일마다 흩어지는 걸 막는다.
 import { api } from "../config/api";
+import CompanyVerificationModal from "./CompanyVerificationModal";
 
 function extractErrorMessage(error) {
   const message = error.response?.data?.message;
@@ -36,6 +37,8 @@ function AuthPage({ mode }) {
   const [nickname, setNickname] = useState("");
   const [nicknameStatus, setNicknameStatus] = useState("idle");
   const [nicknameMessage, setNicknameMessage] = useState("");
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [pendingSignupData, setPendingSignupData] = useState(null);
 
   useEffect(() => {
     if (!isSignup) return undefined;
@@ -109,11 +112,16 @@ function AuthPage({ mode }) {
       return;
     }
 
-    setIsSubmitting(true);
-
-    // 폼 안에 입력된 데이터들을 객체 형태로 추출
     const formData = new FormData(event.target);
     const data = Object.fromEntries(formData.entries());
+
+    if (isSignup && userType === "COMPANY") {
+      setPendingSignupData(data);
+      setVerificationOpen(true);
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       if (isSignup) {
@@ -139,6 +147,28 @@ function AuthPage({ mode }) {
       alert(extractErrorMessage(error));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const completeCompanySignup = async ({ companyId: verifiedCompanyId, email }) => {
+    if (!pendingSignupData) return;
+
+    setVerificationOpen(false);
+    setIsSubmitting(true);
+    try {
+      const response = await api.post("/api/auth/signup", {
+        ...pendingSignupData,
+        companyId: verifiedCompanyId,
+        email,
+      });
+      alert(response.data.message || "회원가입이 완료되었습니다!");
+      window.location.href = ROUTES.LOGIN;
+    } catch (error) {
+      console.error("인증 실패:", error);
+      alert(extractErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+      setPendingSignupData(null);
     }
   };
 
@@ -548,6 +578,15 @@ function AuthPage({ mode }) {
           </p>
         </div>
       </section>
+      <CompanyVerificationModal
+        open={verificationOpen}
+        companies={companies}
+        companiesLoading={isCompaniesLoading}
+        initialCompanyId={companyId === "NONE" ? "" : companyId}
+        initialEmail={pendingSignupData?.email || ""}
+        onCancel={() => { setVerificationOpen(false); setPendingSignupData(null); }}
+        onVerified={completeCompanySignup}
+      />
     </main>
   );
 }
