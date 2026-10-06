@@ -260,6 +260,11 @@ function MyPage() {
     setWithdrawalOpen(true);
   };
 
+  const openWithdrawalFromProfileEditor = () => {
+    closeProfileEditor();
+    openWithdrawal();
+  };
+
   const closeWithdrawal = () => {
     if (withdrawing) return;
     setWithdrawalOpen(false);
@@ -569,17 +574,6 @@ function MyPage() {
           )}
         </section>
 
-        <section className="mypage-withdrawal-section" aria-labelledby="mypage-withdrawal-title">
-          <div>
-            <p>ACCOUNT MANAGEMENT</p>
-            <h2 id="mypage-withdrawal-title">회원 탈퇴</h2>
-            <span>탈퇴하면 관심기업, 알림 및 저장한 대응자료를 복구할 수 없습니다.</span>
-          </div>
-          <button type="button" className="mypage-withdrawal-button" onClick={openWithdrawal}>
-            회원 탈퇴하기
-          </button>
-        </section>
-
         {pendingRemoval && (
           <div className="mypage-modal-backdrop" role="presentation">
             <section
@@ -733,11 +727,21 @@ function MyPage() {
                   />
                 </label>
                 {profileError && <p className="mypage-profile-error" role="alert">{profileError}</p>}
-                <div className="mypage-modal-actions">
-                  <button type="button" onClick={closeProfileEditor} disabled={profileSaving}>취소</button>
-                  <button type="submit" className="is-primary" disabled={profileSaving}>
-                    {profileSaving ? "저장 중..." : "저장"}
+                <div className="mypage-modal-actions mypage-profile-actions">
+                  <button
+                    type="button"
+                    className="is-danger"
+                    onClick={openWithdrawalFromProfileEditor}
+                    disabled={profileSaving}
+                  >
+                    회원 탈퇴하기
                   </button>
+                  <div className="mypage-profile-actions-right">
+                    <button type="button" onClick={closeProfileEditor} disabled={profileSaving}>취소</button>
+                    <button type="submit" className="is-primary" disabled={profileSaving}>
+                      {profileSaving ? "저장 중..." : "저장"}
+                    </button>
+                  </div>
                 </div>
               </form>
             )}

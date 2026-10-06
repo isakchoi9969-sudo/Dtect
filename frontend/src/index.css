@@ -4903,6 +4903,13 @@ button:focus-visible {
   background: #0878e8;
   color: #fff;
 }
+.mypage-profile-actions {
+  justify-content: space-between;
+}
+.mypage-profile-actions-right {
+  display: flex;
+  gap: 8px;
+}
 .mypage-profile-modal {
   width: min(100%, 420px);
 }
@@ -4990,58 +4997,6 @@ button:focus-visible {
   font-weight: 700 !important;
   letter-spacing: 0 !important;
 }
-.mypage-withdrawal-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 42px;
-  padding: 20px;
-  border: 1px solid #f0c9ce;
-  border-radius: 15px;
-  background: #fff8f8;
-}
-.mypage-withdrawal-section p {
-  margin: 0 0 5px;
-  color: #c7424f;
-  font-size: 10px;
-  font-weight: 850;
-  letter-spacing: 0.15em;
-}
-.mypage-withdrawal-section h2 {
-  margin: 0;
-  color: #87313a;
-  font-size: 17px;
-  letter-spacing: -0.03em;
-}
-.mypage-withdrawal-section span {
-  display: block;
-  margin-top: 7px;
-  color: #8d6268;
-  font-size: 12px;
-}
-.mypage-withdrawal-button {
-  flex-shrink: 0;
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid #d95c69;
-  border-radius: 8px;
-  background: #fff;
-  color: #c7424f;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition:
-    background 150ms ease,
-    color 150ms ease,
-    transform 150ms ease;
-}
-.mypage-withdrawal-button:hover {
-  background: #d95c69;
-  color: #fff;
-  transform: translateY(-1px);
-}
 .mypage-withdrawal-modal {
   width: min(100%, 410px);
 }
@@ -5113,25 +5068,6 @@ button:focus-visible {
 :root[data-theme="dark"] .mypage-profile-error {
   color: #ff9ba4 !important;
 }
-:root[data-theme="dark"] .mypage-withdrawal-section {
-  border-color: #6b3b45;
-  background: #25171d;
-}
-:root[data-theme="dark"] .mypage-withdrawal-section h2 {
-  color: #ffd2d6;
-}
-:root[data-theme="dark"] .mypage-withdrawal-section span {
-  color: #d4a9af;
-}
-:root[data-theme="dark"] .mypage-withdrawal-button {
-  border-color: #c86470;
-  background: #2b1820;
-  color: #ffb4bb;
-}
-:root[data-theme="dark"] .mypage-withdrawal-button:hover {
-  background: #b84e5b;
-  color: #fff;
-}
 :root[data-theme="dark"] .mypage-modal-actions .is-danger {
   border-color: #b84e5b;
   background: #b84e5b;
@@ -5142,11 +5078,17 @@ button:focus-visible {
   .mypage-company-grid {
     grid-template-columns: 1fr;
   }
-  .mypage-withdrawal-section {
+}
+@media (max-width: 420px) {
+  .mypage-profile-actions {
     align-items: stretch;
     flex-direction: column;
   }
-  .mypage-withdrawal-button {
+  .mypage-profile-actions-right {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mypage-profile-actions button {
     width: 100%;
   }
 }
