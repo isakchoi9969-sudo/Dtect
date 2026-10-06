@@ -1,7 +1,11 @@
+import json
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from app.api.risk_assessment import (
     RiskAssessmentRequest,
+    _assess_news_risk,
     build_polite_metric_fallback,
     has_polite_formal_endings,
 )
@@ -56,6 +60,56 @@ class PoliteFormalEndingTests(unittest.TestCase):
         self.assertIn("비율은 5%", fallback)
         self.assertIn("날짜는 3일", fallback)
         self.assertTrue(has_polite_formal_endings(fallback))
+
+    def test_primary_and_rewrite_prompts_use_the_same_paragraph_rule(self):
+        payload = RiskAssessmentRequest.model_validate({
+            "company": {"name": "테스트 기업"},
+            "signals": {
+                "analyzedArticleCount": 3,
+                "databaseRecentArticleCount": 3,
+                "databaseBaselineMonthlyArticleAverage": 2,
+                "databaseRecentPressCount": 2,
+                "negativeArticleShare": 0.33,
+                "negativeActiveDays": 1,
+                "negativeArticleCount": 1,
+                "negativeArticlePercent": 33,
+                "scores": {"negativeSentiment": 20},
+            },
+            "articles": [{"id": f"A{i}", "title": f"기사 {i}"} for i in range(1, 4)],
+        })
+        first_response = {
+            "issue_impact": 20,
+            "analysis_result": "간결한 보고다.",
+            "analysis_evidence_ids": [],
+            "key_drivers": [],
+            "watch_items": [],
+            "confidence": "low",
+            "data_limitations": [],
+        }
+        rewrite_response = {
+            "analysis_result": "첫 문단입니다.\n\n둘째 문단입니다.\n\n셋째 문단입니다."
+        }
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}), patch(
+            "app.api.risk_assessment.OpenAI"
+        ) as openai_client:
+            create = openai_client.return_value.responses.create
+            create.side_effect = [
+                SimpleNamespace(output_text=json.dumps(first_response)),
+                SimpleNamespace(output_text=json.dumps(rewrite_response)),
+            ]
+            result = _assess_news_risk(payload)
+
+        main_prompt = create.call_args_list[0].kwargs["instructions"]
+        rewrite_prompt = create.call_args_list[1].kwargs["instructions"]
+        self.assertIn("정확히 3개의 짧은 한국어 문단", main_prompt)
+        self.assertIn("전체가 3~6문장", main_prompt)
+        self.assertNotIn("3~5문장", main_prompt)
+        self.assertIn("확인되지 않은 내용", main_prompt)
+        self.assertIn("조건부 위험", main_prompt)
+        self.assertIn("정확히 3개의 짧은 문단", rewrite_prompt)
+        self.assertNotIn("3~4개의", rewrite_prompt)
+        self.assertFalse(result["tone_fallback"])
+        self.assertEqual(result["analysis_result"], rewrite_response["analysis_result"])
 
 
 if __name__ == "__main__":
