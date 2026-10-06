@@ -3304,6 +3304,8 @@ button:focus-visible {
   grid-template-columns: minmax(0, 1fr) !important;
 }
 .risk-sentiment-combined-card {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-column: 1 / -1;
   grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
@@ -3316,7 +3318,7 @@ button:focus-visible {
   align-items: start;
   column-gap: 22px;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--analysis-card-border, #dfe7f0);
   border-radius: 14px;
   background: #fff;
@@ -5523,6 +5525,8 @@ button:focus-visible {
   color: #243b55;
 }
 .risk-score-summary {
+  position: relative;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -5546,6 +5550,116 @@ button:focus-visible {
   font-size: 12px;
   font-weight: 650;
   letter-spacing: 0.01em;
+}
+.risk-score-caption-with-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.risk-score-info-trigger {
+  display: inline-flex;
+}
+.risk-score-info-tooltip {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 18px;
+  display: grid;
+  gap: 9px;
+  width: min(560px, calc(100% - 36px));
+  max-height: min(68vh, 540px);
+  overflow-y: auto;
+  padding: 15px 17px;
+  border: 1px solid #d8e5f1;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(27, 60, 96, 0.18);
+  box-sizing: border-box;
+  color: #536980;
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 1.6;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+  pointer-events: none;
+}
+.risk-score-info-trigger:hover .risk-score-info-tooltip,
+.risk-score-info-trigger:focus-within .risk-score-info-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.risk-score-info-tooltip strong {
+  color: #173553;
+  font-size: 13px;
+}
+.risk-score-info-reasons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.risk-score-info-reason {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 9px 10px;
+  border: 1px solid #e3ebf4;
+  border-radius: 8px;
+  background: #f8fbfe;
+}
+.risk-score-info-reason b {
+  color: #244d73;
+  font-size: 12px;
+}
+.risk-score-info-formula-label {
+  margin-top: 2px;
+  color: #355b82;
+  font-weight: 800;
+}
+.risk-score-info-formula {
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: #f1f6fc;
+  color: #234968;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.risk-score-info-tooltip small {
+  color: #687e95;
+  font-size: 11px;
+}
+:root[data-theme="dark"] .risk-score-info-tooltip {
+  border-color: #45607b;
+  background: #203147;
+  color: #c9d9e9;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.32);
+}
+:root[data-theme="dark"] .risk-score-info-tooltip strong,
+:root[data-theme="dark"] .risk-score-info-formula-label {
+  color: #ecf4fd;
+}
+:root[data-theme="dark"] .risk-score-info-formula {
+  background: #17283c;
+  color: #d6e8fa;
+}
+:root[data-theme="dark"] .risk-score-info-reason {
+  border-color: #405a74;
+  background: #1b2b40;
+}
+:root[data-theme="dark"] .risk-score-info-reason b {
+  color: #d7ebff;
+}
+:root[data-theme="dark"] .risk-score-info-tooltip small {
+  color: #b0c4d9;
+}
+@media (max-width: 600px) {
+  .risk-score-info-reasons {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .risk-score-number strong {
   color: #263f59;

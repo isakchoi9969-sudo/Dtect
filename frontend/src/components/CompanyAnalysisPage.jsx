@@ -1269,6 +1269,37 @@ export default function CompanyAnalysisPage() {
     (isNewsLoading || (newsAnalysis && !hasCurrentRiskAssessment)),
   );
   const riskPresentation = getRiskPresentation(riskAssessment);
+  const riskScoreFactors = [
+    [
+      "이슈 영향도",
+      riskAssessment?.impactScore,
+      riskAssessment?.weights?.issueImpact ?? 0.4,
+      "문제 자체가 사업에 줄 수 있는 부담을 가장 중요하게 봅니다. 기사 수가 적어도 영향이 클 수 있어 가장 큰 비중을 둡니다.",
+    ],
+    [
+      "기사 정서 지표",
+      riskAssessment?.signals?.scores?.negativeSentiment,
+      riskAssessment?.weights?.negativeSentiment ?? 0.3,
+      "부정적인 보도가 얼마나 많은지 보여줍니다. 다만 기사 분위기만으로 실제 피해를 단정할 수 없어 영향도보다는 낮게 반영합니다.",
+    ],
+    [
+      "이슈 보도 확산도",
+      riskAssessment?.signals?.scores?.negativeNewsAcceleration,
+      riskAssessment?.weights?.negativeNewsAcceleration ?? 0.2,
+      "관련 보도가 빠르게 늘면 우려가 퍼지는 신호일 수 있습니다. 같은 내용을 여러 곳에서 반복 보도할 수도 있어 보조적으로 반영합니다.",
+    ],
+    [
+      "보도 지속도",
+      riskAssessment?.signals?.scores?.negativePersistence,
+      riskAssessment?.weights?.negativePersistence ?? 0.1,
+      "여러 날 이어지는 보도는 일시적인 이슈인지 살펴볼 단서입니다. 오래 보도된다고 반드시 심각한 것은 아니므로 비중을 가장 낮게 둡니다.",
+    ],
+  ];
+  const riskScoreFormula = `반올림(${riskScoreFactors.map(([label, , weight]) => `${label} × ${Math.round(weight * 100)}%`).join(" + ")})`;
+  const riskScoreAppliedFormula = riskPresentation.score == null
+    ? null
+    : `반올림(${riskScoreFactors.map(([, value, weight]) => `${Number.isFinite(value) ? value : "0(자료 없음)"} × ${Math.round(weight * 100)}%`).join(" + ")}) = ${riskPresentation.score}점`;
+  const hasMissingRiskScoreFactor = riskScoreFactors.some(([, value]) => !Number.isFinite(value));
   const analyzedCount = newsAnalysis?.analyzed_count ?? 0;
   const fetchedCount = newsAnalysis?.fetched_count ?? 0;
   const relevantCount = newsAnalysis?.relevant_count ?? 0;
@@ -1466,8 +1497,58 @@ export default function CompanyAnalysisPage() {
                       className={`risk-score-summary risk-level-${riskPresentation.level}`}
                     >
                       <div className="risk-score-primary">
-                        <span className="risk-score-caption">
+                        <span className="risk-score-caption risk-score-caption-with-info">
                           종합 지표 점수
+                          <span className="risk-score-info-trigger">
+                            <button
+                              aria-describedby="risk-score-info-tooltip"
+                              aria-label="종합 지표 점수 계산 설명"
+                              className="risk-signal-info-button"
+                              type="button"
+                            >
+                              ?
+                            </button>
+                            <span
+                              className="risk-score-info-tooltip"
+                              id="risk-score-info-tooltip"
+                              role="tooltip"
+                            >
+                              <strong>종합 지표 점수는 어떻게 계산하나요?</strong>
+                              <span>
+                                네 항목을 각각 100점 기준으로 평가하고 아래 비중만큼 더합니다.
+                                예를 들어 이슈 영향도가 100점이면 종합 점수에 최대 40점이 더해집니다.
+                              </span>
+                              <span className="risk-score-info-formula-label">비중을 이렇게 정한 이유</span>
+                              <span className="risk-score-info-reasons">
+                                {riskScoreFactors.map(([label, , weight, reason]) => (
+                                  <span className="risk-score-info-reason" key={label}>
+                                    <b>{label} · {Math.round(weight * 100)}%</b>
+                                    <span>{reason}</span>
+                                  </span>
+                                ))}
+                              </span>
+                              <span className="risk-score-info-formula-label">계산식</span>
+                              <span className="risk-score-info-formula">{riskScoreFormula}</span>
+                              {riskScoreAppliedFormula ? (
+                                <>
+                                  <span className="risk-score-info-formula-label">현재 점수에 적용한 값</span>
+                                  <span className="risk-score-info-formula">{riskScoreAppliedFormula}</span>
+                                </>
+                              ) : (
+                                <span>평가가 완료되면 각 항목의 점수를 대입한 계산 결과도 표시됩니다.</span>
+                              )}
+                              {hasMissingRiskScoreFactor && (
+                                <small>
+                                  자료가 없는 항목은 0점으로 평가한 것이 아니라 계산에 기여하지 않은 것입니다.
+                                  다른 항목의 비중도 늘리지 않습니다.
+                                </small>
+                              )}
+                              <small>
+                                이 비중은 뉴스를 비교하기 위해 정한 서비스의 평가 기준입니다.
+                                통계적으로 검증된 위험 확률이나 주가 전망은 아닙니다.
+                              </small>
+                            </span>
+                          </span>
                         </span>
                         <div className="risk-score-number">
                           <strong>{riskPresentation.score ?? "—"}</strong>
@@ -1531,23 +1612,23 @@ export default function CompanyAnalysisPage() {
                         [
                           "이슈 영향도",
                           riskAssessment.impactScore,
-                          "기사에서 확인된 이슈가 회사 사업에 미칠 수 있는 영향의 크기입니다. 긍정·부정 방향과는 별도로 평가합니다.",
+                          "최근 기사에서 확인된 문제나 우려가 회사의 사업에 얼마나 큰 부담이 될 수 있는지 평가합니다. 점수가 높을수록 예상되는 부담이 크다는 뜻이며, 좋은 소식만으로 점수가 올라가지는 않습니다.",
                         ],
                         [
                           "이슈 보도 확산도",
                           riskAssessment.signals?.scores
                             ?.negativeNewsAcceleration,
-                          "관련 보도량과 보도처가 이전 기간보다 늘어난 정도를 살피고, 관련 기사 중 부정으로 분류된 비중을 반영합니다.",
+                          "최근 30일간 이 회사의 기사와 보도 매체가 이전보다 얼마나 늘었는지 살펴봅니다. 우려를 담은 기사 비율도 반영하므로, 점수가 높을수록 부정적 이슈가 더 널리 보도되고 있다는 뜻입니다.",
                         ],
                         [
                           "보도 지속도",
                           riskAssessment.signals?.scores?.negativePersistence,
-                          "부정으로 분류된 관련 기사가 나온 날짜 수를 기준으로 산출합니다. 여러 날에 걸쳐 보도될수록 점수가 높아집니다.",
+                          "최근 30일 동안 우려를 담은 기사가 며칠에 걸쳐 나왔는지 봅니다. 같은 날 기사가 여러 건 나와도 하루로 세며, 15일 이상이면 100점입니다.",
                         ],
                         [
                           "기사 정서 지표",
                           riskAssessment.signals?.scores?.negativeSentiment,
-                          "부정으로 분류된 기사 비율과 감성 분류 신뢰도, 분석 기사 수를 함께 반영합니다. 기사 수가 적으면 표본 영향을 낮춰 계산합니다.",
+                          "분석한 기사 중 부정적으로 분류된 기사가 얼마나 되는지 보여줍니다. AI의 분류 확신도와 기사 수를 함께 반영해, 기사 몇 건만으로 점수가 지나치게 높아지지 않도록 합니다.",
                         ],
                       ].map(([label, score, explanation], index) => (
                         <div className="risk-signal-row" key={label}>
