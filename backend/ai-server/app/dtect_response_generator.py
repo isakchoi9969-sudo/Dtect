@@ -56,35 +56,238 @@ SYSTEM_INSTRUCTIONS = """당신은 기업 위기 커뮤니케이션 담당자입
 - 긴 문단을 작성하지 마세요.
 - 초안 본문만 작성하고, 인사말·설명·코드 블록은 넣지 마세요."""
 
+# 문서 유형마다 제목뿐 아니라 목적과 전달 대상이 다르게 보이도록 설정
 DOCUMENT_TYPE_INSTRUCTIONS: dict[str, str] = {
-    "보도자료": """기자와 외부 이해관계자에게 제공하는 보도자료 형식입니다.
+    "보도자료": """언론 및 외부 이해관계자에게 배포하는 공식 보도자료입니다.
+고객 안내문이나 내부 공지 형식의 '확인된 사항·현재 대응·향후 안내' 제목은 절대 사용하지 마세요.
+
 아래 순서와 제목을 반드시 그대로 사용하세요.
 
 ## 제목
-- 이슈를 짧게 요약한 제목 한 줄
+- 기사 근거의 핵심 사실을 담은 공식 발표형 제목 한 줄
 
-## 확인된 사항
-- 기사에서 확인 가능한 사실만 2~3개
+## 배포 내용
+- 이 보도자료가 다루는 상황을 2~3문장으로 요약
+- 회사명·날짜·수치 등 기사에서 확인되지 않은 정보는 만들지 마세요
 
-## 현재 대응
-- 현재 확인·점검·복구 등 진행 중인 사항
+## 주요 내용
+- 기사 근거로 확인된 사실과 회사의 대응 방향을 2~3개로 정리
+- 확인되지 않은 조치, 일정, 피해 규모를 단정하지 마세요
 
-## 향후 안내
-- 추가 확인 결과를 안내한다는 내용""",
-    "고객 안내문": """고객에게 제공하는 안내문 형식입니다.
-어려운 표현을 피하고, 다음 네 구역을 반드시 유지하세요: 안내 제목, 현재 확인된 내용, 고객 안내, 추가 안내.
-고객이 지금 해야 할 일이 기사 근거에 없으면 임의로 지시하지 마세요.""",
-    "임직원 공지": """임직원에게 공유하는 내부 공지 형식입니다.
-차분하고 명확하게 작성하고, 다음 네 구역을 반드시 유지하세요: 공지 제목, 현재 상황, 임직원 안내, 후속 공지.
-사내 지시·일정·담당 부서는 기사 근거에 없으면 만들어 내지 마세요.""",
-    "Q&A 문서": """예상 질문과 답변을 정리한 문서 형식입니다.
-질문 3개와 답변 3개를 작성하세요. 각 답변은 기사 근거 안에서만 답하고,
-확인되지 않은 내용에는 '현재 확인 중입니다'라고 명시하세요.""",
+## 회사 입장
+- 기업의 공식 입장이 기사에서 확인된 경우에만 작성
+- 근거가 없으면 '관련 사실을 확인 중이며, 확인되는 내용은 신속히 안내하겠습니다.'라고 작성
+- 가상의 담당자 이름, 직책, 인용문은 만들지 마세요
+
+## 문의
+- 실제 연락처는 만들지 말고 '문의처는 추후 안내 예정입니다.'라고 작성""",
+
+    "고객 안내문": """서비스 이용 고객에게 전달하는 안내문입니다.
+쉽고 친절한 표현을 사용하고, 고객이 알아야 할 영향과 행동만 안내하세요.
+보도자료식 배포 문구, 회사 입장, 인용문은 넣지 마세요.
+
+아래 순서와 제목을 반드시 그대로 사용하세요.
+
+## 안내 제목
+- 고객이 상황을 바로 이해할 수 있는 제목 한 줄
+
+## 고객에게 알려드리는 내용
+- 현재 확인된 사실과 고객 영향 여부를 2~3개로 작성
+- 확인되지 않은 피해·보상·복구 완료 사실은 만들지 마세요
+
+## 이용 시 참고 사항
+- 고객이 확인하거나 유의할 사항만 작성
+- 근거가 없으면 '현재 고객이 별도로 취해야 할 조치는 확인 중입니다.'라고 작성
+
+## 추가 안내
+- 추가 확인 결과가 있을 경우 안내하겠다는 내용만 작성""",
+
+    "임직원 공지": """임직원에게 공유하는 내부 공지입니다.
+차분하고 명확한 내부 커뮤니케이션 톤으로 작성하세요.
+고객 안내문처럼 사과하거나, 보도자료처럼 대외 발표 형식으로 작성하지 마세요.
+
+아래 순서와 제목을 반드시 그대로 사용하세요.
+
+## 공지 제목
+- 내부 공유 목적이 드러나는 제목 한 줄
+
+## 상황 요약
+- 기사 근거로 확인된 현재 상황을 2~3개로 정리
+
+## 임직원 행동 기준
+- 외부 문의에는 확인된 사실만 안내한다는 원칙을 포함
+- 추측성 발언, 개인 의견 공유를 피하도록 안내
+- 담당 부서, 지시, 마감일은 근거가 없으면 만들지 마세요
+
+## 후속 공유
+- 추가 확인 사항이 생기면 내부 공지하겠다는 내용만 작성""",
+
+    "Q&A 문서": """예상 질문과 표준 답변을 정리하는 대응 Q&A 문서입니다.
+질문과 답변 외의 설명 문단이나 안내문 형식의 제목은 작성하지 마세요.
+
+아래 형식을 반드시 그대로 사용하여 질문 3개와 답변 3개를 작성하세요.
+
+## 예상 질문 1
+- 질문: 가장 핵심적인 우려 사항을 질문형으로 작성
+- 답변: 기사 근거 안에서만 답변
+
+## 예상 질문 2
+- 질문: 고객·언론·이해관계자가 물을 수 있는 질문
+- 답변: 기사 근거 안에서만 답변
+
+## 예상 질문 3
+- 질문: 향후 조치 또는 영향 관련 질문
+- 답변: 근거가 없으면 '현재 확인 중이며, 확인되는 내용은 신속히 안내하겠습니다.'라고 답변
+
+가상의 수치, 보상, 일정, 담당자 발언은 만들지 마세요.""",
 }
-
 
 def clean(value: object) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
+
+# 공식 대응자료 CSV 위치
+REFERENCE_CORPUS_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "data"
+    / "official_response_corpus_v2.csv"
+)
+
+# 현재 이슈 분류와 공식 대응자료의 이슈 표현을 연결합니다.
+REFERENCE_KEYWORDS = {
+    "사건·사고": ("안전", "사고", "산업재해", "환경", "화재"),
+    "서비스·보안": ("서비스", "장애", "개인정보", "보안", "복구", "보호"),
+    "규제·법률": ("규제", "법률", "공정거래", "과징금", "제재", "해명"),
+    "노사": ("노사", "파업", "인력", "협력사"),
+    "제품·소비자": ("품질", "결함", "리콜", "고객", "보상", "소비자"),
+    "경영·평판": ("입장", "유감", "사과", "평판", "경영권"),
+}
+
+_reference_corpus: pd.DataFrame | None = None
+
+
+def load_reference_corpus() -> pd.DataFrame:
+    """공식 대응자료를 서버 실행 중 한 번만 읽습니다."""
+    global _reference_corpus
+
+    if _reference_corpus is not None:
+        return _reference_corpus
+
+    if not REFERENCE_CORPUS_PATH.exists():
+        print(f"[대응자료 RAG] 참고 CSV를 찾지 못했습니다: {REFERENCE_CORPUS_PATH}")
+        _reference_corpus = pd.DataFrame()
+        return _reference_corpus
+
+    corpus = pd.read_csv(REFERENCE_CORPUS_PATH, encoding="utf-8-sig").fillna("")
+
+    # 실제 대응 표현으로 분류된 자료를 우선 사용합니다.
+    corpus = corpus[
+        corpus["ai_label"].isin([
+            "학습가능",
+            "사건참고자료",
+            "일반보도자료",
+            "고객 FAQ",
+            "고객조치",
+        ])
+    ].copy()
+
+    corpus["search_text"] = (
+        corpus["issue_type_original"].astype(str)
+        + " "
+        + corpus["response_type_rule"].astype(str)
+        + " "
+        + corpus["ai_response_type"].astype(str)
+        + " "
+        + corpus["document_title"].astype(str)
+        + " "
+        + corpus["official_response_text"].astype(str).str[:1200]
+    )
+
+    _reference_corpus = corpus
+    print(f"[대응자료 RAG] 공식 대응자료 {len(corpus)}건을 불러왔습니다.")
+    return _reference_corpus
+
+
+def find_reference_examples(
+    document_type: str,
+    title: str,
+    risk_type: str,
+    evidence: str,
+    limit: int = 2,
+) -> list[str]:
+    """현재 이슈와 가까운 공식 대응자료를 최대 2건 찾습니다."""
+    corpus = load_reference_corpus()
+
+    if corpus.empty:
+        return []
+
+    query = clean(f"{title} {risk_type} {evidence}")
+    keywords = REFERENCE_KEYWORDS.get(risk_type, ())
+
+    ranked: list[tuple[int, pd.Series]] = []
+
+    for _, row in corpus.iterrows():
+        search_text = clean(row["search_text"])
+        score = sum(keyword in search_text for keyword in keywords)
+
+        # 현재 기사에 실제 등장한 핵심 표현이 대응자료에도 있으면 점수를 더합니다.
+        for keyword in ("개인정보", "보안", "장애", "유출", "사고", "리콜", "파업", "과징금"):
+            if keyword in query and keyword in search_text:
+                score += 2
+
+        # 원문은 모두 공개 공식자료입니다. 따라서 '문서유형'은 원문 자체의
+        # 형식이 아니라, 초안 작성에 참고할 수 있는 목적을 뜻합니다.
+        # 실제 사내 공지가 아닌 자료를 사내 공지 원문이라고 잘못 표기하지 않습니다.
+        response_type = clean(row["ai_response_type"])
+        issue_type = clean(row["issue_type_original"])
+        response_rule = clean(row["response_type_rule"])
+        type_context = f"{response_type} {issue_type} {response_rule} {search_text}"
+
+        if document_type == "보도자료":
+            if row["ai_label"] == "일반보도자료":
+                score += 2
+            if any(word in type_context for word in ("공식", "입장", "발표", "대응")):
+                score += 1
+
+        elif document_type == "고객 안내문":
+            # 고객조치만 찾으면 참고자료가 지나치게 적어집니다. 고객에게
+            # 영향을 주는 장애·보안·리콜·보상 사례도 함께 우선합니다.
+            if "고객조치" in response_type:
+                score += 4
+            if any(word in type_context for word in (
+                "서비스 장애", "개인정보", "보안", "보상", "리콜", "회수", "복구", "점검",
+            )):
+                score += 2
+
+        elif document_type == "임직원 공지":
+            # 공개 자료의 상황 요약·조사·재발방지 내용을 내부 공지의
+            # 사실/행동 기준 근거로만 활용합니다.
+            if any(word in type_context for word in (
+                "조사", "점검", "재발 방지", "개선", "보완", "대책", "안전", "사고", "규제", "노사",
+            )):
+                score += 3
+
+        elif document_type == "Q&A 문서":
+            if "해명·입장" in response_type:
+                score += 4
+            if any(word in type_context for word in ("해명", "입장", "정정", "사실무근", "확인")):
+                score += 2
+
+        if score > 0:
+            ranked.append((score, row))
+
+    ranked.sort(key=lambda item: item[0], reverse=True)
+
+    examples = []
+    for _, row in ranked[:limit]:
+        examples.append(
+            f"""[공식 대응자료 참고]
+        기업: {row["company"]}
+        유형: {row["ai_response_type"]}
+        제목: {row["document_title"]}
+        본문 일부: {clean(row["official_response_text"])[:600]}"""
+        )
+
+    return examples
 
 def clean_generated_text(value: object) -> str:
     """AI가 만든 결과의 줄바꿈은 유지하고 불필요한 공백만 정리합니다."""
@@ -146,11 +349,15 @@ def build_user_prompt(
     risk_type: str,
     evidence: str,
     document_type: str = "보도자료",
+    reference_examples: list[str] | None = None,
 ) -> str:
     document_instruction = DOCUMENT_TYPE_INSTRUCTIONS.get(
         document_type,
         DOCUMENT_TYPE_INSTRUCTIONS["보도자료"],
     )
+
+    example_text = "\n\n".join(reference_examples or [])
+
     return f"""다음 뉴스 기사 근거를 바탕으로 {document_type} 초안을 작성하세요.
 
 문서 유형: {document_type}
@@ -165,7 +372,13 @@ def build_user_prompt(
 기사 근거:
 {evidence}
 
-주의: 기사 근거에 없는 내용을 추가하지 마세요."""
+공식 대응자료 참고 예시:
+{example_text or '적합한 참고 예시가 없습니다.'}
+
+중요:
+- 공식 대응자료 예시는 문체와 구성만 참고하세요.
+- 예시에 나온 기업명, 날짜, 수치, 사건, 조치를 현재 초안에 옮기지 마세요.
+- 현재 기사 근거에 없는 내용을 추가하지 마세요."""
 
 
 def fallback_draft(
@@ -216,30 +429,7 @@ def generate_with_openai(model: str, prompt: str) -> str:
         raise RuntimeError("AI 응답이 비어 있습니다.")
 
     return result
-    """OpenAI Responses API 호출."""
 
-    api_key = os.getenv("OPENAI_API_KEY")
-
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
-
-    from openai import OpenAI
-
-    client = OpenAI(api_key=api_key)
-
-    response = client.responses.create(
-        model=model,
-        instructions=SYSTEM_INSTRUCTIONS,
-        input=prompt,
-    )
-
-    # 결과 줄바꿈을 유지하여 화면에서 구역별로 표시합니다.
-    result = clean_generated_text(response.output_text)
-
-    if not result:
-        raise RuntimeError("AI 응답이 비어 있습니다.")
-
-    return result
 
 def create_drafts(
     input_df: pd.DataFrame,
@@ -264,8 +454,24 @@ def create_drafts(
 
         risk_type = classify_risk(title, body)
         evidence = select_evidence(title, body)
+
+        # 현재 이슈와 가까운 공식 대응자료를 최대 2건 검색합니다.
+        reference_examples = find_reference_examples(
+            document_type=document_type,
+            title=title,
+            risk_type=risk_type,
+            evidence=evidence,
+        )
+
+        # 기사 근거와 공식 대응자료 예시를 함께 전달해 초안을 생성합니다.
         prompt = build_user_prompt(
-            company, industry, title, risk_type, evidence, document_type
+            company,
+            industry,
+            title,
+            risk_type,
+            evidence,
+            document_type,
+            reference_examples,
         )
         status = "fallback"
 
@@ -274,8 +480,9 @@ def create_drafts(
                 draft = generate_with_openai(model, prompt)
                 status = "generated"
             except Exception as error:
+                print(f"OpenAI 초안 생성 실패: {clean(error)}")
                 draft = fallback_draft(company, title, evidence, document_type)
-                status = f"fallback: {clean(error)[:120]}"
+                status = "fallback"
         else:
             draft = fallback_draft(company, title, evidence, document_type)
 

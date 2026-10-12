@@ -106,6 +106,15 @@ function createKeywordParams(keywords) {
   return keywords.flatMap((keyword) => [`%${keyword}%`, `%${keyword}%`]);
 }
 
+// 참고 기사는 제목에 이슈 키워드가 있는 기사를 우선 보여주기 위한 함수
+function createTitleKeywordCondition(keywords) {
+  return keywords.map(() => "n.TITLE LIKE ?").join(" OR ");
+}
+
+function createTitleKeywordParams(keywords) {
+  return keywords.map((keyword) => `%${keyword}%`);
+}
+
 async function getIndustryIssues(industry) {
   const rules = ISSUE_RULES[industry];
 
@@ -117,6 +126,10 @@ async function getIndustryIssues(industry) {
     rules.map(async (rule, index) => {
       const keywordCondition = createKeywordCondition(rule.keywords);
       const keywordParams = createKeywordParams(rule.keywords);
+
+      // 제목 키워드 일치 여부를 참고 기사 정렬 기준으로 사용
+      const titleKeywordCondition = createTitleKeywordCondition(rule.keywords);
+      const titleKeywordParams = createTitleKeywordParams(rule.keywords);
 
       // DB에 들어 있는 가장 최근 기사 날짜를 기준으로 최근 30일만 분석합니다.
       // 서버 날짜와 DB 데이터 날짜가 달라도 결과가 어긋나지 않습니다.
@@ -146,7 +159,8 @@ async function getIndustryIssues(industry) {
 
       const articleCount = Number(countRows[0].articleCount || 0);
 
-      // 생성 결과 아래에 표시할 실제 참고 기사 최대 3건입니다.
+      // 실제 참고 기사 최대 3건을 가져옵니다.
+      // DISTINCT 사용 시 ORDER BY 값도 SELECT에 포함해야 MySQL 오류가 나지 않습니다.
       const [articleRows] = await pool.execute(
         `
           SELECT DISTINCT
@@ -154,12 +168,22 @@ async function getIndustryIssues(industry) {
             n.TITLE AS title,
             n.PRESS AS source,
             DATE_FORMAT(n.PUBLISHED_AT, '%Y-%m-%d') AS publishedAt,
-            n.ORIGINAL_URL AS url
+            n.ORIGINAL_URL AS url,
+            LEFT(n.CONTENT, 700) AS excerpt,
+
+            -- 제목에 이슈 키워드가 있으면 우선 노출하기 위한 정렬용 값
+            CASE WHEN (${titleKeywordCondition}) THEN 1 ELSE 0 END AS titleMatched,
+
+            -- DISTINCT + ORDER BY 오류 방지를 위한 정렬용 원본 날짜
+            n.PUBLISHED_AT AS sortPublishedAt
           ${baseSql}
-          ORDER BY publishedAt DESC
+          ORDER BY
+            titleMatched DESC,
+            sortPublishedAt DESC
           LIMIT 3
         `,
-        [industry, ...keywordParams],
+        // SQL에서 titleKeywordCondition이 baseSql보다 먼저 나오므로 파라미터 순서도 맞춥니다.
+        [...titleKeywordParams, industry, ...keywordParams],
       );
 
       return {
@@ -185,6 +209,8 @@ async function getIndustryIssues(industry) {
           source: article.source || "출처 미상",
           publishedAt: article.publishedAt,
           url: article.url || "",
+          // 프론트에서 AI 입력값으로 함께 전달할 기사 본문 일부
+          excerpt: article.excerpt || "",
         })),
       };
     }),
