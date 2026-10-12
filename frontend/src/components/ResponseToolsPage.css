@@ -941,3 +941,42 @@
   color: #ffb5b9;
   background: #2a171d;
 }
+
+.issue-select-wrapper {
+  width: 100%;
+}
+
+.issue-select-wrapper select,
+.issue-loading-select {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  border: 1px solid #dbe4f0;
+  border-radius: 9px;
+}
+
+.issue-loading-select {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 15px;
+  background: #f8fafc;
+  color: #8391a5;
+  font-size: 14px;
+}
+
+.issue-loading-spinner {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border: 3px solid #d9e3f1;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: issue-loading-spin 0.7s linear infinite;
+}
+
+@keyframes issue-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

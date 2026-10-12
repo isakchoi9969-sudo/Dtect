@@ -202,143 +202,145 @@ function SimulatorContent({
     const isSaved = savedCaseKeys.has(savedCaseKey);
 
     return (
-    <div className="tool-card simulation-result">
-      <div className="similar-case-label">
-        <span>SIMILAR CASE</span>
-        <button
-          type="button"
-          className={isSaved ? "case-save-toggle saved" : "case-save-toggle"}
-          onClick={() => isSaved
-            ? onRequestUnsave(similarCase)
-            : onSaveCase(similarCase)}
-          disabled={saveLoadingKey === savedCaseKey}
-          aria-label={isSaved ? "내 사례 저장 취소" : "내 사례에 저장"}
-          aria-pressed={isSaved}
-          title={isSaved ? "내 사례 저장 취소" : "내 사례에 저장"}
-        >
-          <span aria-hidden="true">{isSaved ? "♥" : "♡"}</span>
-        </button>
-      </div>
-      <h2>{similarCase.caseTitle || similarCase.issueName}</h2>
-      {saveError && <p className="ai-case-summary-error">{saveError}</p>}
-      <section className="ai-case-summary" aria-live="polite">
-        <span>AI CASE SUMMARY</span>
-        {(() => {
-          const summaryKey = getCaseSummaryKey(similarCase);
-          const summary = caseSummaries[summaryKey];
-          const error = summaryErrors[summaryKey];
-          const isLoading = summaryLoadingKey === summaryKey;
+      <div className="tool-card simulation-result">
+        <div className="similar-case-label">
+          <span>SIMILAR CASE</span>
+          <button
+            type="button"
+            className={isSaved ? "case-save-toggle saved" : "case-save-toggle"}
+            onClick={() =>
+              isSaved ? onRequestUnsave(similarCase) : onSaveCase(similarCase)
+            }
+            disabled={saveLoadingKey === savedCaseKey}
+            aria-label={isSaved ? "내 사례 저장 취소" : "내 사례에 저장"}
+            aria-pressed={isSaved}
+            title={isSaved ? "내 사례 저장 취소" : "내 사례에 저장"}
+          >
+            <span aria-hidden="true">{isSaved ? "♥" : "♡"}</span>
+          </button>
+        </div>
+        <h2>{similarCase.caseTitle || similarCase.issueName}</h2>
+        {saveError && <p className="ai-case-summary-error">{saveError}</p>}
+        <section className="ai-case-summary" aria-live="polite">
+          <span>AI CASE SUMMARY</span>
+          {(() => {
+            const summaryKey = getCaseSummaryKey(similarCase);
+            const summary = caseSummaries[summaryKey];
+            const error = summaryErrors[summaryKey];
+            const isLoading = summaryLoadingKey === summaryKey;
 
-          if (summary) {
-            const sections = [
-              ["사건 개요", [summary.overview]],
-              ["발생 원인", summary.confirmed_causes],
-              ["당시 대응", summary.actions_taken],
-              ["향후 대응", summary.recommended_actions],
-              ["확인 필요", summary.uncertainties],
-            ].filter(([, items]) => items?.filter(Boolean).length > 0);
+            if (summary) {
+              const sections = [
+                ["사건 개요", [summary.overview]],
+                ["발생 원인", summary.confirmed_causes],
+                ["당시 대응", summary.actions_taken],
+                ["향후 대응", summary.recommended_actions],
+                ["확인 필요", summary.uncertainties],
+              ].filter(([, items]) => items?.filter(Boolean).length > 0);
+
+              return (
+                <div className="ai-case-summary-content">
+                  {sections.map(([heading, items]) => (
+                    <div key={heading}>
+                      <strong>{heading}</strong>
+                      <ul>
+                        {items.filter(Boolean).map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              );
+            }
 
             return (
-              <div className="ai-case-summary-content">
-                {sections.map(([heading, items]) => (
-                  <div key={heading}>
-                    <strong>{heading}</strong>
-                    <ul>
-                      {items.filter(Boolean).map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
+              <>
+                <p>
+                  사건 개요, 발생 원인, 당시 대응과 향후 대응을 기사 근거로
+                  정리합니다.
+                </p>
+                {error && <p className="ai-case-summary-error">{error}</p>}
+                <button
+                  type="button"
+                  className="case-summary-trigger"
+                  onClick={() => onRequestSummary(similarCase)}
+                  disabled={
+                    isLoading || similarCase.sourceArticles?.length === 0
+                  }
+                >
+                  {isLoading ? "AI 사건 요약 생성 중…" : "AI 사건 요약 보기"}
+                </button>
+              </>
             );
-          }
-
-          return (
-            <>
-              <p>
-                사건 개요, 발생 원인, 당시 대응과 향후 대응을 기사 근거로
-                정리합니다.
-              </p>
-              {error && <p className="ai-case-summary-error">{error}</p>}
-              <button
-                type="button"
-                className="case-summary-trigger"
-                onClick={() => onRequestSummary(similarCase)}
-                disabled={isLoading || similarCase.sourceArticles?.length === 0}
-              >
-                {isLoading ? "AI 사건 요약 생성 중…" : "AI 사건 요약 보기"}
-              </button>
-            </>
-          );
-        })()}
-      </section>
-      <button
-        type="button"
-        className="case-detail-trigger"
-        onClick={onShowDetails}
-        aria-expanded={showDetails}
-      >
-        {showDetails ? "상세 내용 닫기" : "상세 내용 보기"}
-      </button>
-      {showDetails && (
-        <>
-          <div className="case-detail-grid">
-            <div>
-              <span>기업</span>
-              <strong>{displayValue(similarCase.companyName)}</strong>
+          })()}
+        </section>
+        <button
+          type="button"
+          className="case-detail-trigger"
+          onClick={onShowDetails}
+          aria-expanded={showDetails}
+        >
+          {showDetails ? "상세 내용 닫기" : "상세 내용 보기"}
+        </button>
+        {showDetails && (
+          <>
+            <div className="case-detail-grid">
+              <div>
+                <span>기업</span>
+                <strong>{displayValue(similarCase.companyName)}</strong>
+              </div>
+              <div>
+                <span>업종</span>
+                <strong>{displayValue(similarCase.industry)}</strong>
+              </div>
+              <div>
+                <span>리스크 유형</span>
+                <strong>
+                  {similarCase.riskType
+                    ? RISK_TYPE_LABELS[similarCase.riskType] ||
+                      similarCase.riskType
+                    : "정보 준비 중"}
+                </strong>
+              </div>
+              <div>
+                <span>사건 발생일</span>
+                <strong>{displayIncidentDate(similarCase.startDate)}</strong>
+              </div>
+              <div>
+                <span>지속기간</span>
+                <strong>
+                  {similarCase.durationDays == null
+                    ? "정보 준비 중"
+                    : `약 ${similarCase.durationDays}일`}
+                </strong>
+              </div>
+              <div>
+                <span>관련 기사</span>
+                <strong>
+                  {similarCase.articleCount == null
+                    ? "정보 준비 중"
+                    : `${similarCase.articleCount}건`}
+                </strong>
+              </div>
             </div>
-            <div>
-              <span>업종</span>
-              <strong>{displayValue(similarCase.industry)}</strong>
+            <div className="representative-news">
+              <span>대표기사</span>
+              {similarCase.representativeUrl ? (
+                <a
+                  href={similarCase.representativeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {displayValue(similarCase.representativeTitle)}
+                </a>
+              ) : (
+                <strong>{displayValue(similarCase.representativeTitle)}</strong>
+              )}
             </div>
-            <div>
-              <span>리스크 유형</span>
-              <strong>
-                {similarCase.riskType
-                  ? RISK_TYPE_LABELS[similarCase.riskType] ||
-                    similarCase.riskType
-                  : "정보 준비 중"}
-              </strong>
-            </div>
-            <div>
-              <span>사건 발생일</span>
-              <strong>{displayIncidentDate(similarCase.startDate)}</strong>
-            </div>
-            <div>
-              <span>지속기간</span>
-              <strong>
-                {similarCase.durationDays == null
-                  ? "정보 준비 중"
-                  : `약 ${similarCase.durationDays}일`}
-              </strong>
-            </div>
-            <div>
-              <span>관련 기사</span>
-              <strong>
-                {similarCase.articleCount == null
-                  ? "정보 준비 중"
-                  : `${similarCase.articleCount}건`}
-              </strong>
-            </div>
-          </div>
-          <div className="representative-news">
-            <span>대표기사</span>
-            {similarCase.representativeUrl ? (
-              <a
-                href={similarCase.representativeUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {displayValue(similarCase.representativeTitle)}
-              </a>
-            ) : (
-              <strong>{displayValue(similarCase.representativeTitle)}</strong>
-            )}
-          </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </div>
     );
   };
 
@@ -346,52 +348,62 @@ function SimulatorContent({
 
   return (
     <>
-    <section className="tool-grid">
-      <div className="tool-card case-library-card">
-        <span>CASE LIBRARY</span>
-        <h2>유사 사례를 선택하세요</h2>
-        <div className="case-options">
-          {cases.map((item, index) => (
-            <div className="case-option" key={`${item.issueName}-${index}`}>
+      <section className="tool-grid">
+        <div className="tool-card case-library-card">
+          <span>CASE LIBRARY</span>
+          <h2>유사 사례를 선택하세요</h2>
+          <div className="case-options">
+            {cases.map((item, index) => (
+              <div className="case-option" key={`${item.issueName}-${index}`}>
+                <button
+                  type="button"
+                  className={selectedCase === index ? "selected" : ""}
+                  onClick={() => onSelect(index)}
+                  aria-pressed={selectedCase === index}
+                >
+                  <span>{item.caseTitle || item.issueName}</span>
+                  <i aria-hidden="true">›</i>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+        {renderCaseDetails(selectedSimilarCase)}
+      </section>
+      {pendingUnsaveCase && (
+        <div className="case-unsave-modal-backdrop" role="presentation">
+          <section
+            className="case-unsave-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="case-unsave-title"
+          >
+            <h3 id="case-unsave-title">저장한 과거 사례를 취소할까요?</h3>
+            <p>
+              <strong>
+                {pendingUnsaveCase.caseTitle || pendingUnsaveCase.issueName}
+              </strong>
+              가 마이페이지의 저장 목록에서 삭제됩니다.
+            </p>
+            <div className="case-unsave-modal-actions">
+              <button type="button" onClick={onCancelUnsave}>
+                취소
+              </button>
               <button
                 type="button"
-                className={selectedCase === index ? "selected" : ""}
-                onClick={() => onSelect(index)}
-                aria-pressed={selectedCase === index}
+                onClick={onConfirmUnsave}
+                disabled={
+                  saveLoadingKey === getCaseSummaryKey(pendingUnsaveCase)
+                }
               >
-                <span>{item.caseTitle || item.issueName}</span>
-                <i aria-hidden="true">›</i>
+                {saveLoadingKey === getCaseSummaryKey(pendingUnsaveCase)
+                  ? "처리 중…"
+                  : "저장 취소"}
               </button>
             </div>
-          ))}
+          </section>
         </div>
-      </div>
-      {renderCaseDetails(selectedSimilarCase)}
-    </section>
-    {pendingUnsaveCase && (
-      <div className="case-unsave-modal-backdrop" role="presentation">
-        <section
-          className="case-unsave-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="case-unsave-title"
-        >
-          <h3 id="case-unsave-title">저장한 과거 사례를 취소할까요?</h3>
-          <p>
-            <strong>
-              {pendingUnsaveCase.caseTitle || pendingUnsaveCase.issueName}
-            </strong>
-            가 마이페이지의 저장 목록에서 삭제됩니다.
-          </p>
-          <div className="case-unsave-modal-actions">
-            <button type="button" onClick={onCancelUnsave}>취소</button>
-            <button type="button" onClick={onConfirmUnsave} disabled={saveLoadingKey === getCaseSummaryKey(pendingUnsaveCase)}>
-              {saveLoadingKey === getCaseSummaryKey(pendingUnsaveCase) ? "처리 중…" : "저장 취소"}
-            </button>
-          </div>
-        </section>
-      </div>
-    )}
+      )}
     </>
   );
 }
@@ -490,6 +502,20 @@ function ResponseToolsPage({ mode }) {
     // 새 초안을 생성할 때는 기사 목록을 다시 접은 상태로 시작
     setIsReferenceArticlesOpen(false);
 
+    // 화면의 참고 기사와 AI가 읽는 기사 근거를 동일하게 맞춤
+    const referenceContext = (selectedIssue.referenceArticles || [])
+      .map((article, index) => {
+        const excerpt = article.excerpt?.trim() || "본문 정보 없음";
+
+        return [
+          `[참고 기사 ${index + 1}]`,
+          `제목: ${article.title || "제목 정보 없음"}`,
+          `언론사: ${article.source || "출처 미상"}`,
+          `내용: ${excerpt}`,
+        ].join("\n");
+      })
+      .join("\n\n");
+
     try {
       const response = await api.post("/api/response-drafts", {
         documentType: document,
@@ -502,6 +528,9 @@ function ResponseToolsPage({ mode }) {
           `관련 기사 수: ${selectedIssue.articleCount}건`,
           `위험도: ${selectedIssue.risk}`,
           selectedIssue.riskReason,
+          // 실제 참고 기사 내용을 AI 초안 생성 근거로 전달
+          referenceContext ? `실제 참고 기사 근거:\n${referenceContext}` : "",
+
           additionalRequest.trim()
             ? `추가 요청: ${additionalRequest.trim()}`
             : "",
@@ -558,7 +587,9 @@ function ResponseToolsPage({ mode }) {
         throw new Error(response.message || "유사 사례를 불러오지 못했습니다.");
       }
 
-      const cases = Array.isArray(response.similarCases) ? response.similarCases : [];
+      const cases = Array.isArray(response.similarCases)
+        ? response.similarCases
+        : [];
       setSimilarCases(cases);
       setSelectedCase(0);
       setIsCaseDetailVisible(false);
@@ -580,88 +611,108 @@ function ResponseToolsPage({ mode }) {
     } catch (error) {
       setSimilarCases([]);
       setCaseError(
-        error.response?.data?.message
-          || error.message
-          || "유사 사례를 불러오지 못했습니다.",
+        error.response?.data?.message ||
+          error.message ||
+          "유사 사례를 불러오지 못했습니다.",
       );
       setCaseLoadStatus("error");
     }
   }, [caseType, currentIssue]);
 
-  const requestCaseSummary = useCallback(async (similarCase) => {
-    const summaryKey = getCaseSummaryKey(similarCase);
-    if (caseSummaries[summaryKey]) return caseSummaries[summaryKey];
-    if (summaryLoadingKey === summaryKey) return null;
+  const requestCaseSummary = useCallback(
+    async (similarCase) => {
+      const summaryKey = getCaseSummaryKey(similarCase);
+      if (caseSummaries[summaryKey]) return caseSummaries[summaryKey];
+      if (summaryLoadingKey === summaryKey) return null;
 
-    if (!similarCase.sourceArticles?.length) {
-      setSummaryErrors((previous) => ({
-        ...previous,
-        [summaryKey]: "요약에 사용할 기사 정보가 없습니다.",
-      }));
-      return null;
-    }
-
-    setSummaryLoadingKey(summaryKey);
-    setSummaryErrors((previous) => ({ ...previous, [summaryKey]: "" }));
-    try {
-      const response = await fetchCaseSummary({
-        caseTitle: similarCase.caseTitle || similarCase.issueName,
-        companyName: similarCase.companyName,
-        articles: similarCase.sourceArticles,
-      });
-      if (!response.success || !response.summary) {
-        throw new Error(response.message || "AI 사건 요약을 생성하지 못했습니다.");
+      if (!similarCase.sourceArticles?.length) {
+        setSummaryErrors((previous) => ({
+          ...previous,
+          [summaryKey]: "요약에 사용할 기사 정보가 없습니다.",
+        }));
+        return null;
       }
-      setCaseSummaries((previous) => ({
-        ...previous,
-        [summaryKey]: response.summary,
-      }));
-      return response.summary;
-    } catch (error) {
-      setSummaryErrors((previous) => ({
-        ...previous,
-        [summaryKey]: error.response?.data?.message
-          || error.message
-          || "AI 사건 요약을 생성하지 못했습니다.",
-      }));
-      return null;
-    } finally {
-      setSummaryLoadingKey((current) => current === summaryKey ? "" : current);
-    }
-  }, [caseSummaries, summaryLoadingKey]);
 
-  const saveCase = useCallback(async (similarCase) => {
-    const caseKey = getCaseSummaryKey(similarCase);
-    setSaveLoadingKey(caseKey);
-    setSaveError("");
-    try {
-      // 기존에 화면에서 생성한 요약을 재사용하고, 없을 때만 LLM을 호출합니다.
-      const aiSummary = caseSummaries[caseKey] || await requestCaseSummary(similarCase);
-      if (!aiSummary) throw new Error("AI 사건 요약을 만든 뒤 저장할 수 있습니다.");
+      setSummaryLoadingKey(summaryKey);
+      setSummaryErrors((previous) => ({ ...previous, [summaryKey]: "" }));
+      try {
+        const response = await fetchCaseSummary({
+          caseTitle: similarCase.caseTitle || similarCase.issueName,
+          companyName: similarCase.companyName,
+          articles: similarCase.sourceArticles,
+        });
+        if (!response.success || !response.summary) {
+          throw new Error(
+            response.message || "AI 사건 요약을 생성하지 못했습니다.",
+          );
+        }
+        setCaseSummaries((previous) => ({
+          ...previous,
+          [summaryKey]: response.summary,
+        }));
+        return response.summary;
+      } catch (error) {
+        setSummaryErrors((previous) => ({
+          ...previous,
+          [summaryKey]:
+            error.response?.data?.message ||
+            error.message ||
+            "AI 사건 요약을 생성하지 못했습니다.",
+        }));
+        return null;
+      } finally {
+        setSummaryLoadingKey((current) =>
+          current === summaryKey ? "" : current,
+        );
+      }
+    },
+    [caseSummaries, summaryLoadingKey],
+  );
 
-      const response = await saveHistoricalCase({
-        caseId: similarCase.caseId,
-        caseTitle: similarCase.caseTitle || similarCase.issueName,
-        companyName: similarCase.companyName,
-        industry: similarCase.industry,
-        riskType: similarCase.riskType,
-        startDate: similarCase.startDate,
-        durationDays: similarCase.durationDays,
-        articleCount: similarCase.articleCount,
-        representativeNewsId: similarCase.representativeNewsId,
-        representativeTitle: similarCase.representativeTitle,
-        representativeUrl: similarCase.representativeUrl,
-        aiSummary,
-        articles: similarCase.sourceArticles,
-      });
-      if (!response.success) throw new Error(response.message || "과거 사례를 저장하지 못했습니다.");
-      setSavedCaseKeys((previous) => new Set([...previous, caseKey]));
-    } catch (error) {
-      setSaveError(error.response?.data?.message || error.message || "과거 사례를 저장하지 못했습니다.");
-    } finally {
-      setSaveLoadingKey("");
-    }
-  }, [caseSummaries, requestCaseSummary]);
+  const saveCase = useCallback(
+    async (similarCase) => {
+      const caseKey = getCaseSummaryKey(similarCase);
+      setSaveLoadingKey(caseKey);
+      setSaveError("");
+      try {
+        // 기존에 화면에서 생성한 요약을 재사용하고, 없을 때만 LLM을 호출합니다.
+        const aiSummary =
+          caseSummaries[caseKey] || (await requestCaseSummary(similarCase));
+        if (!aiSummary)
+          throw new Error("AI 사건 요약을 만든 뒤 저장할 수 있습니다.");
+
+        const response = await saveHistoricalCase({
+          caseId: similarCase.caseId,
+          caseTitle: similarCase.caseTitle || similarCase.issueName,
+          companyName: similarCase.companyName,
+          industry: similarCase.industry,
+          riskType: similarCase.riskType,
+          startDate: similarCase.startDate,
+          durationDays: similarCase.durationDays,
+          articleCount: similarCase.articleCount,
+          representativeNewsId: similarCase.representativeNewsId,
+          representativeTitle: similarCase.representativeTitle,
+          representativeUrl: similarCase.representativeUrl,
+          aiSummary,
+          articles: similarCase.sourceArticles,
+        });
+        if (!response.success)
+          throw new Error(
+            response.message || "과거 사례를 저장하지 못했습니다.",
+          );
+        setSavedCaseKeys((previous) => new Set([...previous, caseKey]));
+      } catch (error) {
+        setSaveError(
+          error.response?.data?.message ||
+            error.message ||
+            "과거 사례를 저장하지 못했습니다.",
+        );
+      } finally {
+        setSaveLoadingKey("");
+      }
+    },
+    [caseSummaries, requestCaseSummary],
+  );
 
   const confirmUnsaveCase = useCallback(async () => {
     if (!pendingUnsaveCase) return;
@@ -678,7 +729,10 @@ function ResponseToolsPage({ mode }) {
       });
       setPendingUnsaveCase(null);
     } catch (error) {
-      setSaveError(error.response?.data?.message || "저장한 과거 사례를 삭제하지 못했습니다.");
+      setSaveError(
+        error.response?.data?.message ||
+          "저장한 과거 사례를 삭제하지 못했습니다.",
+      );
     } finally {
       setSaveLoadingKey("");
     }
@@ -804,27 +858,35 @@ function ResponseToolsPage({ mode }) {
 
                 <label>
                   감지된 이슈
-                  <select
-                    value={selectedIssueIndex}
-                    disabled={isIssueLoading || issues.length === 0}
-                    onChange={(event) =>
-                      setSelectedIssueIndex(Number(event.target.value))
-                    }
-                  >
-                    {isIssueLoading && (
-                      <option>이슈를 불러오는 중입니다.</option>
-                    )}
+                  <span className="issue-select-wrapper">
+                    {isIssueLoading ? (
+                      <span className="issue-loading-select" role="status">
+                        <span>이슈를 불러오는 중입니다.</span>
+                        <span
+                          className="issue-loading-spinner"
+                          aria-hidden="true"
+                        />
+                      </span>
+                    ) : (
+                      <select
+                        value={selectedIssueIndex}
+                        disabled={issues.length === 0}
+                        onChange={(event) =>
+                          setSelectedIssueIndex(Number(event.target.value))
+                        }
+                      >
+                        {issues.length === 0 && (
+                          <option>등록된 분석 이슈가 없습니다.</option>
+                        )}
 
-                    {!isIssueLoading && issues.length === 0 && (
-                      <option>등록된 분석 이슈가 없습니다.</option>
+                        {issues.map((item, index) => (
+                          <option key={item.issueId} value={index}>
+                            {item.issueName}
+                          </option>
+                        ))}
+                      </select>
                     )}
-
-                    {issues.map((item, index) => (
-                      <option key={item.issueId} value={index}>
-                        {item.issueName}
-                      </option>
-                    ))}
-                  </select>
+                  </span>
                 </label>
               </div>
 
