@@ -14,12 +14,13 @@ const {
   filterGroupsByCaseSimilarity,
   filterGroupsByInternalSimilarity,
   groupCandidatesByTime,
+  mergeRelatedIssueGroups,
   prepareCandidatesForClustering,
   SIMULATOR_RULES,
   splitGroupsBySemanticSimilarity,
 } = require("./simulatorClustering.service");
 const { buildSimulatorResponse } = require("./simulatorResponse.service");
-const { buildCaseTitle } = require("./simulatorCaseTitle.service");
+const { buildCaseProfile, buildCaseTitle } = require("./simulatorCaseTitle.service");
 const {
   scoreCaseGroups,
   selectTopSimilarCases,
@@ -126,7 +127,11 @@ async function getValidatedIssueGroupResult(
     internallySimilarGroups,
     embeddingsByNewsId,
   );
-  const groups = filterGroupsByCaseSimilarity(centroidGroups, currentIssueEmbedding);
+  const mergedCentroidGroups = mergeRelatedIssueGroups(
+    centroidGroups,
+    embeddingsByNewsId,
+  );
+  const groups = filterGroupsByCaseSimilarity(mergedCentroidGroups, currentIssueEmbedding);
 
   return {
     groups,
@@ -135,6 +140,7 @@ async function getValidatedIssueGroupResult(
       semanticGroups: semanticGroups.length,
       internallySimilarGroups: internallySimilarGroups.length,
       centroidGroups: centroidGroups.length,
+      mergedCentroidGroups: mergedCentroidGroups.length,
       caseSimilarityGroups: groups.length,
     },
   };
@@ -195,14 +201,19 @@ function buildIssueSearchQueries(title, content, majorCategory, minorCategory) {
 
 /** Chroma 뉴스 군집을 DB 저장 없이도 화면에 표시할 수 있는 동적 사례로 변환한다. */
 function buildDynamicCaseGroups(groups, options = {}) {
-  return groups.map((group) => ({
-    ...group,
-    caseId: null,
-    issueId: null,
-    caseTitle: buildCaseTitle(group, options),
-    issueName: group.representativeTitle,
-    description: `${group.companyName} 관련 기사 ${group.articleCount}건이 ${group.startDate}부터 ${group.lastDate}까지 확인된 동적 과거 사례 후보입니다.`,
-  }));
+  return groups.map((group) => {
+    const profile = buildCaseProfile(group, options);
+    const profiledGroup = { ...group, ...profile };
+
+    return {
+      ...profiledGroup,
+      caseId: null,
+      issueId: null,
+      caseTitle: buildCaseTitle(profiledGroup, options),
+      issueName: group.representativeTitle,
+      description: `${group.companyName} 관련 기사 ${group.articleCount}건이 ${group.startDate}부터 ${group.lastDate}까지 확인된 동적 과거 사례 후보입니다.`,
+    };
+  });
 }
 
 /** 시장·기업 경로가 동일한 기사 묶음을 만들었을 때 한 사례만 남긴다. */
@@ -352,11 +363,14 @@ async function simulateSimilarCases(
       },
     };
   }
-  const scoredDynamicGroups = scoreCaseGroups(
-    removeDuplicateDynamicGroups(buildDynamicCaseGroups(validationResult.groups, {
+  const dynamicGroups = removeDuplicateDynamicGroups(
+    buildDynamicCaseGroups(validationResult.groups, {
       majorCategory,
       minorCategory,
-    })),
+    }),
+  );
+  const scoredDynamicGroups = scoreCaseGroups(
+    dynamicGroups,
     { currentIndustry, currentDate },
   );
   const selectedGroups = selectTopSimilarCases(scoredDynamicGroups);
@@ -368,6 +382,9 @@ async function simulateSimilarCases(
     ...response,
     diagnostics: {
       ...validationResult.diagnostics,
+      specificGroups: dynamicGroups.filter((group) => group.eventSpecificity === "SPECIFIC").length,
+      generalGroups: dynamicGroups.filter((group) => group.eventSpecificity === "GENERAL").length,
+      uncertainGroups: dynamicGroups.filter((group) => group.eventSpecificity === "UNCERTAIN").length,
       scoredGroups: scoredDynamicGroups.length,
       finalCases: selectedGroups.length,
     },

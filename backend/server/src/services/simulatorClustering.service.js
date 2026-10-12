@@ -13,6 +13,10 @@ const SIMULATOR_RULES = Object.freeze({
   searchTopN: 100,
   articleSearchCut: 0.55,
   maxGapDays: 10,
+  // 초기 보도와 후속 보도가 시간 군집에서 갈라진 경우에도 같은 사건으로 다시 합친다.
+  // 서로 다른 사건을 합치지 않도록 시간·기업 경로와 높은 centroid 유사도를 함께 요구한다.
+  sameEventMaxGapDays: 21,
+  sameEventCentroidSimilarityCut: 0.8,
   // 1건도 과거 사례 후보로 표시하고, 0건일 때만 빈 결과로 처리한다.
   minArticles: 1,
   issueSimilarityCut: 0.7,
@@ -155,6 +159,7 @@ function groupCandidatesByTime(candidates) {
         companyId: candidate.companyId,
         companyName: candidate.companyName,
         industry: candidate.industry,
+        clusterKey: candidate.clusterKey,
         tempGroup,
         articles: [],
       };
@@ -334,6 +339,107 @@ function buildIssueCentroids(groups, embeddingsByNewsId) {
   });
 }
 
+function getGroupIdentity(group) {
+  if (group.clusterKey) return group.clusterKey;
+  if (group.companyId !== null && group.companyId !== undefined) {
+    return `company:${group.companyId}`;
+  }
+  return `topic:${group.companyName || "unknown"}`;
+}
+
+function getDateGapDays(leftGroup, rightGroup) {
+  const leftStart = new Date(leftGroup.startDate).getTime();
+  const leftEnd = new Date(leftGroup.lastDate).getTime();
+  const rightStart = new Date(rightGroup.startDate).getTime();
+  const rightEnd = new Date(rightGroup.lastDate).getTime();
+
+  if ([leftStart, leftEnd, rightStart, rightEnd].some(Number.isNaN)) return null;
+  if (leftEnd >= rightStart && rightEnd >= leftStart) return 0;
+  const milliseconds = leftEnd < rightStart ? rightStart - leftEnd : leftStart - rightEnd;
+  return Math.floor(milliseconds / (24 * 60 * 60 * 1000));
+}
+
+function combineGroups(groups, embeddingsByNewsId) {
+  const articlesByNewsId = new Map();
+  for (const group of groups) {
+    for (const article of group.articles) {
+      if (!articlesByNewsId.has(article.newsId)) articlesByNewsId.set(article.newsId, article);
+    }
+  }
+
+  const articles = [...articlesByNewsId.values()]
+    .sort((left, right) => publishedAtTimestamp(left) - publishedAtTimestamp(right));
+  const seed = groups[0];
+  const [rebuiltGroup] = buildIssueCentroids([{
+    ...seed,
+    articles,
+    startDate: articles[0]?.publishedAt || seed.startDate,
+    lastDate: articles.at(-1)?.publishedAt || seed.lastDate,
+    articleCount: articles.length,
+    mergedGroupCount: groups.reduce(
+      (count, group) => count + (group.mergedGroupCount || 1),
+      0,
+    ),
+  }], embeddingsByNewsId);
+
+  return rebuiltGroup || null;
+}
+
+/**
+ * 시간 군집화에서 초기 보도와 후속 보도가 갈라져도, 같은 기업 경로에서
+ * 기간 간격과 centroid 의미 유사도가 모두 충분하면 하나의 사건으로 합친다.
+ * 기사 ID가 전혀 겹치지 않아도 병합할 수 있으며, 다른 기업 경로는 절대 합치지 않는다.
+ */
+function mergeRelatedIssueGroups(groups, embeddingsByNewsId) {
+  const orderedGroups = [...groups]
+    .map((group) => ({ ...group, mergedGroupCount: group.mergedGroupCount || 1 }))
+    .sort((left, right) =>
+      getGroupIdentity(left).localeCompare(getGroupIdentity(right), "ko")
+      || new Date(left.startDate) - new Date(right.startDate)
+    );
+  const mergedGroups = [];
+
+  for (const group of orderedGroups) {
+    const matchingIndexes = mergedGroups
+      .map((existingGroup, index) => ({ existingGroup, index }))
+      .filter(({ existingGroup }) => {
+        if (getGroupIdentity(existingGroup) !== getGroupIdentity(group)) return false;
+
+        const gapDays = getDateGapDays(existingGroup, group);
+        const centroidSimilarity = cosineSimilarity(existingGroup.centroid, group.centroid);
+        return gapDays !== null
+          && gapDays <= SIMULATOR_RULES.sameEventMaxGapDays
+          && centroidSimilarity !== null
+          && centroidSimilarity >= SIMULATOR_RULES.sameEventCentroidSimilarityCut;
+      });
+
+    if (matchingIndexes.length === 0) {
+      mergedGroups.push(group);
+      continue;
+    }
+
+    const groupsToCombine = [
+      group,
+      ...matchingIndexes.map(({ existingGroup }) => existingGroup),
+    ];
+    const combinedGroup = combineGroups(groupsToCombine, embeddingsByNewsId);
+    if (!combinedGroup) {
+      mergedGroups.push(group);
+      continue;
+    }
+
+    for (const { index } of [...matchingIndexes].sort((left, right) => right.index - left.index)) {
+      mergedGroups.splice(index, 1);
+    }
+    mergedGroups.push(combinedGroup);
+  }
+
+  return mergedGroups.sort((left, right) =>
+    getGroupIdentity(left).localeCompare(getGroupIdentity(right), "ko")
+    || new Date(left.startDate) - new Date(right.startDate)
+  );
+}
+
 /**
  * 저장된 실제 사례의 모든 기사 벡터를 평균 내어 사례별 centroid를 만든다.
  * 검색 후보 기사와의 우연한 ID 중복 여부와 무관하게, 등록된 사례 자체를 비교한다.
@@ -389,6 +495,7 @@ module.exports = {
   splitGroupsBySemanticSimilarity,
   filterGroupsByInternalSimilarity,
   buildIssueCentroids,
+  mergeRelatedIssueGroups,
   buildStoredCaseCentroids,
   calculateCentroid,
   filterGroupsByCaseSimilarity,

@@ -1,4 +1,5 @@
 const { SIMULATOR_RULES } = require("./simulatorClustering.service");
+const { CASE_SPECIFICITY } = require("./simulatorCaseTitle.service");
 
 function round(value, digits) {
   return Number(value.toFixed(digits));
@@ -61,16 +62,53 @@ function scoreCaseGroups(groups, { currentIndustry = null, currentDate = new Dat
   });
 }
 
-/** 의미 유사도·최종 점수 기준을 통과한 상위 3개 사례에 최종 순위를 부여한다. */
+function isEligibleDynamicCase(group) {
+  if (group.caseId !== null && group.caseId !== undefined) return true;
+  if (group.eventSpecificity !== CASE_SPECIFICITY.SPECIFIC) return false;
+  if (group.articleCount >= 2) return true;
+
+  // 후보 생성은 기존처럼 1건도 허용하되, 최종 노출은 매우 높은 의미 유사도의 단일 기사만 허용한다.
+  return group.articleCount === 1 && group.semanticSimilarity >= 0.75;
+}
+
+function isDuplicateSelectedCase(candidate, selected) {
+  if (
+    candidate.caseId !== null
+    || candidate.companyId === null
+    || candidate.companyId === undefined
+  ) return false;
+
+  // 고유 핵심어가 없는 두 사건은 실제로 다른 사건일 수 있으므로 여기서 합치지 않는다.
+  // 그런 경우는 앞선 centroid·기간 병합 단계가 처리한다.
+  if (!candidate.anchorKeywords?.length) return false;
+
+  return selected.some((existing) =>
+    existing.caseId === null
+    && existing.companyId === candidate.companyId
+    && existing.eventType === candidate.eventType
+    && existing.anchorKeywords?.length > 0
+    && existing.anchorKeywords.join("|") === candidate.anchorKeywords.join("|")
+  );
+}
+
+/** 사건성·의미 유사도·최종 점수 기준을 통과한 서로 다른 최대 3개 사례에 순위를 부여한다. */
 function selectTopSimilarCases(scoredGroups) {
-  return scoredGroups
+  const selected = [];
+  const sortedGroups = scoredGroups
     .filter((group) =>
       group.semanticSimilarity >= SIMULATOR_RULES.caseSimilarityCut
       && group.finalScore >= SIMULATOR_RULES.finalScoreCut,
     )
-    .sort((left, right) => right.finalScore - left.finalScore)
-    .slice(0, SIMULATOR_RULES.topK)
-    .map((group, index) => ({ ...group, finalRank: index + 1 }));
+    .filter(isEligibleDynamicCase)
+    .sort((left, right) => right.finalScore - left.finalScore);
+
+  for (const group of sortedGroups) {
+    if (isDuplicateSelectedCase(group, selected)) continue;
+    selected.push(group);
+    if (selected.length === SIMULATOR_RULES.topK) break;
+  }
+
+  return selected.map((group, index) => ({ ...group, finalRank: index + 1 }));
 }
 
 /**
@@ -87,6 +125,7 @@ function selectTopRankedCases(scoredGroups) {
 module.exports = {
   getDurationDays,
   getRecencyScore,
+  isEligibleDynamicCase,
   scoreCaseGroups,
   selectTopSimilarCases,
   selectTopRankedCases,
