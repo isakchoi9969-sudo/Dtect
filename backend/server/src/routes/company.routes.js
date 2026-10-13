@@ -28,7 +28,7 @@ router.post(
   saveCompanyAnalysisSnapshot,
 );
 router.get("/:companyId/quote", getCompanyQuote);
-router.post("/:companyId/risk-assessment", getCompanyRiskAssessment);
+router.post("/:companyId/risk-assessment", requireAuth, getCompanyRiskAssessment);
 router.get("/:companyId/quote-history", getCompanyQuoteHistory);
 router.get("/:companyId/related", getCompanyRelations);
 router.post("/:companyId/related", getCompanyRelations);

@@ -9151,11 +9151,20 @@ button:focus-visible {
 }
 
 /* 우측 하단 위험도 급상승 알림 팝업 */
-.risk-surge-toast {
+.risk-surge-toast-stack {
   position: fixed;
   right: 24px;
   bottom: 24px;
   z-index: 3000;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.risk-surge-toast {
+  position: relative;
   display: flex;
   gap: 12px;
   width: min(360px, calc(100vw - 32px));
@@ -9165,6 +9174,7 @@ button:focus-visible {
   background: #ffffff;
   box-shadow: 0 14px 36px rgba(23, 45, 75, 0.2);
   animation: risk-toast-enter 0.25s ease-out;
+  pointer-events: auto;
 }
 
 /* 팝업 왼쪽의 위험 표시 */

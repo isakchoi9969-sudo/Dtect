@@ -1,6 +1,10 @@
 const express = require("express");
 const cors = require("cors");
-const { port, frontendOrigin } = require("./config/env");
+const {
+  port,
+  frontendOrigin,
+  watchlistSchedulerEnabled,
+} = require("./config/env");
 const { pool } = require("./db/pool");
 
 const favoriteCompanyRoutes = require("./routes/favoriteCompany.routes");
@@ -67,8 +71,11 @@ app.use("/api/community/free", communityFreeRoutes);
 
 const server = app.listen(port, () => {
   console.log(`서버가 http://localhost:${port} 에서 실행 중입니다.`);
-  // 관심기업 뉴스 분석을 매시간 정각에 자동 실행합니다.
-  startWatchlistAnalysisScheduler();
+  if (watchlistSchedulerEnabled) {
+    startWatchlistAnalysisScheduler();
+  } else {
+    console.log("[관심기업 정기 분석] 환경설정에 따라 자동 실행을 등록하지 않습니다.");
+  }
 });
 
 let isShuttingDown = false;

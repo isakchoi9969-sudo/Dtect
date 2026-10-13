@@ -33,6 +33,7 @@ if (!fs.existsSync(serverEnvPath)) {
 
 const isProduction = process.env.NODE_ENV === "production";
 const developmentTokenSecret = "dtect-local-development-token-secret-change-before-deploy";
+const demoMode = process.env.DEMO_MODE === "true";
 
 module.exports = {
   port: process.env.PORT || 3000,
@@ -58,4 +59,14 @@ module.exports = {
     tokenMaxAgeSeconds: Number(process.env.AUTH_TOKEN_MAX_AGE_SECONDS) || 60 * 60 * 24 * 7,
     isProduction,
   },
+
+  // 시연 환경은 물론, 명시적으로 허용한 경우에만 실제 분석 이력·위험 알림을 생성한다.
+  // OpenAI 비용과 이메일 발송이 수반될 수 있는 자동 알림은 기본 비활성화다.
+  automatedAlertsEnabled:
+    !demoMode && process.env.ENABLE_AUTOMATED_ALERTS === "true",
+
+  // 관심기업 정기 뉴스 분석은 명시적으로 켠 환경에서만 등록합니다.
+  // 시연 환경에서는 뉴스 수집·로컬 감성분석도 주기적으로 실행하지 않습니다.
+  watchlistSchedulerEnabled:
+    process.env.ENABLE_WATCHLIST_SCHEDULER === "true",
 };

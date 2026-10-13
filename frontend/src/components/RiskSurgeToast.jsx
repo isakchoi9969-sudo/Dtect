@@ -1,12 +1,22 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { api } from "../config/api";
 import { ROUTES } from "../config/routes";
+import { DEMO_RISK_SURGE_ALERTS, isDemoMode } from "../config/demo";
 
 const POLLING_INTERVAL = 60 * 1000; // 1분마다 새 알림 확인
 const AUTO_CLOSE_DELAY = 8000; // 8초 후 팝업 자동 닫힘
+const DEMO_TOAST_VISIBLE_DELAY = 10000;
+const DEMO_TOAST_INTERVAL = 3000;
+
+function isRiskAlertPage() {
+  const pathname = window.location.pathname.replace(/\/$/, "") || "/";
+  return pathname === ROUTES.RISK_ALERT;
+}
 
 export default function RiskSurgeToast({ enabled }) {
   const [toast, setToast] = useState(null);
+  const [demoToasts, setDemoToasts] = useState([]);
 
   // 페이지를 처음 열었을 때 이미 존재하던 알림을 기억합니다.
   const knownAlertIdsRef = useRef(new Set());
@@ -14,12 +24,55 @@ export default function RiskSurgeToast({ enabled }) {
   const closeTimerRef = useRef(null);
 
   useEffect(() => {
-    // 로그인하지 않은 상태에서는 알림을 확인하지 않습니다.
-    if (!enabled) {
+    // 실제 알림은 로그인한 사용자만 확인하고, 시연 알림은 알림 페이지에서만 표시합니다.
+    if (!enabled && !isDemoMode) {
       initializedRef.current = false;
       knownAlertIdsRef.current = new Set();
       setToast(null);
+      setDemoToasts([]);
       return undefined;
+    }
+
+    if (isDemoMode) {
+      if (!isRiskAlertPage()) {
+        setDemoToasts([]);
+        return undefined;
+      }
+
+      let isActive = true;
+      const timerIds = [];
+
+      DEMO_RISK_SURGE_ALERTS.forEach((alert, index) => {
+        timerIds.push(
+          window.setTimeout(() => {
+            if (!isActive) return;
+
+            setDemoToasts((currentToasts) => [
+              ...currentToasts.filter(
+                (currentToast) => currentToast.alertId !== alert.alertId,
+              ),
+              alert,
+            ]);
+
+            timerIds.push(
+              window.setTimeout(() => {
+                if (!isActive) return;
+                setDemoToasts((currentToasts) =>
+                  currentToasts.filter(
+                    (currentToast) => currentToast.alertId !== alert.alertId,
+                  ),
+                );
+              }, DEMO_TOAST_VISIBLE_DELAY),
+            );
+          }, index * DEMO_TOAST_INTERVAL),
+        );
+      });
+
+      return () => {
+        isActive = false;
+        timerIds.forEach((timerId) => window.clearTimeout(timerId));
+        setDemoToasts([]);
+      };
     }
 
     let isActive = true;
@@ -98,55 +151,75 @@ export default function RiskSurgeToast({ enabled }) {
     };
   }, [enabled]);
 
-  if (!toast) return null;
+  const toasts = isDemoMode ? demoToasts : toast ? [toast] : [];
+
+  if (!toasts.length) return null;
 
   const handleOpenAlertPage = () => {
     window.location.assign(ROUTES.RISK_ALERT);
   };
 
-  return (
-    <aside
-      className="risk-surge-toast"
-      role="status"
-      aria-live="polite"
-      aria-label="위험도 급상승 알림"
-    >
-      <button
-        type="button"
-        className="risk-surge-toast-close"
-        onClick={() => setToast(null)}
-        aria-label="알림 닫기"
-      >
-        ×
-      </button>
-
-      <div className="risk-surge-toast-icon" aria-hidden="true">
-        !
-      </div>
-
-      <div className="risk-surge-toast-copy">
-        <p>위험도 급상승 감지</p>
-        <strong>{toast.companyName}</strong>
-        <span>
-          종합 리스크 {toast.riskLevel} ·{" "}
-          {Number(toast.riskScore ?? 0).toFixed(0)}점
-        </span>
-
-        {/* 메일 발송에 성공한 경우에만 안내 문구를 표시합니다. */}
-        {toast.emailSentAt && (
-          <span className="risk-surge-toast-email">
-            ✉ 회원가입 이메일로 알림을 발송했습니다.
-          </span>
-        )}
-
-        <button
-          type="button"
-          className="risk-surge-toast-link"
-          onClick={handleOpenAlertPage}
+  return createPortal(
+    <div className="risk-surge-toast-stack" aria-live="polite">
+      {toasts.map((currentToast) => (
+        <aside
+          className="risk-surge-toast"
+          key={currentToast.alertId}
+          role="status"
+          aria-label="위험도 급상승 알림"
         >
-          알림 보기
-        </button>
-      </div>
-    </aside>
+          <button
+            type="button"
+            className="risk-surge-toast-close"
+            onClick={() => {
+              if (currentToast.isDemo) {
+                setDemoToasts((currentToasts) =>
+                  currentToasts.filter(
+                    (item) => item.alertId !== currentToast.alertId,
+                  ),
+                );
+                return;
+              }
+
+              setToast(null);
+            }}
+            aria-label={`${currentToast.companyName} 알림 닫기`}
+          >
+            ×
+          </button>
+
+          <div className="risk-surge-toast-icon" aria-hidden="true">
+            !
+          </div>
+
+          <div className="risk-surge-toast-copy">
+            <p>위험도 급상승 감지</p>
+            <strong>{currentToast.companyName}</strong>
+            <span>
+              종합 리스크 {currentToast.riskLevel} ·{" "}
+              {Number(currentToast.riskScore ?? 0).toFixed(0)}점
+            </span>
+
+            {/* 메일 발송에 성공한 경우에만 안내 문구를 표시합니다. */}
+            {currentToast.emailSentAt && (
+              <span className="risk-surge-toast-email">
+                ✉ 회원가입 이메일로 알림을 발송했습니다.
+              </span>
+            )}
+
+            {!currentToast.isDemo && (
+              <button
+                type="button"
+                className="risk-surge-toast-link"
+                onClick={handleOpenAlertPage}
+              >
+                알림 보기
+              </button>
+            )}
+          </div>
+        </aside>
+      ))}
+    </div>,
+    document.body,
   );
 }
