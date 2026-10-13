@@ -15,7 +15,7 @@ from app.services.inference_cache import InferenceCache
 
 router = APIRouter(prefix="/api/ai", tags=["risk-assessment"])
 logger = logging.getLogger(__name__)
-_risk_cache = InferenceCache(max_entries=128, ttl_seconds=300)
+_risk_cache = InferenceCache(max_entries=128, ttl_seconds=900)
 PROMPT_VERSION = "2026-10-06-evidence-led-analysis-v2"
 
 
