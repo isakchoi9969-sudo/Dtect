@@ -1,0 +1,32 @@
+
+name: DTECT AWS Deploy
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-check:
+    name: AWS Deployment Check
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+
+    timeout-minutes: 10
+
+    steps:
+      - name: Verify deployment environment
+        run: |
+          echo "D:TECT AWS Runner connected"
+          whoami
+          hostname
+
+      - name: Run deployment dry-run
+        run: |
+          sudo -n /opt/dtect-deploy/check.sh
