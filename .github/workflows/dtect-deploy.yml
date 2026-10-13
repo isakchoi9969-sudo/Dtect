@@ -1,21 +1,27 @@
-
 name: DTECT AWS Deploy
 
 on:
+  push:
+    branches:
+      - develop
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: dtect-production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy-check:
-    name: AWS Deployment Check
+    name: AWS Deployment
     runs-on:
       - self-hosted
       - Linux
       - X64
 
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     steps:
       - name: Verify deployment environment
@@ -27,3 +33,7 @@ jobs:
       - name: Run deployment dry-run
         run: |
           sudo -n /opt/dtect-deploy/check.sh
+
+      - name: Deploy to AWS
+        run: |
+          sudo -n /opt/dtect-deploy/auto-deploy.sh
