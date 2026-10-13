@@ -69,12 +69,14 @@ app.use("/api/community/free", communityFreeRoutes);
 //   res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
 // });
 
-const server = app.listen(port, () => {
+const server = app.listen(port, "127.0.0.1", () => {
   console.log(`서버가 http://localhost:${port} 에서 실행 중입니다.`);
   if (watchlistSchedulerEnabled) {
     startWatchlistAnalysisScheduler();
   } else {
-    console.log("[관심기업 정기 분석] 환경설정에 따라 자동 실행을 등록하지 않습니다.");
+    console.log(
+      "[관심기업 정기 분석] 환경설정에 따라 자동 실행을 등록하지 않습니다.",
+    );
   }
 });
 
