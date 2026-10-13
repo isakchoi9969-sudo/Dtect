@@ -3,6 +3,8 @@ import { api } from "../config/api";
 import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
 import Header from "./Header";
+import CompanyLogo from "./CompanyLogo";
+import { DEMO_RISK_SURGE_ALERTS, isDemoMode } from "../config/demo";
 
 function formatTime(isoString) {
   if (!isoString) return "-";
@@ -20,9 +22,18 @@ export default function RiskSurgeAlertPage() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
-  const { isWatched, toggleCompany, count, limit } = useWatchlist();
+  const { isWatched, toggleCompany, count, limit } = useWatchlist({
+    enabled: !isDemoMode,
+  });
 
   const fetchAlerts = async () => {
+    if (isDemoMode) {
+      setAlerts(DEMO_RISK_SURGE_ALERTS);
+      setNotice("시연용 예시 알림을 표시하고 있습니다.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setNotice("");
 
@@ -45,6 +56,15 @@ export default function RiskSurgeAlertPage() {
     let isActive = true;
 
     const loadInitialAlerts = async () => {
+      if (isDemoMode) {
+        if (isActive) {
+          setAlerts(DEMO_RISK_SURGE_ALERTS);
+          setNotice("시연용 예시 알림을 표시하고 있습니다.");
+          setLoading(false);
+        }
+        return;
+      }
+
       try {
         const response = await api.get("/api/company/risk-surge", {
           params: { hours: 24 },
@@ -76,6 +96,7 @@ export default function RiskSurgeAlertPage() {
 
   const toggleWatchlist = (event, company) => {
     event.stopPropagation();
+    if (company.isDemo) return;
     toggleCompany(company.companyId);
   };
 
@@ -93,14 +114,16 @@ export default function RiskSurgeAlertPage() {
           <div className="risk-surge-header">
             <div>
               <h1>위험도 급상승 알림</h1>
-              <p className="risk-surge-desc">
-                종합 리스크가 높음 이상인 관심기업을 알려드립니다.
-              </p>
+              {!isDemoMode && (
+                <p className="risk-surge-desc">
+                  종합 리스크가 높음 이상인 관심기업을 알려드립니다.
+                </p>
+              )}
             </div>
           </div>
         </section>
 
-        {notice && (
+        {!isDemoMode && notice && (
           <p className="company-search-notice" role="status">
             {notice}
           </p>
@@ -134,7 +157,11 @@ export default function RiskSurgeAlertPage() {
                   ↻
                 </span>
 
-                {loading ? "새 알림 확인 중..." : "새 알림 확인"}
+                {loading
+                  ? "새 알림 확인 중..."
+                  : isDemoMode
+                    ? "시연 데이터 다시 보기"
+                    : "새 알림 확인"}
               </button>
             </div>
           </div>
@@ -160,11 +187,20 @@ export default function RiskSurgeAlertPage() {
                       type="button"
                     >
                       <span className="company-result-mark">
-                        {item.companyName?.slice(0, 2) || "??"}
+                        <CompanyLogo
+                          companyName={item.companyName || ""}
+                          size={34}
+                        />
                       </span>
 
                       <span className="company-result-copy">
                         <strong>{item.companyName}</strong>
+
+                        {item.isDemo && (
+                          <span className="risk-mail-sent">
+                            시연용 예시 데이터
+                          </span>
+                        )}
 
                         <em
                           className={`risk-badge ${isCritical ? "danger" : "caution"}`}
@@ -194,7 +230,9 @@ export default function RiskSurgeAlertPage() {
                       aria-label={`${item.companyName} 관심기업 ${
                         watched ? "해제" : "등록"
                       }`}
+                      aria-disabled={item.isDemo || undefined}
                       className={`company-star ${watched ? "is-active" : ""}`}
+                      disabled={item.isDemo}
                       onClick={(event) => toggleWatchlist(event, item)}
                       type="button"
                     >

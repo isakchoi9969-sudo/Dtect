@@ -802,6 +802,7 @@ export default function CompanyAnalysisPage() {
   const [isMarketIndicesLoading, setIsMarketIndicesLoading] = useState(true);
   const [marketIndicesError, setMarketIndicesError] = useState("");
   const [riskAssessmentResult, setRiskAssessmentResult] = useState(null);
+  const riskAssessmentRequestIdRef = useRef(0);
   const [companyDiscussionState, setCompanyDiscussionState] = useState({
     companyId: null,
     page: 1,
@@ -1093,12 +1094,21 @@ export default function CompanyAnalysisPage() {
     return () => controller.abort();
   }, [newsAnalysis, selectedCompanyId]);
 
-  useEffect(() => {
-    if (!selectedCompanyId || !newsAnalysis) return undefined;
-    const controller = new AbortController();
+  const runRiskAssessment = async () => {
+    if (!selectedCompanyId || !newsAnalysis) return;
 
-    api
-      .post(
+    const requestId = riskAssessmentRequestIdRef.current + 1;
+    riskAssessmentRequestIdRef.current = requestId;
+    setRiskAssessmentResult({
+      companyId: selectedCompanyId,
+      newsAnalysis,
+      assessment: null,
+      error: "",
+      loading: true,
+    });
+
+    try {
+      const response = await api.post(
         `/api/company/${selectedCompanyId}/risk-assessment`,
         {
           articles: (newsAnalysis.news_list || []).map((article) => ({
@@ -1111,53 +1121,30 @@ export default function CompanyAnalysisPage() {
             score: article.score,
           })),
         },
-        { signal: controller.signal },
-      )
-      .then((response) => {
-        const assessment = response.data.data || null;
+      );
 
-        setRiskAssessmentResult({
-          companyId: selectedCompanyId,
-          newsAnalysis,
-          assessment,
-          error: "",
-        });
-
-        // 실제 종합 리스크 평가가 완료된 경우에만 이력과 알림 저장
-        if (
-          assessment?.status === "ready" &&
-          Number.isFinite(Number(assessment?.riskScore))
-        ) {
-          void api
-            .post(`/api/company/${selectedCompanyId}/analysis-snapshots`, {
-              riskSignalRate: newsAnalysis.sentiment_percentages?.negative ?? 0,
-              riskScore: assessment.riskScore,
-              riskLevel: assessment.riskLevel,
-              analyzedCount: newsAnalysis.analyzed_count ?? 0,
-              analyzedAt: newsAnalysis.analyzed_at,
-            })
-            .catch((saveError) => {
-              if (saveError.response?.status !== 401) {
-                console.error("분석 이력 저장 실패:", saveError);
-              }
-            });
-        }
-      })
-      .catch((error) => {
-        if (error.code === "ERR_CANCELED") return;
-        setRiskAssessmentResult({
-          companyId: selectedCompanyId,
-          newsAnalysis,
-          assessment: null,
-          error: getApiErrorMessage(
-            error,
-            "종합 리스크 평가를 불러오지 못했습니다.",
-          ),
-        });
+      if (riskAssessmentRequestIdRef.current !== requestId) return;
+      setRiskAssessmentResult({
+        companyId: selectedCompanyId,
+        newsAnalysis,
+        assessment: response.data.data || null,
+        error: "",
+        loading: false,
       });
-
-    return () => controller.abort();
-  }, [newsAnalysis, selectedCompanyId]);
+    } catch (error) {
+      if (riskAssessmentRequestIdRef.current !== requestId) return;
+      setRiskAssessmentResult({
+        companyId: selectedCompanyId,
+        newsAnalysis,
+        assessment: null,
+        error: getApiErrorMessage(
+          error,
+          "종합 리스크 평가를 불러오지 못했습니다.",
+        ),
+        loading: false,
+      });
+    }
+  };
 
   // 선택된 기업의 뉴스 조회
   useEffect(() => {
@@ -1264,11 +1251,21 @@ export default function CompanyAnalysisPage() {
   const riskAssessmentError = hasCurrentRiskAssessment
     ? riskAssessmentResult.error
     : "";
+  // AI 분석을 실행하기 전에도 기존 점수 카드의 '평가 대기' 화면을 유지합니다.
+  const displayRiskAssessment = riskAssessment ||
+    (riskAssessmentError ? null : { status: "pending" });
   const isRiskAssessmentLoading = Boolean(
-    selectedCompanyId &&
-    (isNewsLoading || (newsAnalysis && !hasCurrentRiskAssessment)),
+    hasCurrentRiskAssessment && riskAssessmentResult.loading,
   );
-  const riskPresentation = getRiskPresentation(riskAssessment);
+  const canRunRiskAssessment = Boolean(
+    selectedCompanyId && newsAnalysis && !isNewsLoading && !isRiskAssessmentLoading,
+  );
+  const riskAssessmentButtonLabel = isRiskAssessmentLoading
+    ? "AI 분석 중..."
+    : hasCurrentRiskAssessment
+      ? "AI 분석 다시 실행"
+      : "AI 종합 리스크 분석 실행";
+  const riskPresentation = getRiskPresentation(displayRiskAssessment);
   const riskScoreFactors = [
     [
       "이슈 영향도",
@@ -1489,9 +1486,15 @@ export default function CompanyAnalysisPage() {
                   <div className="risk-assessment-loading">
                     <RiskAnalysisLoading />
                   </div>
-                ) : ["ready", "llm_unavailable", "insufficient_data"].includes(
-                    riskAssessment?.status,
-                  ) ? (
+                ) : riskAssessmentError ? (
+                  <AnalysisUnavailable
+                    label="연결 오류"
+                    description={
+                      riskAssessmentError ||
+                      "평가 결과를 불러오지 못했습니다."
+                    }
+                  />
+                ) : (
                   <div className="risk-assessment-content">
                     <div
                       className={`risk-score-summary risk-level-${riskPresentation.level}`}
@@ -1556,6 +1559,19 @@ export default function CompanyAnalysisPage() {
                         </div>
                       </div>
                       <div className="risk-score-status">
+                        <button
+                          type="button"
+                          style={{
+                            ...styles.riskAssessmentButton,
+                            ...(canRunRiskAssessment
+                              ? {}
+                              : styles.riskAssessmentButtonDisabled),
+                          }}
+                          disabled={!canRunRiskAssessment}
+                          onClick={runRiskAssessment}
+                        >
+                          {riskAssessmentButtonLabel}
+                        </button>
                         <span className="risk-score-status-caption">
                           현재 위험 수준
                         </span>
@@ -1566,7 +1582,7 @@ export default function CompanyAnalysisPage() {
                       </div>
                     </div>
                     <section
-                      className={`risk-final-evaluation ${riskAssessment.status === "ready" ? "is-ready" : "is-pending"}`}
+                      className={`risk-final-evaluation ${displayRiskAssessment.status === "ready" ? "is-ready" : "is-pending"}`}
                     >
                       <div className="risk-final-evaluation-header">
                         <span
@@ -1577,17 +1593,17 @@ export default function CompanyAnalysisPage() {
                         </span>
                         <strong>분석 결과</strong>
                         <span className="risk-final-evaluation-state">
-                          {riskAssessment.status === "ready"
+                          {displayRiskAssessment.status === "ready"
                             ? analysisToneValid &&
-                              riskAssessment.analysisMode !== "metric_fallback"
+                              displayRiskAssessment.analysisMode !== "metric_fallback"
                               ? "분석 완료"
                               : "뉴스 지표 요약"
-                            : riskAssessment.status === "insufficient_data"
+                            : displayRiskAssessment.status === "insufficient_data"
                               ? "자료 부족"
                               : "평가 대기"}
                         </span>
                       </div>
-                      {riskAssessment.status === "ready" ? (
+                      {displayRiskAssessment.status === "ready" ? (
                         <div className="risk-analysis-narrative">
                           {getAnalysisParagraphs(analysisResultToDisplay).map(
                             (paragraph, index) => (
@@ -1597,8 +1613,8 @@ export default function CompanyAnalysisPage() {
                         </div>
                       ) : (
                         <p>
-                          {riskAssessment.status === "insufficient_data"
-                            ? riskAssessment.evaluationMessage
+                          {displayRiskAssessment.status === "insufficient_data"
+                            ? displayRiskAssessment.evaluationMessage
                             : "최근 뉴스와 지표가 준비되면 이슈 및 긍정·부정 전망을 함께 표시합니다."}
                         </p>
                       )}
@@ -1611,23 +1627,23 @@ export default function CompanyAnalysisPage() {
                       {[
                         [
                           "이슈 영향도",
-                          riskAssessment.impactScore,
+                          displayRiskAssessment.impactScore,
                           "최근 기사에서 확인된 문제나 우려가 회사의 사업에 얼마나 큰 부담이 될 수 있는지 평가합니다. 점수가 높을수록 예상되는 부담이 크다는 뜻이며, 좋은 소식만으로 점수가 올라가지는 않습니다.",
                         ],
                         [
                           "이슈 보도 확산도",
-                          riskAssessment.signals?.scores
+                          displayRiskAssessment.signals?.scores
                             ?.negativeNewsAcceleration,
                           "최근 30일간 이 회사의 기사와 보도 매체가 이전보다 얼마나 늘었는지 살펴봅니다. 우려를 담은 기사 비율도 반영하므로, 점수가 높을수록 부정적 이슈가 더 널리 보도되고 있다는 뜻입니다.",
                         ],
                         [
                           "보도 지속도",
-                          riskAssessment.signals?.scores?.negativePersistence,
+                          displayRiskAssessment.signals?.scores?.negativePersistence,
                           "최근 30일 동안 우려를 담은 기사가 며칠에 걸쳐 나왔는지 봅니다. 같은 날 기사가 여러 건 나와도 하루로 세며, 15일 이상이면 100점입니다.",
                         ],
                         [
                           "기사 정서 지표",
-                          riskAssessment.signals?.scores?.negativeSentiment,
+                          displayRiskAssessment.signals?.scores?.negativeSentiment,
                           "분석한 기사 중 부정적으로 분류된 기사가 얼마나 되는지 보여줍니다. AI의 분류 확신도와 기사 수를 함께 반영해, 기사 몇 건만으로 점수가 지나치게 높아지지 않도록 합니다.",
                         ],
                       ].map(([label, score, explanation], index) => (
@@ -1682,15 +1698,6 @@ export default function CompanyAnalysisPage() {
                       ))}
                     </div>
                   </div>
-                ) : (
-                  <AnalysisUnavailable
-                    label={riskAssessmentError ? "연결 오류" : "평가 불가"}
-                    description={
-                      riskAssessmentError ||
-                      riskAssessment?.evaluationMessage ||
-                      "평가 결과를 불러오지 못했습니다."
-                    }
-                  />
                 )}
               </div>
 
@@ -2390,8 +2397,20 @@ const styles = {
     gap: "9px",
   },
 
-  panelHeaderTitle: {
-    margin: 0,
+  riskAssessmentButton: {
+    border: "none",
+    borderRadius: "7px",
+    background: "#2877D6",
+    color: "#FFFFFF",
+    cursor: "pointer",
+    fontSize: "11px",
+    fontWeight: 700,
+    padding: "8px 10px",
+  },
+
+  riskAssessmentButtonDisabled: {
+    background: "#B7C4D4",
+    cursor: "not-allowed",
   },
 
   moreButton: {

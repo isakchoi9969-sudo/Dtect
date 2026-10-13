@@ -7,12 +7,16 @@ const WATCHLIST_LIMIT = 15; // 서버 라우터의 WATCHLIST_LIMIT 과 동일하
 const getErrorMessage = (e) =>
   e.response?.data?.message || e.message || "요청에 실패했습니다.";
 
-export function useWatchlist() {
+export function useWatchlist({ enabled = true } = {}) {
   const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState(null);
 
   const fetchCompanies = useCallback(async () => {
+    if (!enabled) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -23,10 +27,16 @@ export function useWatchlist() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     let isActive = true;
+
+    if (!enabled) {
+      return () => {
+        isActive = false;
+      };
+    }
 
     const loadInitialCompanies = async () => {
       try {
@@ -44,7 +54,7 @@ export function useWatchlist() {
     return () => {
       isActive = false;
     };
-  }, [fetchCompanies]);
+  }, [enabled, fetchCompanies]);
 
   const isFavorite = useCallback(
     (companyId) =>
@@ -55,6 +65,8 @@ export function useWatchlist() {
   // 별표 토글: 이미 등록돼 있으면 DELETE, 아니면 POST
   const toggleCompany = useCallback(
     async (companyId) => {
+      if (!enabled) return;
+
       setError(null);
       try {
         if (isFavorite(companyId)) {
@@ -73,7 +85,7 @@ export function useWatchlist() {
         setError(getErrorMessage(e));
       }
     },
-    [companies.length, fetchCompanies, isFavorite],
+    [companies.length, enabled, fetchCompanies, isFavorite],
   );
 
   return {

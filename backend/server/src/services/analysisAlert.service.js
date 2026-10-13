@@ -1,4 +1,5 @@
 const { pool } = require("../db/pool");
+const { automatedAlertsEnabled } = require("../config/env");
 
 // 직전 분석보다 종합 리스크가 10점 이상 오르면 급상승 알림
 const RISK_SURGE_THRESHOLD = 10;
@@ -29,6 +30,12 @@ async function saveAnalysisAndCreateAlerts({
   analyzedCount,
   analyzedAt,
 }) {
+  // 시연 모드 및 기본 설정에서는 스냅샷·실제 알림을 남기지 않는다.
+  // 기업 상세 페이지 등의 호출 경로가 남아 있어도 알림 데이터가 생성되지 않는 서버 측 안전장치다.
+  if (!automatedAlertsEnabled) {
+    return { isWatched: false, createdAlerts: [], skipped: true };
+  }
+
   const [favorites] = await pool.query(
     `SELECT FAVORITE_ID
      FROM FAVORITE_COMPANY
