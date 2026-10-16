@@ -3,6 +3,20 @@ import CommunitySharedLayout from "./CommunitySharedLayout";
 import { PROMOTION_POSTS, RECRUITMENT_POSTS } from "../data/companyBoardDummy";
 import { api } from "../config/api";
 
+const COMPANY_CI = {
+  "모빌리티랩": "/company-ci/mobilitylab.png",
+  "그린셀": "/company-ci/greencell.png",
+  "메디노바": "/company-ci/medinova.png",
+  "로보링크": "/company-ci/robolink.png",
+  "클라우드포지": "/company-ci/cloudforge.png",
+  "아쿠아시스템즈": "/company-ci/aquasystems.png",
+  "파워실리콘": "/company-ci/powersilicon.png",
+  "스튜디오픽셀": "/company-ci/studiopixel.png",
+  "오션테크": "/company-ci/oceantech.png",
+  "솔라웨이브": "/company-ci/solarwave.png",
+  "네오브레인": "/company-ci/neobrain.png",
+};
+
 /** 실제 홍보·채용 데이터 연결 전, 탭형 화면의 공통 UI 진입점입니다. */
 export default function CommunityCompanyHubPage() {
   const [activeTab, setActiveTab] = useState("promotion");
@@ -56,7 +70,9 @@ export default function CommunityCompanyHubPage() {
             <div className="company-board-list">
               {posts.map((post) => (
                 <button className="company-board-row" type="button" key={post.id} onClick={() => setSelectedPost(post)}>
-                  {activeTab === "promotion" && <span className="company-board-image" aria-hidden="true">{post.imageLabel}</span>}
+                  <span className="company-board-image" aria-hidden="true">
+                    <img src={COMPANY_CI[post.company]} alt="" />
+                  </span>
                   <span className="company-board-row-copy"><small>{post.company}</small><strong>{post.title}</strong>{activeTab === "recruitment" && <em>{[post.job, post.career, post.employment, post.location].join(" · ")}</em>}</span>
                   <span className="company-board-row-meta"><time>{activeTab === "promotion" ? post.date : `마감 ${post.deadline}`}</time><small>조회 {post.views}</small></span>
                 </button>
@@ -66,7 +82,9 @@ export default function CommunityCompanyHubPage() {
         ) : (
           <article className="company-board-detail">
             <button type="button" className="company-board-back" onClick={() => setSelectedPost(null)}>← 목록으로</button>
-            {activeTab === "promotion" && <div className="company-board-detail-image">{selectedPost.imageLabel}</div>}
+            <div className="company-board-detail-image" aria-hidden="true">
+              <img src={COMPANY_CI[selectedPost.company]} alt="" />
+            </div>
             <span>{selectedPost.company}</span><h2>{selectedPost.title}</h2>
             <div className="company-board-detail-meta"><time>{activeTab === "promotion" ? selectedPost.date : `마감일 ${selectedPost.deadline}`}</time><span>조회 {selectedPost.views}</span></div>
             {activeTab === "recruitment" && <dl className="company-job-details"><div><dt>직무</dt><dd>{selectedPost.job}</dd></div><div><dt>경력</dt><dd>{selectedPost.career}</dd></div><div><dt>고용형태</dt><dd>{selectedPost.employment}</dd></div><div><dt>근무지역</dt><dd>{selectedPost.location}</dd></div></dl>}
