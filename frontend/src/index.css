@@ -7147,7 +7147,8 @@ button:focus-visible {
 .company-board-list { border-top: 1px solid #dce5f0; }
 .company-board-row { display: flex; width: 100%; gap: 16px; align-items: center; padding: 17px 26px; border-bottom: 1px solid #dce5f0; color: #142b47; background: #fff; cursor: pointer; text-align: left; }
 .company-board-row:hover { background: #f6f9ff; }
-.company-board-image, .company-board-detail-image { display: grid; flex: 0 0 48px; width: 48px; height: 48px; place-items: center; border-radius: 10px; color: #dbeafe; background: linear-gradient(135deg,#1d4ed8,#0f2749); font-size: 11px; font-weight: 900; }
+.company-board-image, .company-board-detail-image { display: grid; flex: 0 0 48px; width: 48px; height: 48px; place-items: center; overflow: hidden; border-radius: 10px; background: #f4f7fb; }
+.company-board-image img, .company-board-detail-image img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .company-board-row-copy { display: grid; min-width: 0; gap: 5px; }
 .company-board-row-copy small { color: #2563eb; font-size: 11px; font-weight: 750; }
 .company-board-row-copy strong { overflow: hidden; font-size: 14px; letter-spacing: -.02em; text-overflow: ellipsis; white-space: nowrap; }
