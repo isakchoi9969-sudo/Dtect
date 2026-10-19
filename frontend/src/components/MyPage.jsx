@@ -44,7 +44,10 @@ function MyPage() {
   const [profileCompaniesLoading, setProfileCompaniesLoading] = useState(false);
   const [pendingUserType, setPendingUserType] = useState(null);
   const [companyVerificationOpen, setCompanyVerificationOpen] = useState(false);
-  const [companyVerificationContext, setCompanyVerificationContext] = useState({ companyId: "", email: "" });
+  const [companyVerificationContext, setCompanyVerificationContext] = useState({
+    companyId: "",
+    email: "",
+  });
   const [verifiedCompanyIdentity, setVerifiedCompanyIdentity] = useState(null);
   const [withdrawalOpen, setWithdrawalOpen] = useState(false);
   const [withdrawalPassword, setWithdrawalPassword] = useState("");
@@ -107,7 +110,9 @@ function MyPage() {
         if (active) setSavedCasesLoading(false);
       });
 
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   // 로그인 사용자의 최근 생성 이력 5건을 불러옵니다.
@@ -183,9 +188,14 @@ function MyPage() {
 
     try {
       await deleteSavedCase(savedCaseId);
-      setSavedCases((previous) => previous.filter((item) => item.savedCaseId !== savedCaseId));
+      setSavedCases((previous) =>
+        previous.filter((item) => item.savedCaseId !== savedCaseId),
+      );
     } catch (error) {
-      window.alert(error.response?.data?.message || "저장한 과거 사례를 삭제하지 못했습니다.");
+      window.alert(
+        error.response?.data?.message ||
+          "저장한 과거 사례를 삭제하지 못했습니다.",
+      );
     }
   };
 
@@ -248,7 +258,9 @@ function MyPage() {
         verifiedCompanyIdentity.companyId !== String(profileForm.companyId) ||
         verifiedCompanyIdentity.email !== profileForm.email)
     ) {
-      setProfileError("기업 또는 이메일을 변경하려면 기업 인증을 완료해 주세요.");
+      setProfileError(
+        "기업 또는 이메일을 변경하려면 기업 인증을 완료해 주세요.",
+      );
       return;
     }
 
@@ -291,7 +303,12 @@ function MyPage() {
   };
 
   const completeCompanyVerification = ({ companyId, email }) => {
-    setProfileForm((form) => ({ ...form, userType: "COMPANY", companyId, email }));
+    setProfileForm((form) => ({
+      ...form,
+      userType: "COMPANY",
+      companyId,
+      email,
+    }));
     setVerifiedCompanyIdentity({ companyId: String(companyId), email });
     setPendingUserType(null);
     setCompanyVerificationOpen(false);
@@ -440,8 +457,11 @@ function MyPage() {
                         {formatDate(item.generatedAt)}
                       </time>
 
-                      <span className="mypage-draft-arrow" aria-hidden="true">
-                        {isExpanded ? "⌃" : "⌄"}
+                      <span
+                        className={`mypage-draft-arrow ${isExpanded ? "is-expanded" : ""}`}
+                        aria-hidden="true"
+                      >
+                        ⌄
                       </span>
                     </button>
 
@@ -500,19 +520,33 @@ function MyPage() {
             <h2 id="mypage-saved-cases-title">저장한 과거 사례</h2>
           </div>
 
-          {savedCasesError && <p className="watchlist-error" role="alert">{savedCasesError}</p>}
+          {savedCasesError && (
+            <p className="watchlist-error" role="alert">
+              {savedCasesError}
+            </p>
+          )}
           {savedCasesLoading ? (
-            <div className="watchlist-loading" role="status">저장한 과거 사례를 불러오는 중입니다.</div>
+            <div className="watchlist-loading" role="status">
+              저장한 과거 사례를 불러오는 중입니다.
+            </div>
           ) : savedCases.length > 0 ? (
             <div className="mypage-saved-case-list">
               {savedCases.map((item) => (
-                <article className="mypage-saved-case-item" key={item.savedCaseId}>
+                <article
+                  className="mypage-saved-case-item"
+                  key={item.savedCaseId}
+                >
                   <div className="mypage-saved-case-heading">
                     <span aria-hidden="true">♥</span>
                     <div>
                       <h3>{item.caseTitle}</h3>
                       <p>
-                        {[item.riskType, formatDate(item.startDate), item.articleCount && `관련 기사 ${item.articleCount}건`]
+                        {[
+                          item.riskType,
+                          formatDate(item.startDate),
+                          item.articleCount &&
+                            `관련 기사 ${item.articleCount}건`,
+                        ]
                           .filter(Boolean)
                           .join(" · ")}
                       </p>
@@ -525,11 +559,20 @@ function MyPage() {
                   )}
                   <div className="mypage-saved-case-actions">
                     {item.representativeUrl && (
-                      <a href={item.representativeUrl} target="_blank" rel="noreferrer">
+                      <a
+                        href={item.representativeUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
                         대표기사 보기
                       </a>
                     )}
-                    <button type="button" onClick={() => removeSavedCase(item.savedCaseId)}>저장 취소</button>
+                    <button
+                      type="button"
+                      onClick={() => removeSavedCase(item.savedCaseId)}
+                    >
+                      저장 취소
+                    </button>
                   </div>
                 </article>
               ))}
@@ -538,7 +581,9 @@ function MyPage() {
             <div className="watchlist-empty mypage-saved-case-empty">
               <span aria-hidden="true">♡</span>
               <h2>아직 저장한 과거 사례가 없습니다.</h2>
-              <p>과거사례 시뮬레이터에서 하트를 눌러 관심 사건을 저장해 보세요.</p>
+              <p>
+                과거사례 시뮬레이터에서 하트를 눌러 관심 사건을 저장해 보세요.
+              </p>
               <a href={ROUTES.CASE_SIMULATOR}>과거사례 시뮬레이터로 이동</a>
             </div>
           )}
@@ -567,7 +612,10 @@ function MyPage() {
           ) : companies.length > 0 ? (
             <div className="mypage-company-grid">
               {companies.map((company) => (
-                <article className="mypage-company-card" key={company.companyId}>
+                <article
+                  className="mypage-company-card"
+                  key={company.companyId}
+                >
                   <button
                     type="button"
                     className="mypage-company-card-main"
@@ -576,7 +624,11 @@ function MyPage() {
                   >
                     <div className="mypage-company-card-header">
                       <span className="mypage-company-logo">
-                        <CompanyLogo companyName={company.companyName} size={34} visualOffset={{ x: 6, y: 8 }} />
+                        <CompanyLogo
+                          companyName={company.companyName}
+                          size={34}
+                          visualOffset={{ x: 6, y: 8 }}
+                        />
                       </span>
                       <div>
                         <strong>{company.companyName}</strong>
@@ -618,13 +670,23 @@ function MyPage() {
               <p>WATCHLIST</p>
               <h2 id="mypage-remove-title">관심기업 해제</h2>
               <span id="mypage-remove-description">
-                <strong>{pendingRemoval.companyName}</strong>을(를) 관심기업에서 삭제할까요?
+                <strong>{pendingRemoval.companyName}</strong>을(를) 관심기업에서
+                삭제할까요?
               </span>
               <div className="mypage-modal-actions">
-                <button type="button" onClick={() => setPendingRemoval(null)} disabled={removing}>
+                <button
+                  type="button"
+                  onClick={() => setPendingRemoval(null)}
+                  disabled={removing}
+                >
                   취소
                 </button>
-                <button type="button" className="is-danger" onClick={confirmRemoval} disabled={removing}>
+                <button
+                  type="button"
+                  className="is-danger"
+                  onClick={confirmRemoval}
+                  disabled={removing}
+                >
                   {removing ? "삭제 중..." : "삭제"}
                 </button>
               </div>
@@ -651,7 +713,9 @@ function MyPage() {
               <form onSubmit={verifyPassword}>
                 <p>ACCOUNT SECURITY</p>
                 <h2 id="mypage-profile-modal-title">현재 비밀번호 확인</h2>
-                <span>개인정보를 수정하려면 현재 비밀번호를 입력해 주세요.</span>
+                <span>
+                  개인정보를 수정하려면 현재 비밀번호를 입력해 주세요.
+                </span>
                 <label className="mypage-profile-field">
                   현재 비밀번호
                   <input
@@ -663,10 +727,24 @@ function MyPage() {
                     value={currentPassword}
                   />
                 </label>
-                {profileError && <p className="mypage-profile-error" role="alert">{profileError}</p>}
+                {profileError && (
+                  <p className="mypage-profile-error" role="alert">
+                    {profileError}
+                  </p>
+                )}
                 <div className="mypage-modal-actions">
-                  <button type="button" onClick={closeProfileEditor} disabled={profileSaving}>취소</button>
-                  <button type="submit" className="is-primary" disabled={profileSaving}>
+                  <button
+                    type="button"
+                    onClick={closeProfileEditor}
+                    disabled={profileSaving}
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="submit"
+                    className="is-primary"
+                    disabled={profileSaving}
+                  >
                     {profileSaving ? "확인 중..." : "확인"}
                   </button>
                 </div>
@@ -675,12 +753,19 @@ function MyPage() {
               <form onSubmit={saveProfile}>
                 <p>ACCOUNT</p>
                 <h2 id="mypage-profile-modal-title">개인정보 수정</h2>
-                <span>이름과 이메일을 수정하고, 필요하면 새 비밀번호를 설정하세요.</span>
+                <span>
+                  이름과 이메일을 수정하고, 필요하면 새 비밀번호를 설정하세요.
+                </span>
                 <label className="mypage-profile-field">
                   이름
                   <input
                     autoComplete="name"
-                    onChange={(event) => setProfileForm((form) => ({ ...form, name: event.target.value }))}
+                    onChange={(event) =>
+                      setProfileForm((form) => ({
+                        ...form,
+                        name: event.target.value,
+                      }))
+                    }
                     required
                     value={profileForm.name}
                   />
@@ -689,7 +774,12 @@ function MyPage() {
                   이메일
                   <input
                     autoComplete="email"
-                    onChange={(event) => setProfileForm((form) => ({ ...form, email: event.target.value }))}
+                    onChange={(event) =>
+                      setProfileForm((form) => ({
+                        ...form,
+                        email: event.target.value,
+                      }))
+                    }
                     required
                     type="email"
                     value={profileForm.email}
@@ -699,18 +789,24 @@ function MyPage() {
                   <span>회원 유형</span>
                   <div>
                     <button
-                      className={profileForm.userType === "PERSONAL" ? "is-selected" : ""}
+                      className={
+                        profileForm.userType === "PERSONAL" ? "is-selected" : ""
+                      }
                       onClick={() => {
-                        if (profileForm.userType !== "PERSONAL") setPendingUserType("PERSONAL");
+                        if (profileForm.userType !== "PERSONAL")
+                          setPendingUserType("PERSONAL");
                       }}
                       type="button"
                     >
                       개인 회원
                     </button>
                     <button
-                      className={profileForm.userType === "COMPANY" ? "is-selected" : ""}
+                      className={
+                        profileForm.userType === "COMPANY" ? "is-selected" : ""
+                      }
                       onClick={() => {
-                        if (profileForm.userType !== "COMPANY") openCompanyVerification();
+                        if (profileForm.userType !== "COMPANY")
+                          openCompanyVerification();
                       }}
                       type="button"
                     >
@@ -723,15 +819,22 @@ function MyPage() {
                     소속 기업
                     <select
                       disabled={profileCompaniesLoading}
-                      onChange={(event) => openCompanyVerification(event.target.value)}
+                      onChange={(event) =>
+                        openCompanyVerification(event.target.value)
+                      }
                       required
                       value={profileForm.companyId}
                     >
                       <option value="">
-                        {profileCompaniesLoading ? "기업 목록을 불러오는 중..." : "소속 기업을 선택하세요"}
+                        {profileCompaniesLoading
+                          ? "기업 목록을 불러오는 중..."
+                          : "소속 기업을 선택하세요"}
                       </option>
                       {profileCompanies.map((company) => (
-                        <option key={company.companyId} value={company.companyId}>
+                        <option
+                          key={company.companyId}
+                          value={company.companyId}
+                        >
                           {company.companyName}
                         </option>
                       ))}
@@ -743,7 +846,12 @@ function MyPage() {
                   <input
                     autoComplete="new-password"
                     minLength="8"
-                    onChange={(event) => setProfileForm((form) => ({ ...form, newPassword: event.target.value }))}
+                    onChange={(event) =>
+                      setProfileForm((form) => ({
+                        ...form,
+                        newPassword: event.target.value,
+                      }))
+                    }
                     type="password"
                     value={profileForm.newPassword}
                   />
@@ -753,12 +861,21 @@ function MyPage() {
                   <input
                     autoComplete="new-password"
                     minLength="8"
-                    onChange={(event) => setProfileForm((form) => ({ ...form, newPasswordConfirm: event.target.value }))}
+                    onChange={(event) =>
+                      setProfileForm((form) => ({
+                        ...form,
+                        newPasswordConfirm: event.target.value,
+                      }))
+                    }
                     type="password"
                     value={profileForm.newPasswordConfirm}
                   />
                 </label>
-                {profileError && <p className="mypage-profile-error" role="alert">{profileError}</p>}
+                {profileError && (
+                  <p className="mypage-profile-error" role="alert">
+                    {profileError}
+                  </p>
+                )}
                 <div className="mypage-modal-actions mypage-profile-actions">
                   <button
                     type="button"
@@ -769,8 +886,18 @@ function MyPage() {
                     회원 탈퇴하기
                   </button>
                   <div className="mypage-profile-actions-right">
-                    <button type="button" onClick={closeProfileEditor} disabled={profileSaving}>취소</button>
-                    <button type="submit" className="is-primary" disabled={profileSaving}>
+                    <button
+                      type="button"
+                      onClick={closeProfileEditor}
+                      disabled={profileSaving}
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="submit"
+                      className="is-primary"
+                      disabled={profileSaving}
+                    >
                       {profileSaving ? "저장 중..." : "저장"}
                     </button>
                   </div>
@@ -782,7 +909,10 @@ function MyPage() {
       )}
 
       {pendingUserType && (
-        <div className="mypage-modal-backdrop mypage-confirm-backdrop" role="presentation">
+        <div
+          className="mypage-modal-backdrop mypage-confirm-backdrop"
+          role="presentation"
+        >
           <section
             className="mypage-modal mypage-member-type-modal"
             role="dialog"
@@ -791,7 +921,9 @@ function MyPage() {
           >
             <p>MEMBERSHIP TYPE</p>
             <h2 id="mypage-member-type-title">
-              {pendingUserType === "COMPANY" ? "기업 회원으로 변경할까요?" : "개인 회원으로 변경할까요?"}
+              {pendingUserType === "COMPANY"
+                ? "기업 회원으로 변경할까요?"
+                : "개인 회원으로 변경할까요?"}
             </h2>
             <span>
               {pendingUserType === "COMPANY"
@@ -799,7 +931,9 @@ function MyPage() {
                 : "저장하면 소속 기업 정보가 해제되고 개인 회원으로 변경됩니다."}
             </span>
             <div className="mypage-modal-actions">
-              <button type="button" onClick={() => setPendingUserType(null)}>취소</button>
+              <button type="button" onClick={() => setPendingUserType(null)}>
+                취소
+              </button>
               <button
                 type="button"
                 className="is-primary"
@@ -807,7 +941,8 @@ function MyPage() {
                   setProfileForm((form) => ({
                     ...form,
                     userType: pendingUserType,
-                    companyId: pendingUserType === "PERSONAL" ? "" : form.companyId,
+                    companyId:
+                      pendingUserType === "PERSONAL" ? "" : form.companyId,
                   }));
                   setPendingUserType(null);
                 }}
@@ -847,23 +982,40 @@ function MyPage() {
               <p>ACCOUNT WITHDRAWAL</p>
               <h2 id="mypage-withdrawal-modal-title">정말 탈퇴하시겠습니까?</h2>
               <span>
-                관심기업, 알림 및 저장한 대응자료가 삭제됩니다. 커뮤니티 글과 댓글은 <strong>탈퇴한 사용자</strong>로 표시됩니다.
+                관심기업, 알림 및 저장한 대응자료가 삭제됩니다. 커뮤니티 글과
+                댓글은 <strong>탈퇴한 사용자</strong>로 표시됩니다.
               </span>
               <label className="mypage-profile-field">
                 현재 비밀번호
                 <input
                   autoComplete="current-password"
                   autoFocus
-                  onChange={(event) => setWithdrawalPassword(event.target.value)}
+                  onChange={(event) =>
+                    setWithdrawalPassword(event.target.value)
+                  }
                   required
                   type="password"
                   value={withdrawalPassword}
                 />
               </label>
-              {withdrawalError && <p className="mypage-profile-error" role="alert">{withdrawalError}</p>}
+              {withdrawalError && (
+                <p className="mypage-profile-error" role="alert">
+                  {withdrawalError}
+                </p>
+              )}
               <div className="mypage-modal-actions">
-                <button type="button" onClick={closeWithdrawal} disabled={withdrawing}>취소</button>
-                <button type="submit" className="is-danger" disabled={withdrawing}>
+                <button
+                  type="button"
+                  onClick={closeWithdrawal}
+                  disabled={withdrawing}
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="is-danger"
+                  disabled={withdrawing}
+                >
                   {withdrawing ? "탈퇴 처리 중..." : "탈퇴하기"}
                 </button>
               </div>

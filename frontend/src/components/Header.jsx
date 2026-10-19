@@ -1,6 +1,7 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { navigationItems } from "../data/landingData";
 import { ROUTES } from "../config/routes";
+import { buildAuthUrl } from "../utils/authNavigation";
 import { api } from "../config/api";
 import ThemeToggle from "./ThemeToggle";
 import RiskSurgeToast from "./RiskSurgeToast";
@@ -165,7 +166,7 @@ function Header() {
             </>
           ) : (
             <a
-              href={ROUTES.LOGIN}
+              href={buildAuthUrl(ROUTES.LOGIN)}
               className="header-icon-button desktop-login"
               aria-label={copy.login}
               title={copy.login}
@@ -241,7 +242,7 @@ function Header() {
             </>
           ) : (
             <a
-              href={ROUTES.LOGIN}
+              href={buildAuthUrl(ROUTES.LOGIN)}
               className="login-button mobile-login"
               onClick={closeMobileMenu}
             >

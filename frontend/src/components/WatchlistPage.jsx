@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
+import { buildAuthUrl } from "../utils/authNavigation";
 import CompanyLogo from "./CompanyLogo";
 import Header from "./Header";
+import "./AnalysisAccess.css";
 
 const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the shared Header is intentionally untouched. */
 .watchlist-page-content {
@@ -629,7 +631,7 @@ const watchlistStyles = String.raw`/* Scoped to the watchlist content only; the 
 `;
 
 export default function WatchlistPage() {
-  const { companies, toggleCompany, count, limit, loading, error } =
+  const { companies, toggleCompany, count, limit, loading, error, requiresLogin } =
     useWatchlist();
   const [pendingRemoval, setPendingRemoval] = useState(null);
   const [removing, setRemoving] = useState(false);
@@ -662,16 +664,16 @@ export default function WatchlistPage() {
             <span>별표로 저장한 기업의 리스크 변화를 한눈에 확인하세요.</span>
           </div>
 
-          <strong
+          {!requiresLogin && <strong
             className="watchlist-count"
             aria-label={`관심 기업 ${count}개, 최대 ${limit}개`}
           >
             <span className="watchlist-count-value">{count}</span>
             <small> / {limit}개</small>
-          </strong>
+          </strong>}
         </header>
 
-        {error && (
+        {error && !requiresLogin && (
           <p className="watchlist-error" role="alert">
             {error}
           </p>
@@ -681,6 +683,16 @@ export default function WatchlistPage() {
           <div className="watchlist-loading" role="status" aria-live="polite">
             <span className="watchlist-loading-dot" aria-hidden="true" />
             관심기업을 불러오는 중입니다.
+          </div>
+        ) : requiresLogin ? (
+          <div className="watchlist-login-panel">
+            <span className="risk-analysis-gate-icon" aria-hidden="true">☆</span>
+            <h2>관심 있는 기업을 모아<br />나만의 목록을 만들어 보세요</h2>
+            <p>로그인하고 기업명 옆의 별표를 누르면<br />관심기업의 리스크 변화를 한곳에서 확인하실 수 있습니다.</p>
+            <div className="watchlist-login-actions">
+              <a href={buildAuthUrl(ROUTES.LOGIN)}>로그인하고 시작하기</a>
+              <a href={buildAuthUrl(ROUTES.SIGNUP)}>회원가입</a>
+            </div>
           </div>
         ) : companies.length > 0 ? (
           <div className="watchlist-grid">
