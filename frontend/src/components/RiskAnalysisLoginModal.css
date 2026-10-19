@@ -1,0 +1,95 @@
+.risk-login-dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px);
+  padding: 0;
+  border: 1px solid #dce5ef;
+  border-radius: 24px;
+  background: #fff;
+  color: #14263d;
+  box-shadow: 0 24px 80px #06132440;
+}
+.risk-login-dialog::backdrop {
+  background: #071321a6;
+  backdrop-filter: blur(5px);
+}
+.risk-login-dialog-content {
+  position: relative;
+  padding: 38px 28px 30px;
+  text-align: center;
+}
+.risk-login-dialog-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #64748b;
+  font-size: 26px;
+  cursor: pointer;
+}
+.risk-login-dialog-close:hover { background: #edf3fa; }
+.risk-login-dialog-icon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 22px;
+  border-radius: 18px;
+  background: #eaf3ff;
+  color: #2678d8;
+}
+.risk-login-dialog-icon svg { width: 32px; height: 32px; }
+.risk-login-dialog h2 {
+  margin: 0;
+  font-size: clamp(21px, 5vw, 24px);
+  line-height: 1.5;
+  letter-spacing: -0.04em;
+  word-break: keep-all;
+}
+.risk-login-dialog p {
+  margin: 14px 0 28px;
+  color: #52657c;
+  font-size: 14px;
+  line-height: 1.8;
+  word-break: keep-all;
+}
+.risk-login-dialog-primary {
+  display: block;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #226bd1;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 750;
+  text-decoration: none;
+}
+.risk-login-dialog-primary:hover { background: #1859b5; }
+.risk-login-dialog-signup {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+  font-size: 13px;
+  color: #64748b;
+}
+.risk-login-dialog-signup a { color: #226bd1; font-weight: 750; }
+.risk-login-dialog :is(a, button):focus-visible {
+  outline: 3px solid #72aaf0;
+  outline-offset: 4px;
+}
+:root[data-theme="dark"] .risk-login-dialog {
+  border-color: #354a61;
+  background: #192737;
+  color: #eff5ff;
+}
+:root[data-theme="dark"] .risk-login-dialog p,
+:root[data-theme="dark"] .risk-login-dialog-signup,
+:root[data-theme="dark"] .risk-login-dialog-close { color: #b9c9dd; }
+:root[data-theme="dark"] .risk-login-dialog-close:hover,
+:root[data-theme="dark"] .risk-login-dialog-icon { background: #243e59; }
+:root[data-theme="dark"] .risk-login-dialog-icon,
+:root[data-theme="dark"] .risk-login-dialog-signup a { color: #8dc1ff; }

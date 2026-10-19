@@ -1,0 +1,100 @@
+.risk-assessment-stage { display: contents; }
+.risk-sentiment-combined-card > .overall-risk-assessment > .risk-assessment-stage.is-gated {
+  position: relative;
+  display: grid;
+  grid-column: 1;
+  grid-row: 2 / 4;
+  min-height: 310px;
+  margin-left: 27px;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid #dce7f4;
+  border-radius: 14px;
+  background: #f5f9ff;
+}
+.risk-sentiment-combined-card .is-gated .risk-assessment-content {
+  display: block;
+  padding: 20px;
+  filter: blur(5px);
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+}
+.risk-sentiment-combined-card .is-gated :is(.risk-score-summary, .risk-final-evaluation) { margin: 0 0 14px; }
+.risk-sentiment-combined-card .is-gated :is(.risk-signal-heading, .risk-signal-list) { display: none; }
+.risk-analysis-gate {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px;
+  background: #f8fbffb8;
+  text-align: center;
+}
+.risk-analysis-gate-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 14px;
+  border-radius: 15px;
+  background: #e1edff;
+  color: #236bd6;
+  font-size: 28px;
+}
+.risk-analysis-gate h4 { margin: 0; color: #173252; font-size: 20px; line-height: 1.5; word-break: keep-all; }
+.risk-analysis-gate p { margin: 10px 0 20px; color: #526b87; font-size: 14px; line-height: 1.8; }
+.risk-analysis-gate button {
+  min-height: 48px;
+  padding: 13px 24px;
+  border: 0;
+  border-radius: 11px;
+  background: #256de0;
+  box-shadow: 0 6px 20px #256de033;
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.risk-analysis-gate button:hover:not(:disabled) { background: #1858be; }
+.risk-analysis-gate button:disabled { opacity: 0.6; cursor: wait; }
+.risk-analysis-gate button:focus-visible { outline: 3px solid #73a9fb; outline-offset: 4px; }
+.risk-sentiment-combined-card .risk-assessment-stage > .risk-assessment-loading,
+.risk-sentiment-combined-card .risk-assessment-stage > .analysis-unavailable {
+  grid-column: 1;
+  grid-row: 2 / 4;
+  align-self: stretch;
+  min-height: 310px;
+  margin-left: 27px;
+}
+.watchlist-login-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px 24px;
+  border: 1px solid #dce7f4;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f5f9ff, #fff);
+  text-align: center;
+}
+.watchlist-login-panel h2 { margin: 0; color: #173252; font-size: clamp(22px, 4vw, 28px); line-height: 1.5; word-break: keep-all; }
+.watchlist-login-panel p { margin: 16px 0 26px; color: #526b87; font-size: 15px; line-height: 1.9; word-break: keep-all; }
+.watchlist-login-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.watchlist-login-actions a { padding: 13px 24px; border: 1px solid #ccd9ea; border-radius: 11px; color: #236bd6; background: #fff; font-weight: 750; text-decoration: none; }
+.watchlist-login-actions a:first-child { border-color: #256de0; background: #256de0; color: #fff; }
+.watchlist-login-actions a:focus-visible { outline: 3px solid #73a9fb; outline-offset: 4px; }
+:root[data-theme="dark"] :is(.risk-assessment-stage.is-gated, .watchlist-login-panel) { border-color: #344b64; background: #192b3e; }
+:root[data-theme="dark"] .risk-analysis-gate { background: #17283bc4; }
+:root[data-theme="dark"] :is(.risk-analysis-gate h4, .watchlist-login-panel h2) { color: #eef5ff; }
+:root[data-theme="dark"] :is(.risk-analysis-gate p, .watchlist-login-panel p) { color: #bbcee4; }
+:root[data-theme="dark"] .risk-analysis-gate-icon { background: #284767; color: #91c3ff; }
+:root[data-theme="dark"] .watchlist-login-actions a:not(:first-child) { background: #20374e; border-color: #466484; color: #b7d8ff; }
+@media (max-width: 900px) {
+  .risk-sentiment-combined-card > .overall-risk-assessment > .risk-assessment-stage.is-gated,
+  .risk-sentiment-combined-card .risk-assessment-stage > .risk-assessment-loading,
+  .risk-sentiment-combined-card .risk-assessment-stage > .analysis-unavailable { margin: 0 20px; }
+}
