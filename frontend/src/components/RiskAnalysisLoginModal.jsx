@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ROUTES } from "../config/routes";
+import { buildAuthUrl } from "../utils/authNavigation";
 import "./RiskAnalysisLoginModal.css";
 
 export default function RiskAnalysisLoginModal({ onClose, purpose = "risk" }) {
@@ -46,10 +47,10 @@ export default function RiskAnalysisLoginModal({ onClose, purpose = "risk" }) {
         <p id="risk-login-description">
           {isWatchlist ? <>로그인하시면 관심기업을 저장하고<br />기업별 리스크를 편리하게 확인하실 수 있습니다.</> : <>AI 종합 리스크 분석으로 기업의 위험 지수와<br />주요 이슈를 함께 살펴보실 수 있습니다.</>}
         </p>
-        <a ref={loginRef} className="risk-login-dialog-primary" href={ROUTES.LOGIN}>{isWatchlist ? "로그인하고 관심기업 저장하기" : "로그인하고 분석하기"}</a>
+        <a ref={loginRef} className="risk-login-dialog-primary" href={buildAuthUrl(ROUTES.LOGIN)}>{isWatchlist ? "로그인하고 관심기업 저장하기" : "로그인하고 분석하기"}</a>
         <div className="risk-login-dialog-signup">
           <span>아직 회원이 아니신가요?</span>
-          <a href={ROUTES.SIGNUP}>회원가입</a>
+          <a href={buildAuthUrl(ROUTES.SIGNUP)}>회원가입</a>
         </div>
       </div>
     </dialog>,
