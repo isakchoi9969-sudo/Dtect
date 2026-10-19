@@ -7,6 +7,8 @@ import { api } from "../config/api";
 import { ROUTES } from "../config/routes";
 import { paginate } from "../utils/pagination";
 import CompanyLogo from "./CompanyLogo";
+import RiskAnalysisLoginModal from "./RiskAnalysisLoginModal";
+import "./AnalysisAccess.css";
 
 /* =========================================================
    유틸
@@ -802,6 +804,8 @@ export default function CompanyAnalysisPage() {
   const [isMarketIndicesLoading, setIsMarketIndicesLoading] = useState(true);
   const [marketIndicesError, setMarketIndicesError] = useState("");
   const [riskAssessmentResult, setRiskAssessmentResult] = useState(null);
+  const [loginPrompt, setLoginPrompt] = useState(null);
+  const [isCheckingRiskAccess, setIsCheckingRiskAccess] = useState(false);
   const riskAssessmentRequestIdRef = useRef(0);
   const [companyDiscussionState, setCompanyDiscussionState] = useState({
     companyId: null,
@@ -1095,19 +1099,23 @@ export default function CompanyAnalysisPage() {
   }, [newsAnalysis, selectedCompanyId]);
 
   const runRiskAssessment = async () => {
-    if (!selectedCompanyId || !newsAnalysis) return;
+    if (!selectedCompanyId || !newsAnalysis || isCheckingRiskAccess) return;
 
     const requestId = riskAssessmentRequestIdRef.current + 1;
     riskAssessmentRequestIdRef.current = requestId;
-    setRiskAssessmentResult({
-      companyId: selectedCompanyId,
-      newsAnalysis,
-      assessment: null,
-      error: "",
-      loading: true,
-    });
+    setIsCheckingRiskAccess(true);
 
     try {
+      await api.get("/api/auth/me");
+      if (riskAssessmentRequestIdRef.current !== requestId) return;
+      setRiskAssessmentResult({
+        companyId: selectedCompanyId,
+        newsAnalysis,
+        assessment: null,
+        error: "",
+        loading: true,
+      });
+      setIsCheckingRiskAccess(false);
       const response = await api.post(
         `/api/company/${selectedCompanyId}/risk-assessment`,
         {
@@ -1133,6 +1141,11 @@ export default function CompanyAnalysisPage() {
       });
     } catch (error) {
       if (riskAssessmentRequestIdRef.current !== requestId) return;
+      if (error.response?.status === 401) {
+        setRiskAssessmentResult(null);
+        setLoginPrompt("risk");
+        return;
+      }
       setRiskAssessmentResult({
         companyId: selectedCompanyId,
         newsAnalysis,
@@ -1143,7 +1156,16 @@ export default function CompanyAnalysisPage() {
         ),
         loading: false,
       });
+    } finally {
+      if (riskAssessmentRequestIdRef.current === requestId) {
+        setIsCheckingRiskAccess(false);
+      }
     }
+  };
+
+  const toggleWatchlistWithLogin = async () => {
+    const result = await toggleCompany(selectedCompanyId);
+    if (result?.requiresLogin) setLoginPrompt("watchlist");
   };
 
   // 선택된 기업의 뉴스 조회
@@ -1258,9 +1280,13 @@ export default function CompanyAnalysisPage() {
     hasCurrentRiskAssessment && riskAssessmentResult.loading,
   );
   const canRunRiskAssessment = Boolean(
-    selectedCompanyId && newsAnalysis && !isNewsLoading && !isRiskAssessmentLoading,
+    selectedCompanyId && newsAnalysis && !isNewsLoading && !isRiskAssessmentLoading && !isCheckingRiskAccess,
   );
-  const riskAssessmentButtonLabel = isRiskAssessmentLoading
+  const isRiskAssessmentGated = !isRiskAssessmentLoading && !riskAssessmentError &&
+    (!riskAssessment || riskAssessment.status === "pending");
+  const riskAssessmentButtonLabel = isCheckingRiskAccess
+    ? "로그인 확인 중..."
+    : isRiskAssessmentLoading
     ? "AI 분석 중..."
     : hasCurrentRiskAssessment
       ? "AI 분석 다시 실행"
@@ -1414,7 +1440,7 @@ export default function CompanyAnalysisPage() {
                   className={`company-watch-star${
                     isWatched(selectedCompany.id) ? " active" : ""
                   }`}
-                  onClick={() => toggleCompany(selectedCompany.id)}
+                  onClick={toggleWatchlistWithLogin}
                   title={
                     isWatched(selectedCompany.id)
                       ? "관심기업 해제"
@@ -1482,6 +1508,7 @@ export default function CompanyAnalysisPage() {
                         : "근거 기반 평가"}
                   </span>
                 </div>
+                <div className={`risk-assessment-stage${isRiskAssessmentGated ? " is-gated" : ""}`}>
                 {isRiskAssessmentLoading ? (
                   <div className="risk-assessment-loading">
                     <RiskAnalysisLoading />
@@ -1495,7 +1522,7 @@ export default function CompanyAnalysisPage() {
                     }
                   />
                 ) : (
-                  <div className="risk-assessment-content">
+                  <div className="risk-assessment-content" inert={isRiskAssessmentGated ? true : undefined} aria-hidden={isRiskAssessmentGated || undefined}>
                     <div
                       className={`risk-score-summary risk-level-${riskPresentation.level}`}
                     >
@@ -1559,6 +1586,7 @@ export default function CompanyAnalysisPage() {
                         </div>
                       </div>
                       <div className="risk-score-status">
+                        {!isRiskAssessmentGated && (
                         <button
                           type="button"
                           style={{
@@ -1572,6 +1600,7 @@ export default function CompanyAnalysisPage() {
                         >
                           {riskAssessmentButtonLabel}
                         </button>
+                        )}
                         <span className="risk-score-status-caption">
                           현재 위험 수준
                         </span>
@@ -1699,6 +1728,18 @@ export default function CompanyAnalysisPage() {
                     </div>
                   </div>
                 )}
+                {isRiskAssessmentGated && (
+                  <div className="risk-analysis-gate">
+                    <span className="risk-analysis-gate-icon" aria-hidden="true">✦</span>
+                    <h4>이 기업의 위험 신호가 궁금하신가요?</h4>
+                    <p>최신 뉴스와 주요 지표를 종합한<br />AI 리스크 분석을 확인해 보세요.</p>
+                    <button type="button" onClick={runRiskAssessment} disabled={!canRunRiskAssessment}>
+                      {isNewsLoading ? "뉴스를 준비하고 있습니다..." : riskAssessmentButtonLabel}
+                      <span aria-hidden="true"> →</span>
+                    </button>
+                  </div>
+                )}
+                </div>
               </div>
 
               {/* 감성 분석 */}
@@ -2082,6 +2123,9 @@ export default function CompanyAnalysisPage() {
         </div>
       </main>
       {isNewsLoading && <AnalysisLoader companyName={selectedCompany.name} />}
+      {loginPrompt && (
+        <RiskAnalysisLoginModal purpose={loginPrompt} onClose={() => setLoginPrompt(null)} />
+      )}
     </>
   );
 }

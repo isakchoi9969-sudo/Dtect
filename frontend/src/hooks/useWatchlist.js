@@ -11,6 +11,7 @@ export function useWatchlist({ enabled = true } = {}) {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState(null);
+  const [requiresLogin, setRequiresLogin] = useState(false);
 
   const fetchCompanies = useCallback(async () => {
     if (!enabled) {
@@ -22,7 +23,9 @@ export function useWatchlist({ enabled = true } = {}) {
     try {
       const { data } = await api.get(API_URL);
       setCompanies(data);
+      setRequiresLogin(false);
     } catch (e) {
+      setRequiresLogin(e.response?.status === 401);
       setError(getErrorMessage(e));
     } finally {
       setLoading(false);
@@ -41,9 +44,15 @@ export function useWatchlist({ enabled = true } = {}) {
     const loadInitialCompanies = async () => {
       try {
         const { data } = await api.get(API_URL);
-        if (isActive) setCompanies(data);
+        if (isActive) {
+          setCompanies(data);
+          setRequiresLogin(false);
+        }
       } catch (e) {
-        if (isActive) setError(getErrorMessage(e));
+        if (isActive) {
+          setError(getErrorMessage(e));
+          setRequiresLogin(e.response?.status === 401);
+        }
       } finally {
         if (isActive) setLoading(false);
       }
@@ -66,6 +75,7 @@ export function useWatchlist({ enabled = true } = {}) {
   const toggleCompany = useCallback(
     async (companyId) => {
       if (!enabled) return;
+      if (requiresLogin) return { requiresLogin: true };
 
       setError(null);
       try {
@@ -83,9 +93,13 @@ export function useWatchlist({ enabled = true } = {}) {
         await fetchCompanies(); // 서버 기준으로 목록 재조회
       } catch (e) {
         setError(getErrorMessage(e));
+        if (e.response?.status === 401) {
+          setRequiresLogin(true);
+          return { requiresLogin: true };
+        }
       }
     },
-    [companies.length, enabled, fetchCompanies, isFavorite],
+    [companies.length, enabled, fetchCompanies, isFavorite, requiresLogin],
   );
 
   return {
@@ -97,5 +111,6 @@ export function useWatchlist({ enabled = true } = {}) {
     limit: WATCHLIST_LIMIT,
     loading,
     error,
+    requiresLogin,
   };
 }
