@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ROUTES } from "../config/routes";
+import { buildAuthUrl, getAuthReturnPath } from "../utils/authNavigation";
 // 🔧 변경 1: axios 를 직접 쓰지 않고 config/api.js 의 공용 인스턴스를 쓴다.
 //    - baseURL 이 한 곳(api.js)에만 있으므로 포트가 바뀌어도 여기는 안 건드려도 된다.
 //    - "http://localhost:3000" 하드코딩이 파일마다 흩어지는 걸 막는다.
@@ -27,6 +28,9 @@ function extractErrorMessage(error) {
 
 function AuthPage({ mode }) {
   const isSignup = mode === "signup";
+  const returnTo = getAuthReturnPath();
+  const loginUrl = buildAuthUrl(ROUTES.LOGIN, returnTo);
+  const signupUrl = buildAuthUrl(ROUTES.SIGNUP, returnTo);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userType, setUserType] = useState("PERSONAL");
@@ -130,7 +134,7 @@ function AuthPage({ mode }) {
         //    baseURL 은 api.js 가 이미 붙여주므로 경로만 적으면 된다.
         const response = await api.post("/api/auth/signup", data);
         alert(response.data.message || "회원가입이 완료되었습니다!");
-        window.location.href = ROUTES.LOGIN; // 로그인 페이지로 이동
+        window.location.href = loginUrl;
       } else {
         // 2️⃣ 로그인 요청
         const response = await api.post("/api/auth/login", {
@@ -140,7 +144,7 @@ function AuthPage({ mode }) {
         alert(response.data.message || "로그인 성공!");
         localStorage.setItem("isLoggedIn", "true");
 
-        window.location.href = ROUTES.HOME; // 메인 페이지로 이동
+        window.location.href = returnTo;
       }
     } catch (error) {
       console.error("인증 실패:", error);
@@ -162,7 +166,7 @@ function AuthPage({ mode }) {
         email,
       });
       alert(response.data.message || "회원가입이 완료되었습니다!");
-      window.location.href = ROUTES.LOGIN;
+      window.location.href = loginUrl;
     } catch (error) {
       console.error("인증 실패:", error);
       alert(extractErrorMessage(error));
@@ -572,7 +576,7 @@ function AuthPage({ mode }) {
           </form>
           <p className="auth-switch">
             {isSignup ? "이미 계정이 있으신가요?" : "아직 계정이 없으신가요?"}
-            <a href={isSignup ? ROUTES.LOGIN : ROUTES.SIGNUP}>
+            <a href={isSignup ? loginUrl : signupUrl}>
               {isSignup ? " 로그인" : " 회원가입"}
             </a>
           </p>

@@ -3322,6 +3322,7 @@ button:focus-visible {
     "risk-signals risk-signals";
   align-items: start;
   column-gap: 22px;
+  padding-bottom: 24px;
   min-width: 0;
   overflow: visible;
   border: 1px solid var(--analysis-card-border, #dfe7f0);
@@ -5917,7 +5918,7 @@ button:focus-visible {
   font-weight: 600;
 }
 .risk-final-evaluation p {
-  margin: 9px 0 0 23px;
+  margin: 9px 0 0;
   color: #455d75;
   font-size: 14px;
   line-height: 1.75;
@@ -6021,7 +6022,7 @@ button:focus-visible {
   font-size: 12px;
 }
 .risk-analysis-narrative {
-  margin: 12px 0 0 23px;
+  margin: 12px 0 0;
   padding: 13px 15px;
   border: 1px solid #e3ebf3;
   border-radius: 9px;

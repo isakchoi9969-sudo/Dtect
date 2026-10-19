@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useWatchlist } from "../hooks/useWatchlist";
 import { ROUTES } from "../config/routes";
+import { buildAuthUrl } from "../utils/authNavigation";
 import CompanyLogo from "./CompanyLogo";
 import Header from "./Header";
 import "./AnalysisAccess.css";
@@ -689,8 +690,8 @@ export default function WatchlistPage() {
             <h2>관심 있는 기업을 모아<br />나만의 목록을 만들어 보세요</h2>
             <p>로그인하고 기업명 옆의 별표를 누르면<br />관심기업의 리스크 변화를 한곳에서 확인하실 수 있습니다.</p>
             <div className="watchlist-login-actions">
-              <a href={ROUTES.LOGIN}>로그인하고 시작하기</a>
-              <a href={ROUTES.SIGNUP}>회원가입</a>
+              <a href={buildAuthUrl(ROUTES.LOGIN)}>로그인하고 시작하기</a>
+              <a href={buildAuthUrl(ROUTES.SIGNUP)}>회원가입</a>
             </div>
           </div>
         ) : companies.length > 0 ? (
