@@ -48,7 +48,7 @@ test("free-board comments keep replies with their parent across pages", async ()
     if (sql.includes("SELECT COUNT(*) AS total FROM COMMUNITY_FREE_COMMENT")) {
       return [[{ total: sql.includes("PARENT_FREE_COMMENT_ID IS NULL") ? 2 : 3 }]];
     }
-    if (sql.includes("ORDER BY CREATED_AT DESC")) {
+    if (sql.includes("ORDER BY cm.CREATED_AT DESC")) {
       return [[params.at(-1) === 0
         ? { id: 22, parentCommentId: null, content: "새 댓글" }
         : { id: 11, parentCommentId: null, content: "옛 댓글" }]];

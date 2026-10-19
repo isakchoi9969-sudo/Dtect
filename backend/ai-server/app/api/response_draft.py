@@ -1,87 +1,43 @@
-# Node 서버가 보낸 이슈 내용을 DataFrame 형태로 바꾼 뒤
-# dtect_response_generator.py의 create_drafts 함수를 호출하는 API입니다.
+"""공식 대응자료 RAG 기반 대응 초안 API."""
 
-import pandas as pd
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from typing import List
 
-# 현재 넣으신 모델 파일의 실제 함수명은 create_drafts 입니다.
-from app.dtect_response_generator import create_drafts
+from app.dtect_response_generator import create_situation_draft
+
 
 router = APIRouter(prefix="/api/ai", tags=["response-draft"])
 
-# 참고 기사 1건의 데이터 형식
-class ReferenceArticle(BaseModel):
-    title: str = ""
-    source: str = "출처 미상"
-    publishedAt: str = ""
-    url: str = ""
 
 class ResponseDraftRequest(BaseModel):
-    # 프론트에서 선택한 문서 유형
+    company: str = Field(..., min_length=1, max_length=100)
+    situation: str = Field(..., min_length=10, max_length=5000)
     document_type: str = "보도자료"
-
-    # 이슈명과 핵심 상황은 필수 입력값
-    issue_name: str = Field(..., min_length=2)
-    analysis_text: str = Field(..., min_length=10)
-
-    # 현재 화면에는 없어도 비워 둔 채 전송 가능합니다.
-    company: str = ""
-    industry: str = ""
-
-    # Node 서버에서 전달받은 실제 참고 기사
-    reference_articles: List[ReferenceArticle] = Field(default_factory=list)
+    current_actions: str = Field(default="", max_length=3000)
+    additional_request: str = Field(default="", max_length=1000)
 
 
 @router.post("/response-draft")
 def create_response_draft(payload: ResponseDraftRequest):
     try:
-        # create_drafts는 여러 기사 DataFrame을 처리하는 함수입니다.
-        # 화면에서 입력한 한 건을 기사 한 건처럼 만들어 전달합니다.
-        input_df = pd.DataFrame(
-            [
-                {
-                    "company": payload.company,
-                    "industry": payload.industry,
-                    "title": payload.issue_name,
-                    "content": payload.analysis_text,
-                }
-            ]
-        )
-
-        result_df = create_drafts(
-            input_df=input_df,
-            model="gpt-5-mini",
-            use_api=True,
+        draft = create_situation_draft(
+            company=payload.company,
+            situation=payload.situation,
             document_type=payload.document_type,
+            current_actions=payload.current_actions,
+            additional_request=payload.additional_request,
         )
-
-        # 본문 또는 제목이 비어 있을 때 생성 결과가 없을 수 있습니다.
-        if result_df.empty:
-            raise ValueError("초안 생성에 필요한 이슈 내용이 부족합니다.")
-
-        draft = result_df.iloc[0]
-
         return {
             "success": True,
             "data": {
                 "documentType": draft["document_type"],
+                "incidentType": draft["incident_type"],
                 "draftResponse": draft["draft_response"],
-                "riskType": draft["risk_type"],
                 "generationStatus": draft["generation_status"],
-
-                # 초안 생성 근거 기사
-                "referenceArticles": [
-                    article.model_dump()
-                    for article in payload.reference_articles[:3]
-                ],
+                "referenceCases": draft["reference_cases"],
             },
         }
-
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
     except Exception as error:
-        # 실제 오류를 Node 서버에 전달합니다.
-        raise HTTPException(
-            status_code=500,
-            detail=f"대응자료 생성 실패: {str(error)}",
-        )
+        raise HTTPException(status_code=500, detail=f"대응자료 생성 실패: {error}") from error

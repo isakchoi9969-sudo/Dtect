@@ -1,546 +1,390 @@
-"""D:TECT 기사 근거 기반 기자 대응자료 생성 모듈.
+"""공식 대응자료 사례를 근거로 상황별 대응 초안을 생성합니다.
 
-이 파일은 LoRA 학습 모델이 아닙니다. 뉴스 기사에서 확인 가능한 근거를 추출하고,
-생성 AI가 그 근거 범위 안에서 기자 대응자료 초안을 만들도록 합니다.
-
-사용 예시
----------
-export OPENAI_API_KEY="..."
-python dtect_response_generator.py \
-  --input /content/drive/MyDrive/DTECT_news_2026/monthly/news.csv \
-  --output /content/drive/MyDrive/DTECT_output/pr_response_drafts.csv
-
-입력 CSV는 아래 열 가운데 일부를 포함하면 됩니다.
-company, industry, title/document_title, content/original/body,
-published_at/date, source_url/url, article_id/id
+이 모듈은 외부 뉴스나 다른 기업의 사실을 현재 사건의 근거로 사용하지 않습니다.
+사용자가 입력한 상황과 현재 조치만 사실로 취급하고, CSV의 공개 대응자료는
+문서 구성과 표현 범위를 찾는 RAG 참고 사례로만 사용합니다.
 """
 
 from __future__ import annotations
 
-import argparse
 import os
 import re
-import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable
 
 import pandas as pd
 
 
-ISSUE_KEYWORDS: dict[str, tuple[str, ...]] = {
-    "사건·사고": ("사고", "화재", "붕괴", "사망", "부상", "침수", "재해"),
-    "서비스·보안": ("장애", "오류", "먹통", "서비스 중단", "유출", "해킹", "개인정보"),
-    "규제·법률": ("제재", "과징금", "조사", "수사", "소송", "공정위", "검찰"),
-    "노사": ("파업", "노조", "노사", "분쟁", "임금"),
-    "제품·소비자": ("리콜", "결함", "불량", "환불", "피해", "민원"),
-    "경영·평판": ("논란", "의혹", "갑질", "불매", "실적 악화", "적자"),
+REFERENCE_CORPUS_PATH = (
+    Path(__file__).resolve().parent.parent / "data" / "official_response_corpus_v2.csv"
+)
+
+DOCUMENT_TYPE_INSTRUCTIONS: dict[str, str] = {
+    "보도자료": """바로 배포 검토할 수 있는 자연스러운 보도자료로 작성하세요.
+첫 줄은 반드시 '# '로 시작하는 기사형 제목 한 줄입니다. 제목 뒤에는 빈 줄을 넣으세요.
+이후에는 제목이나 목록 기호 없이 2~4개의 완결된 문단만 작성하세요.
+첫 문단은 반드시 '[기업명]은/는 ... 밝혔다.'처럼 기업명을 공식 발표 주체로 시작하세요.
+둘째 문단에는 현재 조치를, 마지막 문단에는 후속 안내를 자연스럽게 서술하세요.
+확인된 현재 상황과 현재 조치만 사용하고, 입력되지 않은 조치·일정·수치·보상은 만들지 마세요.""",
+    "사과문": """공식 사과문으로 작성하세요.
+첫 줄은 반드시 '# '로 시작하는 간결한 제목 한 줄입니다. 제목 뒤에는 빈 줄을 넣으세요.
+이후에는 제목이나 목록 기호 없이 3~4개의 완결된 문단만 작성하세요.
+첫 문단은 반드시 '[기업명]은/는 이번 사안으로 심려를 끼쳐드린 점 깊이 사과드립니다.'처럼 기업명과 명확한 사과 표현으로 시작하세요.
+다음 문단에는 현재 확인된 사실과 현재 조치를 분리해 설명하고, 마지막 문단에는 추가 안내와 필요한 후속 조치 검토 의지를 담으세요.
+법적 책임·피해 규모·보상·완료 시점처럼 입력되지 않은 사실은 단정하거나 약속하지 마세요.""",
+    "고객 안내문": """## 안내 제목, ## 고객에게 알려드리는 내용, ## 이용 시 참고 사항, ## 추가 안내 순서로 작성하세요.
+고객이 알아야 할 사실과 유의 사항만 간결히 작성하고, 기업명은 본문에 쓰지 마세요.""",
+    "임직원 공지": """## 공지 제목, ## 상황 요약, ## 임직원 행동 기준, ## 후속 공유 순서로 작성하세요.
+임직원에게 필요한 사실과 행동 기준만 작성하고, 기업명은 본문에 쓰지 마세요.""",
+    "Q&A 문서": """## 예상 질문 1부터 ## 예상 질문 10까지, 총 10개의 질문과 답변을 작성하세요.
+각 구역은 '- 질문:'과 '- 답변:' 한 쌍으로 구성하고, 기업명이나 회사 소개 문장을 쓰지 마세요.
+질문은 확인된 상황, 영향 범위, 현재 조치, 고객 유의 사항, 추가 안내, 재발 방지 등 이해관계자가 실제로 물을 내용을 서로 겹치지 않게 구성하세요.
+입력되지 않은 수치·일정·보상·조치에 대해서는 추정하지 말고, 사실 확인 또는 조사 중이라고 답하세요.""",
 }
 
-ACTION_WORDS = (
-    "사과", "유감", "확인", "조사", "점검", "조치", "복구", "정상화",
-    "개선", "보완", "재발 방지", "대책", "지원", "보상", "회수",
-)
+INCIDENT_TYPES: dict[str, tuple[str, ...]] = {
+    "개인정보·보안": ("개인정보", "정보 유출", "유출", "해킹", "보안", "랜섬웨어", "계정"),
+    "서비스 장애": ("서비스 장애", "서비스 중단", "장애", "오류", "먹통", "접속", "복구"),
+    "안전사고": ("안전", "사고", "화재", "사망", "부상", "산업재해", "재해"),
+    "리콜·품질": ("리콜", "결함", "불량", "품질", "회수", "환불"),
+    "규제·법률": ("규제", "법률", "과징금", "제재", "조사", "수사", "소송", "공정위"),
+    "노사": ("노사", "노조", "파업", "임금", "협력사"),
+    "경영·평판": ("경영권", "논란", "의혹", "사과", "유감", "불매", "평판"),
+}
+
+QA_SECTION_PATTERN = re.compile(r"^##\s*예상 질문\s*(?:[1-9]|10)\s*$", re.MULTILINE)
+
+SAFE_LABELS = {"학습가능", "사건참고자료", "일반보도자료", "고객 FAQ", "고객조치"}
+SEARCH_PAGE_PATTERN = re.compile(r"검색\s*결과|search\s*results?", re.IGNORECASE)
+GENERIC_NEWSROOM_PATTERN = re.compile(r"(?:^|\s)(?:news\s*room|뉴스룸)$", re.IGNORECASE)
 
 SYSTEM_INSTRUCTIONS = """당신은 기업 위기 커뮤니케이션 담당자입니다.
-제공된 뉴스 기사 근거만으로 한국어 대응자료 초안을 작성하세요.
+사용자가 제공한 '현재 상황'과 '현재 조치'만 현재 기업의 사실로 취급해 한국어 대응자료 초안을 작성하세요.
 
-기사에 없는 원인, 수치, 책임, 조치, 일정은 절대로 만들어 내지 마세요.
-확정되지 않은 내용은 '현재 확인 중입니다'처럼 불확실성을 명시하세요.
-특정 개인이나 기관을 비난하지 마세요.
+참고 사례는 다른 기업의 공개 대응자료입니다. 사례의 문서 구조, 표현의 범위, 안내 항목만 참고하고,
+다른 기업명·날짜·수치·피해 규모·원인·보상·조치·연락처를 현재 초안에 절대로 옮기지 마세요.
+사용자가 제공하지 않은 사실은 만들지 말고 '현재 확인 중입니다' 또는 '추가 확인 후 안내하겠습니다'처럼 명시하세요.
+특정 개인이나 기관을 비난하지 말고, 초안 본문만 작성하세요.
 
-가독성 규칙:
-- 각 구역 제목은 반드시 '## 제목' 형식으로 작성하세요.
-- 각 구역 제목 앞뒤에는 빈 줄을 한 줄씩 넣으세요.
-- 핵심 내용은 한 문장씩 '- '로 시작하는 목록으로 작성하세요.
-- 긴 문단을 작성하지 마세요.
-- 초안 본문만 작성하고, 인사말·설명·코드 블록은 넣지 마세요."""
-
-# 문서 유형마다 제목뿐 아니라 목적과 전달 대상이 다르게 보이도록 설정
-DOCUMENT_TYPE_INSTRUCTIONS: dict[str, str] = {
-    "보도자료": """언론 및 외부 이해관계자에게 배포하는 공식 보도자료입니다.
-고객 안내문이나 내부 공지 형식의 '확인된 사항·현재 대응·향후 안내' 제목은 절대 사용하지 마세요.
-
-아래 순서와 제목을 반드시 그대로 사용하세요.
-
-## 제목
-- 기사 근거의 핵심 사실을 담은 공식 발표형 제목 한 줄
-
-## 배포 내용
-- 이 보도자료가 다루는 상황을 2~3문장으로 요약
-- 회사명·날짜·수치 등 기사에서 확인되지 않은 정보는 만들지 마세요
-
-## 주요 내용
-- 기사 근거로 확인된 사실과 회사의 대응 방향을 2~3개로 정리
-- 확인되지 않은 조치, 일정, 피해 규모를 단정하지 마세요
-
-## 회사 입장
-- 기업의 공식 입장이 기사에서 확인된 경우에만 작성
-- 근거가 없으면 '관련 사실을 확인 중이며, 확인되는 내용은 신속히 안내하겠습니다.'라고 작성
-- 가상의 담당자 이름, 직책, 인용문은 만들지 마세요
-
-## 문의
-- 실제 연락처는 만들지 말고 '문의처는 추후 안내 예정입니다.'라고 작성""",
-
-    "고객 안내문": """서비스 이용 고객에게 전달하는 안내문입니다.
-쉽고 친절한 표현을 사용하고, 고객이 알아야 할 영향과 행동만 안내하세요.
-보도자료식 배포 문구, 회사 입장, 인용문은 넣지 마세요.
-
-아래 순서와 제목을 반드시 그대로 사용하세요.
-
-## 안내 제목
-- 고객이 상황을 바로 이해할 수 있는 제목 한 줄
-
-## 고객에게 알려드리는 내용
-- 현재 확인된 사실과 고객 영향 여부를 2~3개로 작성
-- 확인되지 않은 피해·보상·복구 완료 사실은 만들지 마세요
-
-## 이용 시 참고 사항
-- 고객이 확인하거나 유의할 사항만 작성
-- 근거가 없으면 '현재 고객이 별도로 취해야 할 조치는 확인 중입니다.'라고 작성
-
-## 추가 안내
-- 추가 확인 결과가 있을 경우 안내하겠다는 내용만 작성""",
-
-    "임직원 공지": """임직원에게 공유하는 내부 공지입니다.
-차분하고 명확한 내부 커뮤니케이션 톤으로 작성하세요.
-고객 안내문처럼 사과하거나, 보도자료처럼 대외 발표 형식으로 작성하지 마세요.
-
-아래 순서와 제목을 반드시 그대로 사용하세요.
-
-## 공지 제목
-- 내부 공유 목적이 드러나는 제목 한 줄
-
-## 상황 요약
-- 기사 근거로 확인된 현재 상황을 2~3개로 정리
-
-## 임직원 행동 기준
-- 외부 문의에는 확인된 사실만 안내한다는 원칙을 포함
-- 추측성 발언, 개인 의견 공유를 피하도록 안내
-- 담당 부서, 지시, 마감일은 근거가 없으면 만들지 마세요
-
-## 후속 공유
-- 추가 확인 사항이 생기면 내부 공지하겠다는 내용만 작성""",
-
-    "Q&A 문서": """예상 질문과 표준 답변을 정리하는 대응 Q&A 문서입니다.
-질문과 답변 외의 설명 문단이나 안내문 형식의 제목은 작성하지 마세요.
-
-아래 형식을 반드시 그대로 사용하여 질문 3개와 답변 3개를 작성하세요.
-
-## 예상 질문 1
-- 질문: 가장 핵심적인 우려 사항을 질문형으로 작성
-- 답변: 기사 근거 안에서만 답변
-
-## 예상 질문 2
-- 질문: 고객·언론·이해관계자가 물을 수 있는 질문
-- 답변: 기사 근거 안에서만 답변
-
-## 예상 질문 3
-- 질문: 향후 조치 또는 영향 관련 질문
-- 답변: 근거가 없으면 '현재 확인 중이며, 확인되는 내용은 신속히 안내하겠습니다.'라고 답변
-
-가상의 수치, 보상, 일정, 담당자 발언은 만들지 마세요.""",
-}
-
-def clean(value: object) -> str:
-    return re.sub(r"\s+", " ", str(value or "")).strip()
-
-# 공식 대응자료 CSV 위치
-REFERENCE_CORPUS_PATH = (
-    Path(__file__).resolve().parent.parent
-    / "data"
-    / "official_response_corpus_v2.csv"
-)
-
-# 현재 이슈 분류와 공식 대응자료의 이슈 표현을 연결합니다.
-REFERENCE_KEYWORDS = {
-    "사건·사고": ("안전", "사고", "산업재해", "환경", "화재"),
-    "서비스·보안": ("서비스", "장애", "개인정보", "보안", "복구", "보호"),
-    "규제·법률": ("규제", "법률", "공정거래", "과징금", "제재", "해명"),
-    "노사": ("노사", "파업", "인력", "협력사"),
-    "제품·소비자": ("품질", "결함", "리콜", "고객", "보상", "소비자"),
-    "경영·평판": ("입장", "유감", "사과", "평판", "경영권"),
-}
+문서 유형별 형식 지침을 가장 우선해 따르세요.
+인사말, 작성 과정 설명, 코드 블록은 넣지 마세요."""
 
 _reference_corpus: pd.DataFrame | None = None
 
 
+def clean(value: object) -> str:
+    return re.sub(r"\s+", " ", str(value or "")).strip()
+
+
+def company_subject(company: str) -> str:
+    """한국어 기업명에 맞는 주격 보조사를 붙입니다."""
+    if not company:
+        return "기업은"
+    last_code = ord(company[-1])
+    has_final_consonant = 0xAC00 <= last_code <= 0xD7A3 and (last_code - 0xAC00) % 28 != 0
+    return f"{company}{'은' if has_final_consonant else '는'}"
+
+
 def load_reference_corpus() -> pd.DataFrame:
-    """공식 대응자료를 서버 실행 중 한 번만 읽습니다."""
+    """검색에 안전한 공식 대응자료만 서버 실행 중 한 번 적재합니다."""
     global _reference_corpus
 
     if _reference_corpus is not None:
         return _reference_corpus
-
     if not REFERENCE_CORPUS_PATH.exists():
         print(f"[대응자료 RAG] 참고 CSV를 찾지 못했습니다: {REFERENCE_CORPUS_PATH}")
         _reference_corpus = pd.DataFrame()
         return _reference_corpus
 
     corpus = pd.read_csv(REFERENCE_CORPUS_PATH, encoding="utf-8-sig").fillna("")
+    required_columns = {
+        "company", "document_title", "official_response_text", "published_at", "source_url",
+        "issue_type_original", "response_type_rule", "ai_label", "ai_response_type", "selection_status",
+    }
+    missing_columns = required_columns - set(corpus.columns)
+    if missing_columns:
+        raise ValueError(f"공식 대응자료 CSV에 필요한 열이 없습니다: {', '.join(sorted(missing_columns))}")
 
-    # 실제 대응 표현으로 분류된 자료를 우선 사용합니다.
     corpus = corpus[
-        corpus["ai_label"].isin([
-            "학습가능",
-            "사건참고자료",
-            "일반보도자료",
-            "고객 FAQ",
-            "고객조치",
-        ])
+        corpus["ai_label"].isin(SAFE_LABELS)
+        & (corpus["selection_status"] != "검토 후보")
+        & ~corpus["document_title"].astype(str).str.contains(SEARCH_PAGE_PATTERN, na=False)
+        & ~corpus["document_title"].astype(str).str.contains(GENERIC_NEWSROOM_PATTERN, na=False)
+        & corpus["official_response_text"].astype(str).str.strip().ne("")
     ].copy()
-
-    corpus["search_text"] = (
-        corpus["issue_type_original"].astype(str)
-        + " "
-        + corpus["response_type_rule"].astype(str)
-        + " "
-        + corpus["ai_response_type"].astype(str)
-        + " "
-        + corpus["document_title"].astype(str)
-        + " "
-        + corpus["official_response_text"].astype(str).str[:1200]
+    corpus["search_text"] = corpus.apply(
+        lambda row: clean(" ".join([
+            row["issue_type_original"], row["response_type_rule"], row["ai_response_type"],
+            row["document_title"], str(row["official_response_text"])[:1600],
+        ])).lower(),
+        axis=1,
     )
-
     _reference_corpus = corpus
-    print(f"[대응자료 RAG] 공식 대응자료 {len(corpus)}건을 불러왔습니다.")
+    print(f"[대응자료 RAG] 검색 가능한 공식 대응자료 {len(corpus)}건을 불러왔습니다.")
     return _reference_corpus
 
 
-def find_reference_examples(
-    document_type: str,
-    title: str,
-    risk_type: str,
-    evidence: str,
-    limit: int = 2,
-) -> list[str]:
-    """현재 이슈와 가까운 공식 대응자료를 최대 2건 찾습니다."""
-    corpus = load_reference_corpus()
+def classify_incident(situation: str, current_actions: str = "") -> str:
+    """사용자 상황을 정해진 사건 유형으로 분류합니다."""
+    source = clean(f"{situation} {current_actions}").lower()
+    scores = {
+        incident_type: sum(keyword.lower() in source for keyword in keywords)
+        for incident_type, keywords in INCIDENT_TYPES.items()
+    }
+    incident_type, score = max(scores.items(), key=lambda item: item[1])
+    return incident_type if score else "기타 이슈"
 
+
+def _document_score(document_type: str, row: pd.Series) -> int:
+    context = clean(f"{row['ai_label']} {row['ai_response_type']} {row['response_type_rule']}")
+    if document_type == "고객 안내문":
+        return 5 if any(word in context for word in ("고객", "FAQ", "보상", "안내")) else 0
+    if document_type == "Q&A 문서":
+        return 5 if any(word in context for word in ("FAQ", "해명", "입장", "정정")) else 0
+    if document_type == "임직원 공지":
+        return 3 if any(word in context for word in ("조사", "점검", "재발 방지", "대책")) else 0
+    return 3 if any(word in context for word in ("보도자료", "해명", "입장", "대응")) else 0
+
+
+def find_reference_cases(
+    situation: str,
+    incident_type: str,
+    document_type: str,
+    limit: int = 5,
+) -> list[dict[str, str]]:
+    """현재 상황에 유사한 공식 대응사례를 우선순위로 반환합니다."""
+    corpus = load_reference_corpus()
     if corpus.empty:
         return []
 
-    query = clean(f"{title} {risk_type} {evidence}")
-    keywords = REFERENCE_KEYWORDS.get(risk_type, ())
-
+    situation_words = set(re.findall(r"[가-힣A-Za-z0-9]{2,}", clean(situation).lower()))
+    incident_keywords = INCIDENT_TYPES.get(incident_type, ())
     ranked: list[tuple[int, pd.Series]] = []
 
     for _, row in corpus.iterrows():
-        search_text = clean(row["search_text"])
-        score = sum(keyword in search_text for keyword in keywords)
-
-        # 현재 기사에 실제 등장한 핵심 표현이 대응자료에도 있으면 점수를 더합니다.
-        for keyword in ("개인정보", "보안", "장애", "유출", "사고", "리콜", "파업", "과징금"):
-            if keyword in query and keyword in search_text:
-                score += 2
-
-        # 원문은 모두 공개 공식자료입니다. 따라서 '문서유형'은 원문 자체의
-        # 형식이 아니라, 초안 작성에 참고할 수 있는 목적을 뜻합니다.
-        # 실제 사내 공지가 아닌 자료를 사내 공지 원문이라고 잘못 표기하지 않습니다.
-        response_type = clean(row["ai_response_type"])
-        issue_type = clean(row["issue_type_original"])
-        response_rule = clean(row["response_type_rule"])
-        type_context = f"{response_type} {issue_type} {response_rule} {search_text}"
-
-        if document_type == "보도자료":
-            if row["ai_label"] == "일반보도자료":
-                score += 2
-            if any(word in type_context for word in ("공식", "입장", "발표", "대응")):
-                score += 1
-
-        elif document_type == "고객 안내문":
-            # 고객조치만 찾으면 참고자료가 지나치게 적어집니다. 고객에게
-            # 영향을 주는 장애·보안·리콜·보상 사례도 함께 우선합니다.
-            if "고객조치" in response_type:
-                score += 4
-            if any(word in type_context for word in (
-                "서비스 장애", "개인정보", "보안", "보상", "리콜", "회수", "복구", "점검",
-            )):
-                score += 2
-
-        elif document_type == "임직원 공지":
-            # 공개 자료의 상황 요약·조사·재발방지 내용을 내부 공지의
-            # 사실/행동 기준 근거로만 활용합니다.
-            if any(word in type_context for word in (
-                "조사", "점검", "재발 방지", "개선", "보완", "대책", "안전", "사고", "규제", "노사",
-            )):
-                score += 3
-
-        elif document_type == "Q&A 문서":
-            if "해명·입장" in response_type:
-                score += 4
-            if any(word in type_context for word in ("해명", "입장", "정정", "사실무근", "확인")):
-                score += 2
-
+        search_text = row["search_text"]
+        score = _document_score(document_type, row)
+        score += 4 * sum(keyword.lower() in search_text for keyword in incident_keywords)
+        score += sum(word in search_text for word in situation_words)
+        if row["ai_label"] in {"학습가능", "사건참고자료", "고객 FAQ", "고객조치"}:
+            score += 2
+        if row["ai_response_type"] != "해당없음":
+            score += 1
         if score > 0:
             ranked.append((score, row))
 
-    ranked.sort(key=lambda item: item[0], reverse=True)
-
-    examples = []
-    for _, row in ranked[:limit]:
-        examples.append(
-            f"""[공식 대응자료 참고]
-        기업: {row["company"]}
-        유형: {row["ai_response_type"]}
-        제목: {row["document_title"]}
-        본문 일부: {clean(row["official_response_text"])[:600]}"""
-        )
-
-    return examples
-
-def clean_generated_text(value: object) -> str:
-    """AI가 만든 결과의 줄바꿈은 유지하고 불필요한 공백만 정리합니다."""
-    text = str(value or "").replace("\r\n", "\n").replace("\r", "\n")
-
-    # 줄 내부의 연속 공백만 한 칸으로 정리
-    text = re.sub(r"[ \t]+", " ", text)
-
-    # 빈 줄이 너무 많이 생기지 않도록 최대 한 줄만 유지
-    text = re.sub(r"\n{3,}", "\n\n", text)
-
-    return text.strip()
-
-def first_present(row: pd.Series, names: Iterable[str]) -> str:
-    for name in names:
-        if name in row.index and clean(row[name]):
-            return clean(row[name])
-    return ""
-
-
-def split_sentences(text: str) -> list[str]:
-    parts = re.split(r"(?<=[.!?。])\s+|(?<=다\.)\s+|(?<=니다\.)\s+", clean(text))
-    return [part for part in parts if 20 <= len(part) <= 500]
-
-
-def classify_risk(title: str, body: str) -> str:
-    text = f"{title} {body}".lower()
-    scores = {
-        label: sum(keyword.lower() in text for keyword in keywords)
-        for label, keywords in ISSUE_KEYWORDS.items()
-    }
-    label, score = max(scores.items(), key=lambda item: item[1])
-    return label if score else "기타 이슈"
-
-
-def select_evidence(title: str, body: str, limit: int = 5) -> str:
-    """이슈·조치가 있는 문장을 우선 선택해 모델 입력을 짧고 검증 가능하게 유지합니다."""
-    sentences = split_sentences(body)
-    selected: list[str] = []
-    keywords = tuple(word for values in ISSUE_KEYWORDS.values() for word in values) + ACTION_WORDS
-
-    for sentence in sentences:
-        if any(keyword.replace(" ", "") in sentence.replace(" ", "") for keyword in keywords):
-            selected.append(sentence)
-        if len(selected) >= limit:
-            break
-
-    if not selected:
-        selected = sentences[:limit]
-
-    evidence = "\n".join(f"- {sentence}" for sentence in selected)
-    return evidence or f"- 기사 제목: {title}"
+    ranked.sort(key=lambda item: (item[0], str(item[1]["published_at"])), reverse=True)
+    return [
+        {
+            "company": clean(row["company"]),
+            "title": clean(row["document_title"]),
+            "responseType": clean(row["ai_response_type"]) or clean(row["ai_label"]),
+            "publishedAt": clean(row["published_at"]),
+            "url": clean(row["source_url"]),
+            "excerpt": clean(row["official_response_text"])[:700],
+        }
+        for _, row in ranked[:limit]
+    ]
 
 
 def build_user_prompt(
     company: str,
-    industry: str,
-    title: str,
-    risk_type: str,
-    evidence: str,
-    document_type: str = "보도자료",
-    reference_examples: list[str] | None = None,
+    situation: str,
+    current_actions: str,
+    document_type: str,
+    additional_request: str,
+    incident_type: str,
+    reference_cases: list[dict[str, str]],
 ) -> str:
-    document_instruction = DOCUMENT_TYPE_INSTRUCTIONS.get(
-        document_type,
-        DOCUMENT_TYPE_INSTRUCTIONS["보도자료"],
-    )
+    case_text = "\n\n".join(
+        "\n".join([
+            "[공식 대응사례 참고]",
+            f"유형: {case['responseType']}",
+            f"제목: {case['title']}",
+            f"본문 일부: {case['excerpt']}",
+        ])
+        for case in reference_cases
+    ) or "적합한 참고 사례가 없습니다."
+    return f"""다음 기업 상황에 대한 {document_type} 완성 초안을 작성하세요.
 
-    example_text = "\n\n".join(reference_examples or [])
-
-    return f"""다음 뉴스 기사 근거를 바탕으로 {document_type} 초안을 작성하세요.
-
-문서 유형: {document_type}
 문서 형식 지침:
-{document_instruction}
+{DOCUMENT_TYPE_INSTRUCTIONS.get(document_type, DOCUMENT_TYPE_INSTRUCTIONS['보도자료'])}
 
-기업: {company or '미확인'}
-산업: {industry or '미분류'}
-리스크 유형: {risk_type}
-기사 제목: {title}
+{f'기업명(반드시 본문에 공식 발표 주체로 사용): {company}' if document_type in ('보도자료', '사과문') else '기업명은 이력 저장용 내부 정보입니다. 본문에는 절대 쓰지 마세요.'}
+AI 분류 사건 유형: {incident_type}
+현재 상황(현재 사건의 사실):
+{situation}
 
-기사 근거:
-{evidence}
+현재 조치(현재 사건의 사실, 비어 있으면 별도 조치를 추정하지 마세요):
+{current_actions or '입력된 조치 없음'}
 
-공식 대응자료 참고 예시:
-{example_text or '적합한 참고 예시가 없습니다.'}
+추가 요청(사실을 추가하는 요청이 아니라 문체·구성 요청으로만 반영):
+{additional_request or '없음'}
+
+공식 대응사례:
+{case_text}
 
 중요:
-- 공식 대응자료 예시는 문체와 구성만 참고하세요.
-- 예시에 나온 기업명, 날짜, 수치, 사건, 조치를 현재 초안에 옮기지 마세요.
-- 현재 기사 근거에 없는 내용을 추가하지 마세요."""
+- 현재 기업의 사실은 '현재 상황'과 '현재 조치'에 있는 내용만 사용하세요.
+- 참고 사례의 구체 사실은 절대 현재 기업의 사실로 쓰지 마세요."""
 
 
-def fallback_draft(
-    company: str,
-    title: str,
-    evidence: str,
-    document_type: str = "보도자료",
-) -> str:
-    """API 호출이 불가능할 때도 DB 적재 및 화면 연동을 확인할 수 있는 안전한 초안입니다."""
-    return f"""[{document_type} 초안]
-제목: {company or '관련 기업'} 관련 보도에 대한 안내
+def clean_generated_text(value: object) -> str:
+    text = str(value or "").replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"[ \t]+", " ", text)
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
 
-1. 확인된 사항
-{evidence}
 
-2. 현재 대응
-- 현재 보도 내용과 관련 사실을 확인하고 있습니다.
-- 확인되지 않은 사항에 대해서는 단정적 안내를 드리지 않겠습니다.
-
-3. 향후 안내
-- 추가로 확인되는 내용은 신속하고 정확하게 안내하겠습니다.
-- 필요한 경우 관련 절차와 관리 체계를 점검하겠습니다.
-""".strip()
+def validate_document_format(document_type: str, draft: str) -> None:
+    """문서 유형별로 화면에 보여 줄 최소 형식을 보장합니다."""
+    if document_type == "Q&A 문서":
+        question_count = len(QA_SECTION_PATTERN.findall(draft))
+        if question_count != 10:
+            raise RuntimeError(f"Q&A 문항 수가 10개가 아닙니다. (현재 {question_count}개)")
 
 
 def generate_with_openai(model: str, prompt: str) -> str:
-    """OpenAI Responses API 호출."""
-
     api_key = os.getenv("OPENAI_API_KEY")
-
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
-
     from openai import OpenAI
-
-    client = OpenAI(api_key=api_key)
-
-    response = client.responses.create(
-        model=model,
-        instructions=SYSTEM_INSTRUCTIONS,
-        input=prompt,
+    response = OpenAI(api_key=api_key).responses.create(
+        model=model, instructions=SYSTEM_INSTRUCTIONS, input=prompt,
     )
-
-    # 결과 줄바꿈을 유지하여 화면에서 구역별로 표시합니다.
     result = clean_generated_text(response.output_text)
-
     if not result:
         raise RuntimeError("AI 응답이 비어 있습니다.")
-
     return result
 
 
-def create_drafts(
-    input_df: pd.DataFrame,
-    model: str,
-    use_api: bool,
-    document_type: str = "보도자료",
-) -> pd.DataFrame:
-    rows: list[dict[str, str]] = []
+def fallback_draft(company: str, situation: str, current_actions: str, document_type: str) -> str:
+    """API 호출 실패 시에도 사용자가 입력한 사실만 담는 안전한 초안을 만듭니다."""
+    action_text = current_actions or "현재 추가 사실과 조치를 확인 중입니다."
+    if document_type == "보도자료":
+        subject = company_subject(company)
+        return f"""# {company}, 관련 상황 확인…사실관계 조사 진행
 
-    for index, row in input_df.iterrows():
-        # 기사 DB 변환 파일과 동일한 규칙을 사용해야 외래키로 연결됩니다.
-        article_id = first_present(row, ("article_id", "id", "news_id")) or f"DTECT-{index + 1:08d}"
-        company = first_present(row, ("company", "company_name", "기업명"))
-        industry = first_present(row, ("industry", "산업", "industry_name"))
-        title = first_present(row, ("title", "document_title", "기사제목"))
-        body = first_present(row, ("content", "original", "body", "article_body", "본문"))
-        published_at = first_present(row, ("published_at", "date", "published_date", "작성일"))
-        source_url = first_present(row, ("source_url", "url", "link", "기사링크"))
+{subject} {situation}
 
-        if not title or not body:
-            continue
+{subject} {action_text}
 
-        risk_type = classify_risk(title, body)
-        evidence = select_evidence(title, body)
+추가로 확인되는 내용은 신속하고 정확하게 안내하겠습니다."""
+    if document_type == "사과문":
+        subject = company_subject(company)
+        return f"""# 사과의 말씀
 
-        # 현재 이슈와 가까운 공식 대응자료를 최대 2건 검색합니다.
-        reference_examples = find_reference_examples(
-            document_type=document_type,
-            title=title,
-            risk_type=risk_type,
-            evidence=evidence,
-        )
+{subject} 이번 사안으로 심려를 끼쳐드린 점 깊이 사과드립니다.
 
-        # 기사 근거와 공식 대응자료 예시를 함께 전달해 초안을 생성합니다.
-        prompt = build_user_prompt(
-            company,
-            industry,
-            title,
-            risk_type,
-            evidence,
-            document_type,
-            reference_examples,
-        )
-        status = "fallback"
+현재 확인된 사항은 다음과 같습니다. {situation}
 
-        if use_api:
-            try:
-                draft = generate_with_openai(model, prompt)
-                status = "generated"
-            except Exception as error:
-                print(f"OpenAI 초안 생성 실패: {clean(error)}")
-                draft = fallback_draft(company, title, evidence, document_type)
-                status = "fallback"
-        else:
-            draft = fallback_draft(company, title, evidence, document_type)
+{subject} {action_text}
 
-        rows.append({
-            "response_id": str(uuid.uuid4()),
-            "document_type": document_type,
-            "article_id": article_id,
-            "company": company,
-            "industry": industry,
-            "article_title": title,
-            "published_at": published_at,
-            "source_url": source_url,
-            "risk_type": risk_type,
-            "evidence_text": evidence,
-            "draft_response": draft,
-            "generation_status": status,
-            "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        })
+추가로 확인되는 내용은 신속하고 정확하게 안내하겠으며, 필요한 후속 조치를 검토하겠습니다."""
+    if document_type == "Q&A 문서":
+        return f"""## 예상 질문 1
+- 질문: 현재 어떤 상황이 확인되었나요?
+- 답변: {situation}
 
-    return pd.DataFrame(rows)
+## 예상 질문 2
+- 질문: 현재 어떤 조치가 진행 중인가요?
+- 답변: {action_text}
+
+## 예상 질문 3
+- 질문: 추가 안내는 언제 받을 수 있나요?
+- 답변: 추가로 확인되는 내용은 신속하고 정확하게 안내하겠습니다.
+
+## 예상 질문 4
+- 질문: 영향 범위는 확인되었나요?
+- 답변: 현재 확인된 사실을 바탕으로 영향 범위를 조사하고 있습니다. 확인되지 않은 범위는 추정하지 않겠습니다.
+
+## 예상 질문 5
+- 질문: 이용자 또는 고객이 지금 해야 할 일이 있나요?
+- 답변: 현재 안내할 추가 행동 사항은 확인 중입니다. 필요한 사항이 확인되면 신속하게 안내하겠습니다.
+
+## 예상 질문 6
+- 질문: 문의는 어디로 하면 되나요?
+- 답변: 문의 채널과 운영 방식은 확인되는 대로 안내하겠습니다.
+
+## 예상 질문 7
+- 질문: 서비스 이용에 제한이 있나요?
+- 답변: 이용 제한 여부는 현재 입력된 사실로 확인되지 않았습니다. 확인되는 내용이 있으면 안내하겠습니다.
+
+## 예상 질문 8
+- 질문: 피해 보상 또는 지원 계획이 있나요?
+- 답변: 보상 또는 지원 계획은 현재 확인 중이며, 확정되지 않은 내용을 안내하지 않겠습니다.
+
+## 예상 질문 9
+- 질문: 재발 방지 대책은 마련되나요?
+- 답변: 조사 결과를 바탕으로 필요한 후속 조치를 검토하겠습니다. 구체적인 대책은 확인 후 안내하겠습니다.
+
+## 예상 질문 10
+- 질문: 이후 정보는 어떻게 확인할 수 있나요?
+- 답변: 추가로 확인되는 내용은 신속하고 정확하게 안내하겠습니다."""
+    if document_type == "임직원 공지":
+        return f"""## 공지 제목
+- 현재 상황 공유
+
+## 상황 요약
+- {situation}
+
+## 임직원 행동 기준
+- {action_text}
+- 외부 문의에는 확인된 사실만 안내하고 추측성 발언은 삼가 주세요.
+
+## 후속 공유
+- 추가 확인 사항은 내부 공지를 통해 공유하겠습니다."""
+    return f"""## 안내 제목
+- 현재 상황 안내
+
+## 고객에게 알려드리는 내용
+- {situation}
+
+## 이용 시 참고 사항
+- {action_text}
+
+## 추가 안내
+- 추가로 확인되는 내용은 신속하고 정확하게 안내하겠습니다."""
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="D:TECT 기자 대응자료 초안 생성")
-    parser.add_argument("--input", required=True, help="분석 대상 기사 CSV 경로")
-    parser.add_argument("--output", required=True, help="DB 적재용 결과 CSV 경로")
-    parser.add_argument("--model", default="gpt-5-mini", help="사용할 생성 모델")
-    parser.add_argument(
-        "--document-type",
-        default="보도자료",
-        choices=tuple(DOCUMENT_TYPE_INSTRUCTIONS),
-        help="생성할 문서 유형",
+def create_situation_draft(
+    company: str,
+    situation: str,
+    document_type: str,
+    current_actions: str = "",
+    additional_request: str = "",
+    model: str = "gpt-5-mini",
+    use_api: bool = True,
+) -> dict[str, object]:
+    """상황 입력과 공식 대응사례를 결합해 초안과 참고사례를 반환합니다."""
+    company, situation = clean(company), clean(situation)
+    current_actions, additional_request = clean(current_actions), clean(additional_request)
+    if not company or not situation:
+        raise ValueError("기업명과 현재 상황을 입력해주세요.")
+    if document_type not in DOCUMENT_TYPE_INSTRUCTIONS:
+        raise ValueError("지원하지 않는 문서 유형입니다.")
+
+    incident_type = classify_incident(situation, current_actions)
+    reference_cases = find_reference_cases(situation, incident_type, document_type)
+    prompt = build_user_prompt(
+        company, situation, current_actions, document_type, additional_request,
+        incident_type, reference_cases,
     )
-    parser.add_argument("--max-rows", type=int, default=0, help="테스트용 최대 처리 건수(0은 전체)")
-    parser.add_argument("--dry-run", action="store_true", help="API 호출 없이 안전한 템플릿 초안 생성")
-    args = parser.parse_args()
+    status = "fallback"
+    try:
+        draft = generate_with_openai(model, prompt) if use_api else fallback_draft(
+            company, situation, current_actions, document_type,
+        )
+        validate_document_format(document_type, draft)
+        status = "generated" if use_api else "fallback"
+    except Exception as error:
+        print(f"OpenAI 초안 생성 실패: {clean(error)}")
+        draft = fallback_draft(company, situation, current_actions, document_type)
 
-    input_path = Path(args.input)
-    output_path = Path(args.output)
-    df = pd.read_csv(input_path, encoding="utf-8-sig").fillna("")
-    if args.max_rows:
-        df = df.head(args.max_rows).copy()
-
-    result = create_drafts(
-        df,
-        model=args.model,
-        use_api=not args.dry_run,
-        document_type=args.document_type,
-    )
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    result.to_csv(output_path, index=False, encoding="utf-8-sig")
-
-    print(f"입력 기사: {len(df):,}건")
-    print(f"생성 초안: {len(result):,}건")
-    print(f"저장 위치: {output_path}")
-    if not result.empty:
-        print(result[["company", "article_title", "risk_type", "generation_status"]].head())
-
-
-if __name__ == "__main__":
-    main()
+    return {
+        "document_type": document_type,
+        "incident_type": incident_type,
+        "draft_response": draft,
+        "generation_status": status,
+        "reference_cases": reference_cases,
+        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }

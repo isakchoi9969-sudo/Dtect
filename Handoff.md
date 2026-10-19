@@ -1,5 +1,14 @@
 # D:TECT 인수인계
 
+## 2026-10-19 대응자료 생성 개편
+
+- 대응자료 생성은 뉴스 이슈 대신 사용자가 입력한 `기업명`, `현재 상황`, 선택 `현재 조치`와 `추가 요청`을 사용한다.
+- `backend/ai-server/data/official_response_corpus_v2.csv`의 정제된 공식 대응사례를 검색해 초안 구성과 표현만 참고한다. 다른 기업의 구체 사실은 현재 초안에 사용하지 않는다.
+- AI 요청 계약: `company`, `situation`, `document_type`, `current_actions`, `additional_request`.
+- 기업명은 자유 입력이며, 보도자료 본문에서만 공식 발표 주체로 사용한다. 고객 안내문·임직원 공지·Q&A 본문에는 표시하지 않는다.
+- 기존 `RESPONSE_DRAFT_HISTORY` 테이블 구조를 유지한다. 기업명은 `INDUSTRY`, 사건 유형은 `RISK_TYPE`, 참고 공식 사례는 `REFERENCE_ARTICLES`에 저장한다.
+- 검증 결과: 프론트 빌드·린트, AI 서버 문법 및 CSV fallback 시나리오, Node 전체 테스트 37건이 통과했다. 린트에는 기존 effect 상태 초기화 관련 경고 2건이 남아 있다.
+
 최종 갱신: 2026-09-02
 
 ## 현재 상태
